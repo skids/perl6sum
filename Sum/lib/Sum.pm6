@@ -379,14 +379,16 @@ role Sum::Marshal::BufValues does Sum::Marshal::Cooked {
 
 =begin pod
 
-=head2 role Sum::Marshal::Bits [ :$type = Int, :$bits = 8, :$reflect = False ]
+=head2 role Sum::Marshal::Bits [ :$accept = Int, :$coerce = Int,
+                                 :$bits = 8, :$reflect = False ]
             does Sum::Marshal::Cooked
 
     The C<Sum::Marshal::Bits> role will explode any argument of the type
-    C<$type> into bit values (currently we use Bools).  The parameter
-    C<$bits> determines how many of the least significant bits of the
-    argument will be used to generate bit values, and hence the number
-    of addends generated.  Bits outside this range are ignored silently
+    C<$accept> into bit values (currently we use Bools) after coercing
+    the argument into the type C<$coerce>.  The parameter C<$bits>
+    determines how many of the least significant bits of the result
+    will be used to generate bit values, and hence the number of addends
+    generated.  Bits outside this range are ignored silently
     (one could use type checking to get runtime errors by appropriately
     choosing and/or constraining types.)
 
@@ -398,12 +400,13 @@ role Sum::Marshal::BufValues does Sum::Marshal::Cooked {
 
 =end pod
 
-role Sum::Marshal::Bits [ ::AT :$type = (Int), :$bits = 8, :$reflect = False ]
+role Sum::Marshal::Bits [ ::AT :$accept = (Int), ::CT :$coerce = (Int),
+                          :$bits = 8, :$reflect = False ]
      does Sum::Marshal::Cooked {
 
     multi method marshal (AT $addend) {
-        ?<<($reflect ?? (($addend <<+><< [0 ..^ $bits]) >>+&>> 1)
-                     !! (($addend <<+><< ($bits <<-<< [0^..$bits])) >>+&>> 1));
+        ?<<($reflect ?? ((CT($addend) <<+><< [0 ..^ $bits]) >>+&>> 1)
+                     !! ((CT($addend) <<+><< ($bits <<-<< [0^..$bits])) >>+&>> 1));
     }
 
 }
