@@ -1,4 +1,4 @@
 perl6sum
 ========
 
-Sum:: module suite implementing checksums
+Sum:: Perl6 modules implementing checksums, hashes, etc.
