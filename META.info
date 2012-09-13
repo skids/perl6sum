@@ -1,5 +1,5 @@
 {
-    "name" : "Sum::",
+    "name" : "Sum",
     "version" : "0.0.1",
     "description" : "Perl6 modules for computing hashes and checksums.",
     "author" : "Brian S. Julin",
