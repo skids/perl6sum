@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 76;
+plan 100;
 
 use Sum::CRC;
 ok(1,'We use Sum::CRC and we are still alive');
@@ -97,19 +97,108 @@ is $r8.finalize(0x31..0x39), 0xd0, "CRC_8_ROHC gives expected results";
 ok $r8.check(0xd0), "CRC_8_ROHC self-verifies (0)";
 
 class WCDMA does Sum::CRC_8_WCDMA does Sum::Marshal::Bits[ :reflect ] { }
-my WCDMA $cd8 .= new();
-is $cd8.finalize(0x31..0x39), 0x25, "CRC_8_WCDMA gives expected results";
-ok $cd8.check(0x25), "CRC_8_WCDMA self-verifies (0)";
-
-
+given WCDMA.new {
+  is .finalize(0x31..0x39), 0x25, "CRC_8_WCDMA gives expected results";
+  ok .check(0x25), "CRC_8_WCDMA self-verifies (0)";
+}
 
 class SAE does Sum::CRC_8_SAE_J1850 does Sum::Marshal::Bits[ ] { }
-is SAE.new().finalize(0x31..0x39), 0x4b, "CRC_8_SAE_J1850 gives expected value";
-ok SAE.new().check(0x31..0x39, 0x4b), "CRC_8_SAE_J1820 self-verifies (residual)";
+given SAE.new {
+  is .finalize(0x31..0x39), 0x4b, "CRC_8_SAE_J1850 gives expected value";
+  ok .check(0x4b), "CRC_8_SAE_J1850 self-verifies (residual)";
+}
 
 class AU does Sum::CRC_8_AUTOSAR does Sum::Marshal::Bits[ ] { }
-is AU.new().finalize(0x31..0x39), 0xdf, "CRC_8_AUTOSAR gives expected value";
-ok AU.new().finalize(0x31..0x39,0xdf), "CRC_8_AUTOSAR self-verifies (residual)";
+given AU.new {
+  is .finalize(0x31..0x39), 0xdf, "CRC_8_AUTOSAR gives expected value";
+  ok .check(0xdf), "CRC_8_AUTOSAR self-verifies (residual)";
+}
+
+class AAL does Sum::CRC_10_AAL does Sum::Marshal::Bits[ ] { }
+given AAL.new {
+  is .finalize(0x31..0x39), 0x199, "CRC_10_AAL gives expected value";
+  ok .check(False,True,0x99), "CRC_10_AAL self-verifies (0)";
+}
+
+class FR does Sum::CRC_11_FlexRay does Sum::Marshal::Bits[ ] { }
+given FR.new {
+  is .finalize(0x31..0x39), 0x5a3, "CRC_11_FlexRay gives expected value";
+  ok .check(True,False,True,0xa3), "CRC_11_FlexRay self-verifies (0)";
+}
+
+class G3 does Sum::CRC_12_3GPP does Sum::Marshal::Bits[ ] { }
+given G3.new {
+  is .finalize(0x31..0x39), 0xdaf, "CRC_12_3GPP gives expected value";
+  ok .check(0xf5,True,False,True,True), "CRC_12_3GPP self-verifies (0)";
+}
+
+class D12 does Sum::CRC_12_DECT does Sum::Marshal::Bits[ ] { }
+given D12.new {
+  is .finalize(0x31..0x39),0xf5b, "CRC_12_DECT gives expected value";
+  ok .check(True xx 4,0x5b), "CRC_12_DECT self-verifies (0)";
+}
+
+class D14 does Sum::CRC_14_DARC does Sum::Marshal::Bits[ :reflect ] { }
+given D14.new {
+  is .finalize(0x31..0x39),0x082d, "CRC_14_DARC gives expected value";
+  ok .check(0x2d,?<<comb(/./,"000100")), "CRC_14_DARC self-verifies (0)";
+}
+
+class C15 does Sum::CRC_15_CAN does Sum::Marshal::Bits[ ] { }
+given C15.new {
+  is .finalize(0x31..0x39),0x059e, "CRC_15_CAN gives expected value";
+  ok .check(False xx 4,True,False,True,0x9e), "CRC_15_CAN self-verifies (0)";
+}
+
+class M15 does Sum::CRC_15_MPT1327 does Sum::Marshal::Bits[ ] { }
+given M15.new {
+  is .finalize(0x31..0x39),0x2566, "CRC_15_MPT1327 gives expected value";
+  ok .check(?<<comb(/./,"0100101"),0x66), "CRC_15_MPT1327 self-verifies (residual)";
+}
+
+class A16 does Sum::CRC_16_ANSI does Sum::Marshal::Bits[ ] { }
+given A16.new {
+  is .finalize(0x31..0x39), 0xfee8, "CRC_16_ANSI gives expected value";
+  ok .check(0xfe,0xe8), "CRC_16_ANSI self-verifies (0)";
+}
+
+class L16 does Sum::CRC_16_LHA does Sum::Marshal::Bits[ :reflect ] { }
+given L16.new {
+  is .finalize(0x31..0x39), 0xbb3d, "CRC_16_LHA gives expected value";
+  ok .check(0x3d,0xbb), "CRC_16_LHA self-verifies (0)";
+}
+
+# Test sum and value from "CYCLIC REDUNDANCY CHECKS IN USB" crcdes.pdf usb.org
+class USB16 does Sum::CRC_16_USB_WIRE does Sum::Marshal::Bits[ :bits(16) ] { }
+given USB16.new {
+  my $s = .finalize(?<<(+<<comb(/./,11000100101000101110011010010001)));
+  is $s, 0x7038, "CRC_16_USB_WIRE gives expected results";
+  ok .check($s), "CRC_16_USB_WIRE self-verifies (residual)";
+}
+
+class USB16_2 does Sum::CRC_16_USB does Sum::Marshal::Bits[ :reflect ] { }
+given USB16_2.new {
+  is .finalize(0x31..0x39), 0xb4c8, "CRC_16_USB gives expected value";
+  ok .check(0xc8,0xb4), "CRC_16_USB self-verifies (residual)";
+}
+
+class OW16 does Sum::CRC_16_1_Wire does Sum::Marshal::Bits[ :reflect ] { }
+given OW16.new {
+  is .finalize(0x31..0x39), 0x44c2, "CRC_16_1_Wire gives expected value";
+  ok .check(0x44,0xc2), "CRC_16_1_Wire self-verifies (residual)";
+}
+
+class MB16 does Sum::CRC_16_Modbus does Sum::Marshal::Bits[ :reflect ] { }
+given MB16.new {
+  is .finalize(0x31..0x39), 0x4b37, "CRC_16_Modbus gives expected result.";
+  ok .check(0x37,0x4b), "CRC_16_Modbus self-verifies (0)";
+}
+
+class DD16 does Sum::CRC_16_DDS_110 does Sum::Marshal::Bits[ ] { }
+given DD16.new {
+  is .finalize(0x31..0x39), 0x9ecf, "CRC_16_DDS_110 gives expected result.";
+  ok .check(0x9e,0xcf), "CRC_16_DDS_110 self-verifies (0)";
+}
 
 # Tested using linux kernel lib/crc-itu-t.c
 class CCITT does Sum::CRC_16_CCITT does Sum::Marshal::Bits[ :reflect ] { }
@@ -126,16 +215,8 @@ class CRC16EPC does Sum::CRC_16_EPC does Sum::Marshal::Bits[ :bits(16) ] { }
 is (CRC16EPC.new().finalize(0),CRC16EPC.new().finalize(0x3000,0x1111,0x2222,0x3333,0x4444,0x5555,0x6666)), (0xe2f0, 0x1835), "CRC_16_EPC gives expected result.";
 ok CRC16EPC.new().check(0x0800,0x1111,0xccae), "CRC_16_EPC self-verifies (residual)";
 
-# Test sum and value from "CYCLIC REDUNDANCY CHECKS IN USB" crcdes.pdf usb.org
-class USBData does Sum::CRC_16_USB does Sum::Marshal::Bits[ :bits(16) ] { }
-$s = USBData.new();
-$i = $s.finalize(?<<(+<<comb(/./,11000100101000101110011010010001)));
-is $i, 0x7038, "CRC_16_USB gives expected results";
-ok $s.check($i), "CRC_16_USB self-verifies (residual)";
 
-class CRCModbus does Sum::CRC_16_Modbus does Sum::Marshal::Bits[ :reflect ] { }
-is CRCModbus.new().finalize(0x31..0x39), 0x4b37, "CRC_16_Modbus gives expected result.";
-ok CRCModbus.new().check(0x31..0x39,0x37,0x4b), "CRC_16_Modbus self-verifies (0)";
+
 
 class PGP does Sum::CRC_24_PGP does Sum::Marshal::Bits[ ] { }
 my PGP $pgp .= new();
