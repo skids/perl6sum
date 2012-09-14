@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 100;
+plan 117;
 
 use Sum::CRC;
 ok(1,'We use Sum::CRC and we are still alive');
@@ -200,23 +200,80 @@ given DD16.new {
   ok .check(0x9e,0xcf), "CRC_16_DDS_110 self-verifies (0)";
 }
 
-# Tested using linux kernel lib/crc-itu-t.c
-class CCITT does Sum::CRC_16_CCITT does Sum::Marshal::Bits[ :reflect ] { }
-is CCITT.new().finalize("Please to checksum this text".ords), 0x9e53, "CRC_16_CCITT gives expected result.";
+class X16 does Sum::CRC_16_X25 does Sum::Marshal::Bits[ :reflect ] { }
+given X16.new {
+  is .finalize(0x31..0x39), 0x906e, "CRC_16_X25 gives expected result.";
+  ok .check(0x6e,0x90), "CRC_16_X25 self-verifies (0)";
+}
+
+class EP16 does Sum::CRC_16_EPC does Sum::Marshal::Bits[ ] { }
+given EP16.new {
+  is .finalize(0x31..0x39), 0xd64e, "CRC_16_EPC gives expected result.";
+  ok .check(0xd6,0x4e), "CRC_16_EPC self-verifies (0)";
+}
+# Tests from "Specification for RFID Air Interface" Version 1.2.0 EPCGlobal
+class EP16_16 does Sum::CRC_16_EPC does Sum::Marshal::Bits[ :bits(16) ] { }
+given EP16_16.new {
+  is .finalize(0x3000,0x1111,0x2222,0x3333,0x4444,0x5555,0x6666), 0x1835, "CRC_16_EPC (16-bit addends) gives expected results.";
+  ok .check(0x1835), "CRC_16_EPC (16-bit-addends) self-verifies (residual)";
+}
+
+# Tested using linux kernel lib/crc-itu-t.c (misnamed therein).
+class CCITT does Sum::CRC_16_CCITT_TRUE does Sum::Marshal::Bits[ :reflect ] { }
+given CCITT.new {
+  is .finalize("Please to checksum this text".ords), 0x9e53, "CRC_16_CCITT_TRUE gives expected result.";
+  ok .check(0x53, 0x9e), "CRC_16_CCITT_TRUE self-verifies (0)";
+}
+
+class XM16 does Sum::CRC_16_XModem does Sum::Marshal::Bits[ ] { }
+given XM16.new {
+  is .finalize(0x31..0x39), 0x31c3, "CRC_16_XModem gives expected result.";
+  ok .check(0x31,0xc3), "CRC_16_XModem self-verifies (0)";
+}
+
+class MC16 does Sum::CRC_16_MCRF does Sum::Marshal::Bits[ :reflect ] { }
+given MC16.new {
+  is .finalize(0x31..0x39), 0x6f91, "CRC_16_MCRF gives expected result.";
+  ok .check(0x91, 0x6f), "CRC_16_MCRF self-verifies (0)";
+}
 
 # Test value taken from AUTOSAR document (see references)
 class AU2 does Sum::CRC_16_CCITT_FALSE does Sum::Marshal::Bits[ ] { }
-my AU2 $au2 .= new();
-is $au2.finalize(0x31..0x39), 0x29b1, "CRC_16_CCITT_FALSE gives expected value";
-ok $au2.check(0x29, 0xb1), "CRC_16_CCIT_FALSE self-verifies (0)";
+given AU2.new {
+  is .finalize(0x31..0x39), 0x29b1, "CRC_16_CCITT_FALSE gives expected value";
+  ok .check(0x29, 0xb1), "CRC_16_CCITT_FALSE self-verifies (0)";
+}
 
-# Tests from "Specification for RFID Air Interface" Version 1.2.0 EPCGlobal
-class CRC16EPC does Sum::CRC_16_EPC does Sum::Marshal::Bits[ :bits(16) ] { }
-is (CRC16EPC.new().finalize(0),CRC16EPC.new().finalize(0x3000,0x1111,0x2222,0x3333,0x4444,0x5555,0x6666)), (0xe2f0, 0x1835), "CRC_16_EPC gives expected result.";
-ok CRC16EPC.new().check(0x0800,0x1111,0xccae), "CRC_16_EPC self-verifies (residual)";
+class DN16 does Sum::CRC_16_DNP does Sum::Marshal::Bits[ :reflect ] { }
+given DN16.new {
+  is .finalize(0x31..0x39), 0xea82, "CRC_16_DNP gives expected result.";
+  ok .check(0x82, 0xea), "CRC_16_DNP self-verifies (0)";
+}
 
+class EN16 does Sum::CRC_16_EN_13757 does Sum::Marshal::Bits[ ] { }
+given EN16.new {
+  is .finalize(0x31..0x39), 0xc2b7, "CRC_16_EN13757 gives expected result.";
+  ok .check(0xc2, 0xb7), "CRC_16_EN13757 self-verifies (0)";
+}
 
+class T16 does Sum::CRC_16_T10_DIF does Sum::Marshal::Bits[ ] { }
+given T16.new {
+  is .finalize(0x31..0x39), 0xd0db, "CRC_16_T10_DIF gives expected result.";
+  ok .check(0xd0, 0xdb), "CRC_16_T10_DIF self-verifies (0)";
+}
 
+class TE16 does Sum::CRC_16_Teledisk does Sum::Marshal::Bits[ ] { }
+given TE16.new {
+  is .finalize(0x31..0x39), 0x0fb3, "CRC_16_Teledisk gives expected result.";
+  ok .check(0x0f, 0xb3), "CRC_16_Teledisk self-verifies (0)";
+}
+
+# Need independent test vector for this
+#class AR16 does Sum::CRC_16_ARINC does Sum::Marshal::Bits[ ] { }
+#given AR16.new {
+#  is .finalize(0x31..0x39), 0xXXXX, "CRC_16_ARINC gives expected result.";
+#  ok .check(0xXX, 0xXX), "CRC_16_ARINC self-verifies (0)";
+#}
 
 class PGP does Sum::CRC_24_PGP does Sum::Marshal::Bits[ ] { }
 my PGP $pgp .= new();

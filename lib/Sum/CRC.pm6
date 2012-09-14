@@ -580,32 +580,20 @@ role Sum::CRC_16_DDS_110
 
 =begin pod
 
-=head2
+=head2 role Sum::CRC_16_X25
+       does Sum::CRC[ :reflect, :iniv, :finv, :columns(16), :poly(0x1021),
+                      :residual(0xf47) ]
+
+    Implements a 16-bit CRC used in X.25 and other ITU-T standards.
+    This is the CCITT polynomial with the usual customary inversions
+    that protect against leading and trailing zeros, with bit order
+    reflected for use on LSB-first serial lines.
 
 =end pod
 
-# below still todo tests and doc
-
-role Sum::CRC_16_CCITT_FALSE
-    does Sum::CRC[ :iniv, :columns(16), :poly(0x1021) ] { }
-
-role Sum::CRC_16_Genibus
-    does Sum::CRC[ :finv, :columns(16), :poly(0x1021) ] { }
-
-role Sum::CRC_16_AUG_CCITT
-    does Sum::CRC[ :iniv(0x1d0f), :columns(16), :poly(0x1021) ] { }
-
-role Sum::CRC_16_CCITT
-    does Sum::CRC[ :reflect, :columns(16), :poly(0x1021) ] { }
-
-role Sum::CRC_16_mcrf4xx
-    does Sum::CRC[ :reflect, :iniv, :columns(16), :poly(0x1021) ] { }
-
 role Sum::CRC_16_X25
-    does Sum::CRC[ :reflect, :iniv, :finv, :columns(16), :poly(0x1021) ] { }
-
-role Sum::CRC_16_riello
-    does Sum::CRC[ :reflect, :iniv(0x554d), :columns(16), :poly(0x1021) ] { }
+    does Sum::CRC[ :reflect, :iniv, :finv, :columns(16), :poly(0x1021),
+                   :residual(0xf47) ] { }
 
 =begin pod
 
@@ -613,7 +601,8 @@ role Sum::CRC_16_riello
        does Sum::CRC[ :iniv, :finv, :columns(16), :poly(0x1021),
                       :residual(0xe2f0) ]
 
-    Implements a 16-bit CRC used in RFID.
+    Implements a 16-bit CRC used in RFID tags.  It is a modification
+    of C<Sum::CRC_8_X25> which does not require bit reflection.
 
 =end pod
 
@@ -621,28 +610,139 @@ role Sum::CRC_16_EPC
     does Sum::CRC[ :iniv, :finv, :columns(16), :poly(0x1021),
                    :residual(0xe2f0) ] { }
 
-# below todo tests and doc
-role Sum::CRC_16_XModem does Sum::CRC[ :columns(16), :poly(0x1021) ] { }
-role Sum::CRC_16_Kermit does Sum::CRC[ :reflect, :columns(16), :poly(0x1021) ] { }  # result may be byte swabbed
+=begin pod
 
-role Sum::CRC_16_DECT does Sum::CRC[ :iniv(1), :finv(1), :columns(16), :poly(0x589) ] { }
-role Sum::CRC_16_DECT  does Sum::CRC[ :columns(16), :poly(0x589) ] { }
+=head2 role Sum::CRC_16_CCITT_TRUE
+    does Sum::CRC[ :reflect, :columns(16), :poly(0x1021) ]
 
+    Implements a commonly used 16-Bit CRC.  This is version of
+    CRC which it is technically correct to call "CRC-16-CCITT",
+    though many call other CRCs this, referring only to the polynomial
+    in use.  It does not contain inversions, and so does not protect
+    against leading and trailing zeros.  It is bit reflected for
+    use on LSB-first transmission medium.
 
-# note that result may be byte-swabbed, need to check standard
-#role Sum::CRC_16_DNP
-#    does Sum::CRC[ :finv, :reflect, :columns(16), :poly(0x3d65) ] { }
-#role Sum::CRC_16_DNP does Sum::CRC[ :reflect, :iniv, :finv, :poly(0x3d65) ] { }
+=end pod
 
-role Sum::CRC_16_EN_13757 does Sum::CRC[ :iniv, :finv, :poly(0x3d65) ] { }
+role Sum::CRC_16_CCITT_TRUE
+    does Sum::CRC[ :reflect, :columns(16), :poly(0x1021) ] { }
 
-# linux kernel has impl.
-role Sum::CRC_16_T10_DIF does Sum::CRC[ :columns(16), :poly(0x8bb7) ] { }
+=begin pod
 
-role Sum::CRC_16_TeleDisk
+=head2 role Sum::CRC_16_XModem
+       does Sum::CRC[ :columns(16), :poly(0x1021) ]
+
+    Implements a 16-bit CRC as used in the XModem protocol.  Note this
+    contains no inversions and as such does not protect against leading
+    or trailing zeros.  It is a modification of CRC-16-CCITT-TRUE which
+    changes only the bit order.
+
+=end pod
+
+role Sum::CRC_16_XModem
+    does Sum::CRC[ :columns(16), :poly(0x1021) ] { }
+
+=begin pod
+
+=head2 role Sum::CRC_16_MCRF
+       does Sum::CRC[ :reflect, :iniv, :columns(16), :poly(0x1021) ]
+
+    Implements a 16-bit CRC used by some RFID chipsets.  Note that
+    this algorithm does not protect against trailing zeros.
+
+=end pod
+
+role Sum::CRC_16_MCRF
+    does Sum::CRC[ :reflect, :iniv, :columns(16), :poly(0x1021) ] { }
+
+=begin pod
+
+=head2 role Sum::CRC_16_CCITT_FALSE
+       does Sum::CRC[ :iniv, :columns(16), :poly(0x1021) ]
+
+    Calculates a 16-bit checksum which is in use e.g. in floppy
+    disks, but commonly mistaken for C<Sum::CRC_16_CCITT>, which
+    is slightly different.  It does not protect against trailing
+    zeros.
+
+=end pod
+
+role Sum::CRC_16_CCITT_FALSE
+    does Sum::CRC[ :iniv, :columns(16), :poly(0x1021) ] { }
+
+# Hold off on these for now.  After we can feed role params down, look at
+# how they are used.  The difference between the two may be better
+# handled at the instance level.
+#role Sum::CRC_16_DECT_R
+#    does Sum::CRC[ :finv(1), :columns(16), :poly(0x589), :residual(0x588) ]
+#
+#role Sum::CRC_16_DECT_X  does Sum::CRC[ :columns(16), :poly(0x589) ] { }
+
+=begin pod
+
+=head2 role Sum::CRC_16_DNP
+    does Sum::CRC[ :finv, :reflect, :columns(16), :poly(0x3d65),
+                   :residual(0x993a) ]
+
+    Implements a 16-bit CRC used in automation systems using
+    Distributed Network Protocol.
+
+=end pod
+
+role Sum::CRC_16_DNP
+    does Sum::CRC[ :finv, :reflect, :columns(16), :poly(0x3d65),
+                   :residual(0x993a) ] { }
+
+=begin pod
+
+=head2 role Sum::CRC_16_EN_13757
+       does Sum::CRC[ :finv, :columns(16), :poly(0x3d65),
+                      :residual(0x5c99) ]
+
+    Implements a 16-bit CRC used in utilities metering.
+
+=end pod
+
+role Sum::CRC_16_EN_13757
+    does Sum::CRC[ :finv, :columns(16), :poly(0x3d65),
+                   :residual(0x5c99) ] { }
+
+=begin pod
+
+=head2 role Sum::CRC_16_T10_DIF
+       does Sum::CRC[ :columns(16), :poly(0x8bb7) ]
+
+    Implements a 16-bit CRC used in SCSI.
+
+=end pod
+
+role Sum::CRC_16_T10_DIF
+    does Sum::CRC[ :columns(16), :poly(0x8bb7) ] { }
+
+=begin pod
+
+=head2 role Sum::CRC_16_Teledisk
+    does Sum::CRC[ :columns(16), :poly(0xa097) ]
+
+    Implements a 16-bit CRC used by Teledisk, DECNET, and other arcana.
+
+=end pod
+
+role Sum::CRC_16_Teledisk
     does Sum::CRC[ :columns(16), :poly(0xa097) ] { }
 
-role Sum::CRC_16_ARINC does Sum::CRC[ :columns(16), :poly(0xa02b) ] { }
+## =begin pod
+##
+## =head2 role Sum::CRC_16_ARINC
+##       does Sum::CRC[ :columns(16), :poly(0xa02b) ] { }
+##
+##    Implements a 16-bit CRC used in avionics video applications.
+##
+## =end pod
+
+# TODO: need to find 3rd party implementation or test vector
+#role Sum::CRC_16_ARINC
+#    does Sum::CRC[ :columns(16), :poly(0xa02b) ] { }
 
 #role Sum::CRC_24
 #    does Sum::CRC[ :columns(24), :poly(0x5d6dcb) ] { }
@@ -659,12 +759,11 @@ role Sum::CRC_16_ARINC does Sum::CRC[ :columns(16), :poly(0xa02b) ] { }
 role Sum::CRC_24_PGP
     does Sum::CRC[ :iniv(0xb704ce), :columns(24), :poly(0x864cfb) ] { }
 
-# unconvinced these merit distribution with the base code
-# from python module, claims 1..9 checksum 0x7979BD
+# Hold off on these for now.  After we can feed role params down, look at
+# how they are used.  The difference between the two may be better
+# handled at the instance level.
 #role Sum::CRC_24_FLexray_A
 #    does Sum::CRC[ :iniv(0xfedcba), :columns(24), :poly(0x5d6dcb) ] { }
-
-# from python module, claims 1..9 checksum 0x1f23b8
 #role Sum::CRC_24_Flexray_B
 #    does Sum::CRC[ :iniv(0xabcdef), :columns(24), :poly(0x5d6dcb) ] { }
 
