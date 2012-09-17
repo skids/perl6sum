@@ -32,25 +32,23 @@ is SHA1t.new().finalize(Buf.new(97 xx 56)),
 is SHA1t.new().finalize(Buf.new(97 xx 64)),
    0x0098ba824b5c16427bd7a1122a5a442a25ec644d,
    "SHA1 of a 64-byte buffer is correct.";
-
-todo "need to find 3rd party app that sums %8 != 0 bitfields", 6;
 is SHA1t.new().finalize(Buf.new(),True),
-   0x00, #TODO
+   0x59c4526aa2cc59f9a5f56b5579ba7108e7ccb61a,
    "SHA1 of a 1-bit buffer is correct.";
 is SHA1t.new().finalize(Buf.new(),True,False,True,False,True,False,False),
-   0x00, #TODO
+   0x2a01d85e3f920e9161dfc9ff45fbb778b05ec263,
    "SHA1 of a 7-bit buffer is correct.";
 is SHA1t.new().finalize(Buf.new(97),True),
-   0x00, #TODO
+   0x0a5f406d32e7c5fec1db35bddc1a9c148f459b04,
    "SHA1 of a 9-bit buffer is correct.";
-is SHA1t.new().finalize(Buf.new(0x31 xx 55),True,False,True,False,True,False,False),
-   0x00, #TODO
+is SHA1t.new().finalize(Buf.new(97 xx 55),True,False,True,False,True,False,False),
+   0xc581ddabbdfbc68448a04f9d3d17eccd9d48906e,
    "SHA1 of a 447-bit buffer is correct.";
-is SHA1t.new().finalize(Buf.new(0x31 xx 56),False),
-   0x00, #TODO
+is SHA1t.new().finalize(Buf.new(97 xx 56),True),
+   0xa728aa56bfeb09752ee39baeec23e1c5e3718de5, #TODO
    "SHA1 of a 449-bit buffer is correct.";
-is SHA1t.new().finalize(Buf.new(0x31 xx 63),True,False,True,False,True,False,False),
-   0x00, #TODO
+is SHA1t.new().finalize(Buf.new(97 xx 63),True,False,True,False,True,False,False),
+   0xa1c70b7a97d935e841a9e6280a608fca953c0c91,
    "SHA1 of a 511-bit buffer is correct.";
 
 class SHA0t does Sum::SHA1[:insecure_sha0_obselete] does Sum::Marshal::Raw { };
@@ -78,24 +76,23 @@ is SHA256t.new().finalize(Buf.new(97 xx 64)),
    0xffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb,
    "SHA-256 of a 64-byte buffer is correct.";
 
-todo "need to find 3rd party app that sums %8 != 0 bitfields", 6;
 is SHA256t.new().finalize(Buf.new(),True),
-   0x00, #TODO
+   0xb9debf7d52f36e6468a54817c1fa071166c3a63d384850e1575b42f702dc5aa1,
    "SHA-256 of a 1-bit buffer is correct.";
 is SHA256t.new().finalize(Buf.new(),True,False,True,False,True,False,False),
-   0x00, #TODO
+   0x0e5ba478e13af18fb66cfa7995471142101f9b32cc6f3f29c8a669c94eb6de77,
    "SHA-256 of a 7-bit buffer is correct.";
 is SHA256t.new().finalize(Buf.new(97),True),
-   0x00, #TODO
+   0x32c537397864e2e698c4979136e342d4698902c84298398496608e46c3c92b83,
    "SHA-256 of a 9-bit buffer is correct.";
-is SHA256t.new().finalize(Buf.new(0x31 xx 55),True,False,True,False,True,False,False),
-   0x00, #TODO
+is SHA256t.new().finalize(Buf.new(97 xx 55),True,False,True,False,True,False,False),
+   0x6982e8960c1d937d34586cdb06c1141dbe5fb7419ea24edd2941a1e0fd27a878,
    "SHA-256 of a 447-bit buffer is correct.";
-is SHA256t.new().finalize(Buf.new(0x31 xx 56),False),
-   0x00, #TODO
+is SHA256t.new().finalize(Buf.new(97 xx 56),True),
+   0x5542226c1c374f9c41507bc327300284a42abd726d4ae6a25b357777903fb8bb,
    "SHA-256 of a 449-bit buffer is correct.";
-is SHA256t.new().finalize(Buf.new(0x31 xx 63),True,False,True,False,True,False,False),
-   0x00, #TODO
+is SHA256t.new().finalize(Buf.new(97 xx 63),True,False,True,False,True,False,False),
+   0x5ffdf348fdad74aca3196af07b43730adfe366c394913e8ebc4f987d4d757a36,
    "SHA-256 of a 511-bit buffer is correct.";
 
 class SHA224t does Sum::SHA2[ :columns(224) ] does Sum::Marshal::Raw { };
@@ -125,24 +122,23 @@ is SHA512t.new().finalize(Buf.new(97 xx 128)),
    0xb73d1929aa615934e61a871596b3f3b33359f42b8175602e89f7e06e5f658a243667807ed300314b95cacdd579f3e33abdfbe351909519a846d465c59582f321,
    "SHA-512 of a 128-byte buffer is correct.";
 
-todo "need to find 3rd party app that sums %8 != 0 bitfields", 6;
 is SHA512t.new().finalize(Buf.new(),True),
-   0x00, #TODO
+   0x5f72ee8494a425ba13fc8c48ac0a05cbaae7e932e471e948cb524333745aa432c1851c0c43682b0e67d64626f8f45cf165f6b538a94c63be98224e969e75d7ed,
    "SHA-512 of a 1-bit buffer is correct.";
 is SHA512t.new().finalize(Buf.new(),True,False,True,False,True,False,False),
-   0x00, #TODO
+   0x94c664b71997309af62e6196f574850db1582e7a46c13fd3af091a20c343924df9d633a1a104e5397c4e9032b853d1ed6ee9db95573ce57c460930f370a174cd,
    "SHA-512 of a 7-bit buffer is correct.";
 is SHA512t.new().finalize(Buf.new(97),True),
-   0x00, #TODO
+   0x556467a856fa48f7f6087b59e5ff23c0d96a9fa5175c3c07699c69784afd2bae33a6873b97d8aa127aebf5febc0b40d34a4475cdb828ad91fc24d9be738285dd,
    "SHA-512 of a 9-bit buffer is correct.";
-is SHA512t.new().finalize(Buf.new(0x31 xx 111),True,False,True,False,True,False,False),
-   0x00, #TODO
+is SHA512t.new().finalize(Buf.new(97 xx 111),True,False,True,False,True,False,False),
+   0x9047c7f662d106c57245a810aa5f8abc04e7236e6f75295e1f170b5b94d52a40f457fda58443cf997c160b1a29753d77e0ba6fd19caaa03d3634b9c18fd81af0,
    "SHA-512 of a 895-bit buffer is correct.";
-is SHA512t.new().finalize(Buf.new(0x31 xx 112),False),
-   0x00, #TODO
-   "SHA-512 of a 896-bit buffer is correct.";
-is SHA512t.new().finalize(Buf.new(0x31 xx 127),True,False,True,False,True,False,False),
-   0x00, #TODO
+is SHA512t.new().finalize(Buf.new(97 xx 112),True),
+   0x77a3173ec2b388acdf8a72a8952126df13fb664f662f8ece563fd1ddd8b86ea23eb01f7a17beb82239d9ed1905a9b52dffbba725ec4bd35afec9bdb14dbdd079,
+   "SHA-512 of a 897-bit buffer is correct.";
+is SHA512t.new().finalize(Buf.new(97 xx 127),True,False,True,False,True,False,False),
+   0x33d2f8ddd4822267842fcf6cf600c3d8dbefe31fab82c6e9b2940a2d943c4938094e6c08bc9dc1886afde69c5d087d1a5d23f98c122bd55b2be97ed789040fbf,
    "SHA-512 of a 1023-bit buffer is correct.";
 
 class SHA384t does Sum::SHA2[ :columns(384) ] does Sum::Marshal::Raw { };
