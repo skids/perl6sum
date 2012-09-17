@@ -19,6 +19,12 @@ class X::Sum::Missing is Exception {
     }
 }
 
+class X::Sum::Spill is Exception {
+    method message {
+        "Maximum number of addends exceeded."
+    }
+}
+
 # Take care editing the pod here.  See below, and the t/sum.t test file.
 
 =begin pod

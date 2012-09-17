@@ -125,6 +125,8 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False ] does Sum {
 
         # Update the count of the total number of bits sent.
         $!o += $block.elems * 8 + $bits;
+        # See note in .finalize.
+        $!o &= 0x1ffffffffffffffff if ($!o >  0x1ffffffffffffffff);
 
         # Check if buffer, bits, the added 1 bit, and the length fit in a block
         if $block.elems * 8 + $bits + 1 + 64 < 513 { # Yes
@@ -190,6 +192,8 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False ] does Sum {
 
         # Update the size in bits.
         $!o += 512;
+        # See note in .finalize.
+        $!o &= 0x1ffffffffffffffff if ($!o >  0x1ffffffffffffffff);
     };
     method add (*@addends) { self.do_add(|@addends) }
 
@@ -197,6 +201,14 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False ] does Sum {
         self.push(@addends);
 
         self.add(Buf.new()) unless $!final;
+
+	# Whether or not allowing $!o to wrap is cryptographically
+        # harmless, the specification does limit the length of
+        # messages by writ.  Above we let the values wrap at a bit above
+        # the limit.  This means one can continue to push addends into
+        # a sum that is destined to fail, but if you've let them push
+        # that many addends, you probably have bigger problems.
+	return fail(X::Sum::Spill.new()) if $!o > 0xffffffffffffffff;
 
         [+|] (($!a, $!b, $!c, $!d, $!e) »+<« (32 X* (4,3,2,1,0)));
     }
@@ -317,6 +329,14 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256 ] does Sum {
 
         # Update the count of the total number of bits sent.
         $!o += $block.elems * 8 + $bits;
+        if ($columns > 256) {
+            $!o &= 0x1ffffffffffffffffffffffffffffffff
+                if $!o > 0x1ffffffffffffffffffffffffffffffff;
+        }
+        else {
+            $!o &= 0x1ffffffffffffffff
+                if $!o > 0x1ffffffffffffffff;
+        }
 
         # Check if buffer, bits, the added 1 bit, and the length fit in a block
         if $block.elems * 8 + $bits + 1 + $lbits < $bbytes * 8 + 1 { # Yes
@@ -430,6 +450,14 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256 ] does Sum {
 
         # Update the size in bits.
         $!o += $bbytes * 8;
+        if ($columns > 256) {
+            $!o &= 0x1ffffffffffffffffffffffffffffffff
+                if $!o > 0x1ffffffffffffffffffffffffffffffff;
+        }
+        else {
+            $!o &= 0x1ffffffffffffffff
+                if $!o > 0x1ffffffffffffffff;
+        }
     };
     method add (*@addends) { self.do_add(|@addends) }
 
@@ -437,6 +465,16 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256 ] does Sum {
         self.push(@addends);
 
         self.add(Buf.new()) unless $!final;
+
+	# Whether or not allowing $!o to wrap is cryptographically
+        # harmless, the specification does limit the length of
+        # messages by writ.  Above we let the values wrap at a bit above
+        # the limit.  This means one can continue to push addends into
+        # a sum that is destined to fail, but if you've let them push
+        # that many addends, you probably have bigger problems.
+	return fail(X::Sum::Spill.new())
+            if $!o > 0xffffffffffffffffffffffffffffffff or
+                $columns < 257 and $!o > 0xffffffffffffffff;
 
         given $columns {
             when 224 { [+|] (($!a, $!b, $!c, $!d, $!e, $!f, $!g)
