@@ -8,21 +8,21 @@ Sum::SHA
 
     use Sum::SHA;
 
-    class SHA1 does Sum::SHA1 does Sum::Marshal::Raw { }
-    my SHA1 $a .= new();
+    class mySHA1 does Sum::SHA1 does Sum::Marshal::Raw { }
+    my mySHA1 $a .= new();
     $a.finalize("123456789".encode('ascii')).say;
         # 1414485752856024225500297739715962456813268251713
 
     # SHA-224
-    class SHA2 does Sum::SHA2[:columns(224)] does Sum::Marshal::Raw { }
-    my SHA2 $b .= new();
+    class mySHA2 does Sum::SHA2[:columns(224)] does Sum::Marshal::Raw { }
+    my mySHA2 $b .= new();
     $b.finalize("123456789".encode('ascii')).say;
         # 16349067602210014067037177823623301242625642097093531536712287864097
 
     # When dealing with obselete systems that use SHA0
-    class SHA0 does Sum::SHA1[:insecure_sha0_obselete]
+    class mySHA0 does Sum::SHA1[:insecure_sha0_obselete]
         does Sum::Marshal::Raw { }
-    my SHA0 $c .= new();
+    my mySHA0 $c .= new();
     $c.finalize("123456789".encode('ascii')).say;
         # 1371362676478658660830737973868471486175721482632
 
@@ -60,7 +60,7 @@ $Sum::SHA::Doc::synopsis = $=pod[0].content[3..6]>>.content.Str;
 
 =head1 ROLES
 
-=head2 role Sum::SHA1 [ :$insecure_sha0_old = False ] does Sum
+=head2 role Sum::SHA1 [ :$insecure_sha0_old = False, :$mod8 = False ] does Sum
 
     The C<Sum::SHA1> parametric role is used to create a type of C<Sum>
     that calculates a SHA1 message digest.
@@ -75,25 +75,49 @@ $Sum::SHA::Doc::synopsis = $=pod[0].content[3..6]>>.content.Str;
     C<Sum::Marshal::Block> roles may be mixed in to allow for accumulation
     of smaller addends and to split large messages into blocks.
 
+    If the C<:mod8> flag is provided, then the resulting C<Sum> will
+    only be able to handle messages that end on a byte boundary.
+    The S<Sum> will no longer accept up to seven bit addends after a
+    short block.  You probably do want to specify this flag unless you
+    actually need to process bitfields of lengths that are not modulo 8.
+    This may speed up the pure Perl6 implementation slightly, and since
+    most third party high-speed hash libraries cannot handle raw bit
+    data, it will be necessary to provide this flag to enable use
+    of some of these libraries in the future (presently not implemented.)
+
 =end pod
 
 use Sum;
 
-role Sum::SHA1 [ :$insecure_sha0_obselete = False ] does Sum {
+role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
 
-    has $!a is rw;
-    has $!b is rw;
-    has $!c is rw;
-    has $!d is rw;
-    has $!e is rw;
     has $!o is rw = 0;
     has $!final is rw;
+    has @!w is rw;     # "Parsed" message gets bound here.
+    has @!s is rw;     # Current hash state.  H in specification.
 
     submethod BUILD () {
-        ($!a,$!b,$!c,$!d,$!e) =
-            (0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0);
-
+        @!s = (0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0);
         $!final = False;
+    }
+
+    method comp () {
+
+        my ($a,$b,$c,$d,$e) = @!s[];
+
+        for ((0x5A827999,{ $b +& $c +| (+^$b) +& $d }).item xx 20,
+             (0x6ED9EBA1,{ $b +^ $c +^ $d }).item xx 20,
+             (0x8F1BBCDC,{ $b +& $c +| $b +& $d +| $c +& $d }).item xx 20,
+             (0xCA62C1D6,{ $b +^ $c +^ $d }).item xx 20).kv
+            -> $i,($k,$f) {
+
+            ($b,$c,$d,$e,$a) =
+                ($a, rol($b,30), $c, $d,
+                 0xffffffff +& (rol($a,5) + $f() + $e + $k + @!w[$i]));
+
+        }
+
+        @!s[] = 0xffffffff X+& (@!s[] >>+<< (0xffffffff X+& ($a,$b,$c,$d,$e)));
     }
 
     # A moment of silence for the pixies that die every time something
@@ -169,26 +193,8 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False ] does Sum {
         @m.push(rol(([+^] @m[* <<-<< (3,8,14,16)]),+!$insecure_sha0_obselete))
             for 16..^80;
 
-        # Load the initial/chained state.
-        my ($a,$b,$c,$d,$e) = ($!a, $!b, $!c, $!d, $!e);
-
-        # Mix.
-        for ((0x5A827999,{ $b +& $c +| (+^$b) +& $d }).item xx 20,
-             (0x6ED9EBA1,{ $b +^ $c +^ $d }).item xx 20,
-             (0x8F1BBCDC,{ $b +& $c +| $b +& $d +| $c +& $d }).item xx 20,
-             (0xCA62C1D6,{ $b +^ $c +^ $d }).item xx 20).kv
-            -> $i,($k,$f) {
-
-            ($b,$c,$d,$e,$a) =
-                ($a, rol($b,30), $c, $d,
-                 0xffffffff +& (rol($a,5) + $f() + $e + $k + @m[$i]));
-
-        }
-
-        # merge the new state
-        ($!a, $!b, $!c, $!d, $!e) =
-           0xffffffff X+& (($!a, $!b, $!c, $!d, $!e)
-                            >>+<< (0xffffffff X+& ($a,$b,$c,$d,$e)));
+	@!w := @m;
+        self.comp;
 
         # Update the size in bits.
         $!o += 512;
@@ -203,14 +209,14 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False ] does Sum {
         self.add(Buf.new()) unless $!final;
 
 	# Whether or not allowing $!o to wrap is cryptographically
-        # harmless, the specification does limit the length of
-        # messages by writ.  Above we let the values wrap at a bit above
-        # the limit.  This means one can continue to push addends into
-        # a sum that is destined to fail, but if you've let them push
-        # that many addends, you probably have bigger problems.
+        # wise, the specification does limit the length of messages
+        # by writ.  Above we let the values wrap at a bit above the
+        # limit.  This means one can continue to push addends into
+        # a sum that is destined to fail, but if you've let them
+        # push that many addends, you probably have bigger problems.
 	return fail(X::Sum::Spill.new()) if $!o > 0xffffffffffffffff;
 
-        [+|] (($!a, $!b, $!c, $!d, $!e) »+<« (32 X* (4,3,2,1,0)));
+        [+|] (@!s[] »+<« (32 X* (4,3,2,1,0)));
     }
     method Numeric () { self.finalize };
 
@@ -218,7 +224,7 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False ] does Sum {
 
 =begin pod
 
-=head2 role Sum::SHA2 [ :$columns = 256 ] does Sum
+=head2 role Sum::SHA2 [ :$columns = 256, :$mod8 = False ] does Sum
 
     The C<Sum::SHA2> parametric role is used to create a type of C<Sum>
     that calculates a SHA2 message digest.
@@ -238,22 +244,28 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False ] does Sum {
     C<Sum::Marshal::Block> roles may be mixed in to allow for accumulation
     of smaller addends and to split large messages into blocks.
 
+    If the C<:mod8> flag is provided, then the resulting C<Sum> will
+    only be able to handle messages that end on a byte boundary.
+    The S<Sum> will no longer accept up to seven bit addends after a
+    short block.  You probably do want to specify this flag unless you
+    actually need to process bitfields of lengths that are not modulo 8.
+    This may speed up the pure Perl6 implementation slightly, and since
+    most third party high-speed hash libraries cannot handle raw bit
+    data, it will be necessary to provide this flag to enable use
+    of some of these libraries in the future (presently not implemented.)
+
 =end pod
 
 use Sum;
 
-role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256 ] does Sum {
+role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
+                 :$mod8 = False ]
+     does Sum {
 
-    has $!a is rw;
-    has $!b is rw;
-    has $!c is rw;
-    has $!d is rw;
-    has $!e is rw;
-    has $!f is rw;
-    has $!g is rw;
-    has $!h is rw;
     has $!o is rw = 0;
     has $!final is rw;
+    has @!w is rw;     # "Parsed" message gets bound here.
+    has @!s is rw;     # Current hash state.  H in specification.
 
     my $rwidth = ($columns > 256) ?? 64 !! 32;
     my $rmask = (1 +< $rwidth) - 1; # Hopefully will go away with native types
@@ -284,7 +296,7 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256 ] does Sum {
   »+>» (64 - $rwidth);
 
     submethod BUILD () {
-	($!a,$!b,$!c,$!d,$!e,$!f,$!g,$!h) =
+        @!s =
             (given $columns {
                  when 224 { (0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
                              0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4)}
@@ -308,6 +320,47 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256 ] does Sum {
         my $tmp = ($v +& $rmask) +> $count;
         $tmp +|= ($v +< ($rwidth - $count)) +& $rmask;
 	$tmp;
+    }
+
+    method comp () {
+
+        my ($a,$b,$c,$d,$e,$f,$g,$h) = @!s[];
+
+        if ($bbytes == 64) {
+            for ^64 -> $i {
+                # We'll mask this below
+                my $t1 = [+] $h, @k[$i], @!w[$i],
+                             ($g +^ ($e +& ($f +^ $g))),
+                             ([+^] ($e Xror (6,11,25)));
+                # We'll mask this below
+                my $t2 = [+] ([+^] ($a Xror (2,13,22))),
+                             ([+^] (($a,$a,$b) >>+&<< ($b,$c,$c)));
+
+                ($a,$b,$c,$d,$e,$f,$g,$h) =
+                    $rmask +& ($t1 + $t2), $a, $b, $c,
+                    $rmask +& ($d + $t1), $e, $f, $g;
+            }
+        }
+        else {
+            for ^80 -> $i {
+                # We'll mask this below
+                my $t1 = [+] $h, @k[$i], @!w[$i],
+                             ($g +^ ($e +& ($f +^ $g))),
+                             ([+^] ($e Xror (14,18,41)));
+
+                # We'll mask this below
+                my $t2 = [+] ([+^] ($a Xror (28,34,39))),
+                             ([+^] (($a,$a,$b) >>+&<< ($b,$c,$c)));
+
+                ($a,$b,$c,$d,$e,$f,$g,$h) =
+                    $rmask +& ($t1 + $t2), $a, $b, $c,
+                    $rmask +& ($d + $t1), $e, $f, $g;
+            }
+        }
+
+        # merge the new state
+        @!s[] = $rmask X+& (@!s[] >>+<< ($rmask X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
+
     }
 
     multi method do_add (*@addends) {
@@ -406,47 +459,8 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256 ] does Sum {
                 )) for 16..^80;
         }
 
-        # Load the initial/chained state.
-        my ($a,$b,$c,$d,$e,$f,$g,$h) =
-            ($!a, $!b, $!c, $!d, $!e, $!f, $!g, $!h);
-
-        # Mix.
-        if ($bbytes == 64) {
-            for ^64 -> $i {
-                # We'll mask this below
-                my $t1 = [+] $h, @k[$i], @m[$i],
-                             ($e +& $f) +^ ((+^$e) +& $g),
-                             ([+^] ($e Xror (6,11,25)));
-                # We'll mask this below
-                my $t2 = [+] ([+^] ($a Xror (2,13,22))),
-                             ([+^] (($a,$a,$b) >>+&<< ($b,$c,$c)));
-
-                ($a,$b,$c,$d,$e,$f,$g,$h) =
-                    $rmask +& ($t1 + $t2), $a, $b, $c,
-                    $rmask +& ($d + $t1), $e, $f, $g;
-            }
-        }
-        else {
-            for ^80 -> $i {
-                # We'll mask this below
-                my $t1 = [+] $h, @k[$i], @m[$i],
-                             ($g +^ ($e +& ($f +^ $g))),
-                             ([+^] ($e Xror (14,18,41)));
-
-                # We'll mask this below
-                my $t2 = [+] ([+^] ($a Xror (28,34,39))),
-                             ([+^] (($a,$a,$b) >>+&<< ($b,$c,$c)));
-
-                ($a,$b,$c,$d,$e,$f,$g,$h) =
-                    $rmask +& ($t1 + $t2), $a, $b, $c,
-                    $rmask +& ($d + $t1), $e, $f, $g;
-            }
-        }
-
-        # merge the new state
-        ($!a, $!b, $!c, $!d, $!e, $!f, $!g, $!h) =
-           $rmask X+& (($!a, $!b, $!c, $!d, $!e, $!f, $!g, $!h)
-                        >>+<< ($rmask X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
+	@!w := @m;
+        self.comp;
 
         # Update the size in bits.
         $!o += $bbytes * 8;
@@ -477,14 +491,10 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256 ] does Sum {
                 $columns < 257 and $!o > 0xffffffffffffffff;
 
         given $columns {
-            when 224 { [+|] (($!a, $!b, $!c, $!d, $!e, $!f, $!g)
-                       »+<« (32 X* (6,5,4,3,2,1,0))) }
-            when 256 { [+|] (($!a, $!b, $!c, $!d, $!e, $!f, $!g, $!h)
-                       »+<« (32 X* (7,6,5,4,3,2,1,0))) }
-            when 384 { [+|] (($!a, $!b, $!c, $!d, $!e, $!f)
-                       »+<« (64 X* (5,4,3,2,1,0))) }
-            when 512 { [+|] (($!a, $!b, $!c, $!d, $!e, $!f, $!g, $!h)
-                       »+<« (64 X* (7,6,5,4,3,2,1,0))) }
+            when 224 { [+|] (@!s[0..6] »+<« (32 X* (6,5,4,3,2,1,0)))   }
+            when 256 { [+|] (@!s[]     »+<« (32 X* (7,6,5,4,3,2,1,0))) }
+            when 384 { [+|] (@!s[0..5] »+<« (64 X* (5,4,3,2,1,0)))     }
+            when 512 { [+|] (@!s[]     »+<« (64 X* (7,6,5,4,3,2,1,0))) }
         }
     }
     method Numeric () { self.finalize };
