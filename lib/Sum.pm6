@@ -239,7 +239,7 @@ role Sum {
     # but do not elaborate.
     #
     # Until we know when and how that will be called, we trap it.
-    method clear (|$parms) {
+    method clear (|parms) {
         die(".clear called and we don't know what it does yet.")
     }
 }
