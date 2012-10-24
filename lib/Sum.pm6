@@ -281,10 +281,9 @@ role Sum::Partial {
 
     method partials (*@addends --> List) {
         flat self.marshal(|@addends).map: {
-            # XXX should we return a list with all Failures in it instead?
-            return($^addend) if $addend ~~ Failure;
+            last($^addend) if $addend ~~ Failure;
             given self.add($addend) {
-                when Failure { return $_ };
+                when Failure { last $_ };
             }
             self.finalize;
         }

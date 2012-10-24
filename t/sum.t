@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 64;
+plan 66;
 
 use Sum;
 ok(1,'We use Sum and we are still alive');
@@ -119,6 +119,23 @@ my @d;
 #? rakudo skip 'feed through a slurpy arity function'
 #@d <== $h.partials <== (2,3);
 #is @d.join(""), "3942", "partials inserts values in a feed"
+is $h.partials(4,5,Failure.new(X::AdHoc.new()),6).map({.WHAT.gist}), 'Int() Int() Failure()', "partials stops iterating on Failure (Partial,Cooked).";
+
+class Foo3r does Sum does Sum::Partial does Sum::Marshal::Raw {
+        has $.accum is rw = 0;
+        method finalize (*@addends) {
+            self.push(@addends);
+            $.accum;
+        }
+        method Numeric () { self.finalize };
+        method add (*@addends) {
+            $.accum += [+] @addends;
+        };
+}
+my Foo3r $hr .= new();
+
+# XXX do some tests of laziness of partials method
+is $hr.partials(4,5,Failure.new(X::AdHoc.new()),6).map({.WHAT.gist}), 'Int() Int() Failure()', "partials stops iterating on Failure (Partial,Raw).";
 
 lives_ok {
 class Foo4 does Sum does Sum::Partial does Sum::Marshal::StrOrds {
