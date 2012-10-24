@@ -166,6 +166,24 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
 
 =begin pod
 
+=head1 CONVENIENCE ROLES
+
+    The following additional roles may be used to quickly create
+    classes that implement published CRC standards.  Note that
+    there are cases where different CRC parameters have been
+    mistakenly called by the same name.  Also note that a given
+    set of CRC parameters may be known by many names.  These
+    roles are named to be unambiguous, even when an alternative
+    name may be more famous.
+
+    No complete list of names for different parameter sets is
+    offered by C<Sum::CRC>.  For that, please consult the references
+    below.
+
+=end pod
+
+=begin pod
+
 =head2 role Sum::CRC_3_ROHC
        does Sum::CRC[ :reflect, :columns(3), :poly(0x3) ]
 
