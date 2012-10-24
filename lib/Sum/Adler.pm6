@@ -121,6 +121,19 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
     }
     method Numeric () { self.finalize };
 
+    method buf8 () {
+        my $f = self.finalize;
+        my $bytes = ($columnsA + $columnsB + 7) div 8;
+        Buf.new( 255 X+& ($f X+> (8 X* reverse(^$bytes))) );
+    }
+    method buf1 () {
+        my $f = self.finalize;
+        Buf.new( 1 X+& ($f X+> reverse(^($columnsA + $columnsB))) );
+    }
+    # Although these algorithms can produce results not evenly packable,
+    # common cases are packable and users will expect byte results.
+    method Buf () { (($columnsA + $columnsB) % 8) ?? self.buf1 !! self.buf8 }
+
     method checkvals(*@addends) {
         self.finalize(@addends);
         return fail(X::Sum::CheckVals.new()) if ($modulusB > $modulusA);

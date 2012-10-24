@@ -219,7 +219,10 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
         [+|] (@!s[] »+<« (32 X* (4,3,2,1,0)));
     }
     method Numeric () { self.finalize };
-
+    method buf8 () {
+        Buf.new(255 X+& (@!s[] X+> (24,16,8,0)));
+    }
+    method Buf () { self.buf8 }
 }
 
 =begin pod
@@ -498,6 +501,17 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
         }
     }
     method Numeric () { self.finalize };
+    method buf8 () {
+        Buf.new(255 X+&
+                   (given $columns {
+                        when 224 { (@!s[0..6] X+> (8 X* (3,2,1,0)))         }
+                        when 256 { (@!s[]     X+> (8 X* (3,2,1,0)))         }
+                        when 384 { (@!s[0..5] X+> (8 X* (7,6,5,4,3,2,1,0))) }
+                        when 512 { (@!s[]     X+> (8 X* (7,6,5,4,3,2,1,0))) }
+                    })
+        );
+    }
+    method Buf () { self.buf8 }
 }
 
 

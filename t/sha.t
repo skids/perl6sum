@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 43;
+plan 48;
 
 use Sum::SHA;
 ok 1,'We use Sum::SHA and we are still alive';
@@ -17,9 +17,12 @@ class SHA1t does Sum::SHA1 does Sum::Marshal::Raw { };
 my SHA1t $s .= new();
 ok $s.WHAT === SHA1t, 'We create a SHA1 class and object';
 
-is SHA1t.new().finalize(Buf.new()),
+given (SHA1t.new()) {
+is .finalize(Buf.new()),
    0xda39a3ee5e6b4b0d3255bfef95601890afd80709,
    "SHA1 of an empty buffer is correct.";
+is .Buf.values, (0xda,0x39,0xa3,0xee,0x5e,0x6b,0x4b,0x0d,0x32,0x55,0xbf,0xef,0x95,0x60,0x18,0x90,0xaf,0xd8,0x07,0x09), "SHA1 Buf method works";
+}
 is SHA1t.new().finalize(Buf.new(97)),
    0x86f7e437faa5a7fce15d1ddcb9eaeaea377667b8,
    "SHA1 of a 1-byte buffer is correct.";
@@ -60,9 +63,12 @@ class SHA256t does Sum::SHA2[ :columns(256) ] does Sum::Marshal::Raw { };
 my SHA256t $s2 .= new();
 ok $s2.WHAT === SHA256t, 'We create a SHA2 (SHA-256) class and object';
 
-is SHA256t.new().finalize(Buf.new()),
-   0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,
-   "SHA-256 of an empty buffer is correct.";
+given (SHA256t.new()) {
+  is .finalize(Buf.new()),
+     0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,
+     "SHA-256 of an empty buffer is correct.";
+  is .Buf.values.fmt("%x"), "e3 b0 c4 42 98 fc 1c 14 9a fb f4 c8 99 6f b9 24 27 ae 41 e4 64 9b 93 4c a4 95 99 1b 78 52 b8 55", "SHA256 Buf method works";
+}
 is SHA256t.new().finalize(Buf.new(97)),
    0xca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb,
    "SHA-256 of a 1-byte buffer is correct.";
@@ -98,17 +104,23 @@ is SHA256t.new().finalize(Buf.new(97 xx 63),True,False,True,False,True,False,Fal
 class SHA224t does Sum::SHA2[ :columns(224) ] does Sum::Marshal::Raw { };
 my SHA224t $s3 .= new();
 ok $s3.WHAT === SHA224t, 'We create a SHA2 (SHA-224) class and object';
-is SHA224t.new().finalize(Buf.new(97 xx 55)),
-   0xfb0bd626a70c28541dfa781bb5cc4d7d7f56622a58f01a0b1ddd646f,
-   "SHA-224 expected result is correct.";
+given (SHA224t.new()) {
+  is .finalize(Buf.new(97 xx 55)),
+     0xfb0bd626a70c28541dfa781bb5cc4d7d7f56622a58f01a0b1ddd646f,
+     "SHA-224 expected result is correct.";
+  is .Buf.values.fmt("%x"), "fb b d6 26 a7 c 28 54 1d fa 78 1b b5 cc 4d 7d 7f 56 62 2a 58 f0 1a b 1d dd 64 6f", "SHA224 Buf method works";
+}
 
 class SHA512t does Sum::SHA2[ :columns(512) ] does Sum::Marshal::Raw { };
 my SHA512t $s4 .= new();
 ok $s4.WHAT === SHA512t, 'We create a SHA2 (SHA-512) class and object';
 
-is SHA512t.new().finalize(Buf.new()),
-   0xcf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e,
-   "SHA-512 of an empty buffer is correct.";
+given (SHA512t.new()) {
+  is .finalize(Buf.new()),
+     0xcf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e,
+     "SHA-512 of an empty buffer is correct.";
+  is .Buf.values.fmt("%x"), "cf 83 e1 35 7e ef b8 bd f1 54 28 50 d6 6d 80 7 d6 20 e4 5 b 57 15 dc 83 f4 a9 21 d3 6c e9 ce 47 d0 d1 3c 5d 85 f2 b0 ff 83 18 d2 87 7e ec 2f 63 b9 31 bd 47 41 7a 81 a5 38 32 7a f9 27 da 3e", "SHA512 Buf method works";
+}
 is SHA512t.new().finalize(Buf.new(97)),
    0x1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75,
    "SHA-512 of a 1-byte buffer is correct.";
@@ -145,9 +157,13 @@ class SHA384t does Sum::SHA2[ :columns(384) ] does Sum::Marshal::Raw { };
 my SHA384t $s5 .= new();
 ok $s5.WHAT === SHA384t, 'We create a SHA2 (SHA-384) class and object';
 
-is SHA384t.new().finalize(Buf.new(97 xx 111)),
-   0x3c37955051cb5c3026f94d551d5b5e2ac38d572ae4e07172085fed81f8466b8f90dc23a8ffcdea0b8d8e58e8fdacc80a,
-   "SHA-384 expected result is correct.";
+given (SHA384t.new()) {
+  is .finalize(Buf.new(97 xx 111)),
+     0x3c37955051cb5c3026f94d551d5b5e2ac38d572ae4e07172085fed81f8466b8f90dc23a8ffcdea0b8d8e58e8fdacc80a,
+     "SHA-384 expected result is correct.";
+  is .Buf.values.fmt("%x"), "3c 37 95 50 51 cb 5c 30 26 f9 4d 55 1d 5b 5e 2a c3 8d 57 2a e4 e0 71 72 8 5f ed 81 f8 46 6b 8f 90 dc 23 a8 ff cd ea b 8d 8e 58 e8 fd ac c8 a", "SHA384 Buf method works";
+}
+
 
 # Now grab the code in the synopsis from the POD and make sure it runs.
 # This is currently complete hackery but might improve when pod support does.

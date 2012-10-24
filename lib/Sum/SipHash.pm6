@@ -203,5 +203,8 @@ role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum {
         [+^] ($v0, $v1, $v2, $v3);
     }
     method Numeric () { self.finalize };
-
+    method buf8 () {
+        Buf.new(255 X+& (self.finalize X+> (56,48,40,32,24,16,8,0)));
+    }
+    method Buf () { self.buf8 }
 }

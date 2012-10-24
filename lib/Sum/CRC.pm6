@@ -142,7 +142,19 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
         }
         return $rev;
     }
+
     method Numeric () { self.finalize };
+
+    method buf8 () {
+        my $f = self.finalize;
+        my $bytes = ($columns + 7) div 8;
+        Buf.new( 255 X+& ($f X+> (8 X* reverse(^$bytes))) );
+    }
+    method buf1 () {
+        my $f = self.finalize;
+        Buf.new( 1 X+& ($f X+> reverse(^$columns)) );
+    }
+    method Buf () { self.buf1; }
 
     method check(*@addends) {
         given self.finalize(@addends) {

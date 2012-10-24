@@ -129,8 +129,18 @@ role Sum {
 
         C<$checksum = MySum.new.finalize(1,3,5,7,9);>
 
-    A C<Sum> will generally provide coercion methods, such as C<.Numeric>.
-    These methods are often simply aliases for C<.finalize()>.
+    A C<Sum> will generally provide coercion methods, such as C<.Numeric>,
+    which is often simply aliases for C<.finalize()>.  Which coercion methods
+    are available may vary across different types of C<Sum>.  In particular,
+    sums will provide a C<.buf8> coercion method if their results are always
+    expressed in bytes, and a C<.buf1> coercion method if their results
+    may contain a number of bits that does not pack evenly into bytes.  For
+    convenience the latter may also provide a C<.buf8> method.  The C<.Buf>
+    coercion method will eventually return one of the above results as
+    natural to the type of C<Sum>, but given that C<buf8> and C<buf1> are
+    not implemented in the language core yet, all such methods return a
+    C<Buf> at this time.  As such, explicit use of the C<.buf8> and C<.buf1>
+    methods is advised in the interim.
 
 =end pod
 

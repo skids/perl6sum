@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 117;
+plan 127;
 
 use Sum::CRC;
 ok(1,'We use Sum::CRC and we are still alive');
@@ -56,6 +56,9 @@ ok $j7.check(True xx 3, False, True, False, True), "CRC_7_JEDEC self-verifies (0
 class CRC7ROHC does Sum::CRC_7_ROHC does Sum::Marshal::Bits[ :reflect ] { }
 my CRC7ROHC $r7 .= new();
 is $r7.finalize(0x31..0x39), 0x53, "CRC_7_ROHC gives expected results";
+is $r7.buf8.gist, "Buf:0x<53>", "buf8 works on 7 column CRC";
+is $r7.buf1.values, "1 0 1 0 0 1 1", "buf1 works on 7 column CRC";
+is $r7.Buf.values, "1 0 1 0 0 1 1", "Buf returns buf1";
 ok $r7.check(True,True,False,False,True,False,True), "CRC_7_ROHC self-verifies (0)";
 
 #class CRC7 does Sum::CRC_7 does Sum::Marshal::Bits[ ] { }
@@ -111,6 +114,7 @@ given SAE.new {
 class AU does Sum::CRC_8_AUTOSAR does Sum::Marshal::Bits[ ] { }
 given AU.new {
   is .finalize(0x31..0x39), 0xdf, "CRC_8_AUTOSAR gives expected value";
+  is .buf8.gist, "Buf:0x<df>", "buf8 works on 8 column CRC";
   ok .check(0xdf), "CRC_8_AUTOSAR self-verifies (residual)";
 }
 
@@ -147,6 +151,7 @@ given D14.new {
 class C15 does Sum::CRC_15_CAN does Sum::Marshal::Bits[ ] { }
 given C15.new {
   is .finalize(0x31..0x39),0x059e, "CRC_15_CAN gives expected value";
+  is .buf8.gist, "Buf:0x<05 9e>", "buf8 works on 15 column CRC";
   ok .check(False xx 4,True,False,True,0x9e), "CRC_15_CAN self-verifies (0)";
 }
 
@@ -234,6 +239,7 @@ given XM16.new {
 class MC16 does Sum::CRC_16_MCRF does Sum::Marshal::Bits[ :reflect ] { }
 given MC16.new {
   is .finalize(0x31..0x39), 0x6f91, "CRC_16_MCRF gives expected result.";
+  is .buf8.gist, "Buf:0x<6f 91>", "buf8 works on 16 column CRC";
   ok .check(0x91, 0x6f), "CRC_16_MCRF self-verifies (0)";
 }
 
@@ -278,6 +284,7 @@ given TE16.new {
 class PGP does Sum::CRC_24_PGP does Sum::Marshal::Bits[ ] { }
 my PGP $pgp .= new();
 is $pgp.finalize(0x31..0x39), 0x21cf02, "CRC_24_PGP gives expected value";
+is $pgp.buf8.gist, "Buf:0x<21 cf 02>", "buf8 works on 24 column CRC";
 ok $pgp.check(0x21,0xcf,0x02), "CRC_24_PGP self-verifies (0)";
 
 class CRC32 does Sum::CRC_32 does Sum::Marshal::Bits[ :bits(32), :reflect ]
@@ -312,6 +319,7 @@ ok $bz2.check(0xfc,0x89,0x19,0x18), "CRC_32_BZ2 self-verifies (residual)";
 class C32 does Sum::CRC_32C does Sum::Marshal::Bits[ :reflect ] { }
 my C32 $c32 .= new();
 is $c32.finalize(0x31..0x39), 0xe3069283, "CRC_32C gives expected value";
+is $c32.buf8.gist, "Buf:0x<e3 06 92 83>", "buf8 works on 32 column CRC";
 ok $c32.check(0x83,0x92,0x06,0xe3), "CRC_32C self-verifies (residual)";
 
 class D32 does Sum::CRC_32D does Sum::Marshal::Bits[ :reflect ] { }
@@ -357,9 +365,11 @@ ok $j64.check(reverse(0xca,0xa7,0x17,0x16,0x86,0x09,0xf2,0x81)), "CRC_64_Jones s
 class XZ does Sum::CRC_64_XZ does Sum::Marshal::Bits[ :reflect ] { }
 my XZ $xz64 .= new();
 is $xz64.finalize(0x31..0x39), 0x995dc9bbdf1939fa, "CRC_64_XZ gives expected value";
+is $xz64.buf8.gist, "Buf:0x<99 5d c9 bb df 19 39 fa>", "buf8 works on 64 column CRC";
 ok $xz64.check(reverse(0x99,0x5d,0xc9,0xbb,0xdf,0x19,0x39,0xfa)), "CRC_64_XZ self-verifies (residual)";
 
 class DARC does Sum::CRC_82_DARC does Sum::Marshal::Bits[ :reflect ] { }
 my DARC $d82 .= new();
 is $d82.finalize(0x31..0x39), 0x09ea83f625023801fd612, "CRC_82_DARC gives expected value";
+is $d82.buf8.gist, "Buf:0x<00 9e a8 3f 62 50 23 80 1f d6 12>", "buf8 works on 82 column CRC";
 ok $d82.check(reverse(0x9e,0xa8,0x3f,0x62,0x50,0x23,0x80,0x1f,0xd6,0x12), False, False), "CRC_82_DARC self-verifies (0)";
