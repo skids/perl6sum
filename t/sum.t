@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 63;
+plan 64;
 
 use Sum;
 ok(1,'We use Sum and we are still alive');
@@ -11,6 +11,7 @@ lives_ok { X::Sum::Final.new() }, 'X::Sum::Final is available';
 lives_ok { X::Sum::Missing.new() }, 'X::Sum::Missing is available';
 lives_ok { X::Sum::Spill.new() }, 'X::Sum::Spill is available';
 lives_ok { X::Sum::Push::Usage.new() }, 'X::Sum::Push::Usage is available';
+lives_ok { X::Sum::Recourse.new() }, 'X::Sum::Recourse is available';
 lives_ok { eval 'class foo1 does Sum { method finalize { }; method add { }; method push { }; }' }, 'Sum composes when interface is implemented';
 dies_ok { eval 'class fooX does Sum { }' }, 'Sum requires interface to compose';
 lives_ok { eval 'class foo2 does Sum does Sum::Marshal::Raw { method finalize { }; method add { }; }' }, 'Sum::Marshal::Raw composes and provides push';

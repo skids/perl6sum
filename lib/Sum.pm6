@@ -25,6 +25,12 @@ class X::Sum::Spill is Exception {
     }
 }
 
+class X::Sum::Recourse is Exception {
+    method message {
+        "No acceptable recourse found.  Verify third-party library support."
+    }
+}
+
 # Take care editing the pod here.  See below, and the t/sum.t test file.
 
 =begin pod
