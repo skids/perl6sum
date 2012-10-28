@@ -150,7 +150,7 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
         # Update the count of the total number of bits sent.
         $!o += $block.elems * 8 + $bits;
         # See note in .finalize.
-        $!o &= 0x1ffffffffffffffff if ($!o >  0x1ffffffffffffffff);
+        $!o +&= 0x1ffffffffffffffff if ($!o >  0x1ffffffffffffffff);
 
         # Check if buffer, bits, the added 1 bit, and the length fit in a block
         if $block.elems * 8 + $bits + 1 + 64 < 513 { # Yes
@@ -199,7 +199,7 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
         # Update the size in bits.
         $!o += 512;
         # See note in .finalize.
-        $!o &= 0x1ffffffffffffffff if ($!o >  0x1ffffffffffffffff);
+        $!o +&= 0x1ffffffffffffffff if ($!o >  0x1ffffffffffffffff);
     };
     method add (*@addends) { self.do_add(|@addends) }
 
@@ -386,11 +386,11 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
         # Update the count of the total number of bits sent.
         $!o += $block.elems * 8 + $bits;
         if ($columns > 256) {
-            $!o &= 0x1ffffffffffffffffffffffffffffffff
+            $!o +&= 0x1ffffffffffffffffffffffffffffffff
                 if $!o > 0x1ffffffffffffffffffffffffffffffff;
         }
         else {
-            $!o &= 0x1ffffffffffffffff
+            $!o +&= 0x1ffffffffffffffff
                 if $!o > 0x1ffffffffffffffff;
         }
 
@@ -468,11 +468,11 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
         # Update the size in bits.
         $!o += $bbytes * 8;
         if ($columns > 256) {
-            $!o &= 0x1ffffffffffffffffffffffffffffffff
+            $!o +&= 0x1ffffffffffffffffffffffffffffffff
                 if $!o > 0x1ffffffffffffffffffffffffffffffff;
         }
         else {
-            $!o &= 0x1ffffffffffffffff
+            $!o +&= 0x1ffffffffffffffff
                 if $!o > 0x1ffffffffffffffff;
         }
     };
