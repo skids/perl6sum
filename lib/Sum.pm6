@@ -437,7 +437,7 @@ role Sum::Marshal::Bits [ ::AT :$accept = (Int), ::CT :$coerce = (Int),
 =head2 role Sum::Marshal::Pack [ :$width = 8 ]
             does Sum::Marshal::Cooked
 
-    The C<Sum::Marshal::Pack> role is a base role.  Once must also compose
+    The C<Sum::Marshal::Pack> role is a base role.  One must also compose
     one or more C<Sum::Marshal::Pack::*> roles to use it.  These roles are
     used in situations where a C<Sum> works on addends of a certain width,
     but fragments of addends may be provided separately.  The fragments
