@@ -184,10 +184,7 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
         # First 16 uint32's are a straight copy of the data.
         # When endianness matches and with native types,
         # this would boil down to a simple memcpy.
-        my @m = ((($block[      (4 X* 0..^16)]) X+< 24)
-          <<+|<< (($block[ 1 X+ (4 X* 0..^16)]) X+< 16)
-          <<+|<< (($block[ 2 X+ (4 X* 0..^16)]) X+< 8)
-          <<+|<< (($block[ 3 X+ (4 X* 0..^16)])));
+        my @m = (:256[ $block[ $_ ..^ $_+4 ] ] for 0,4,{$^idx + 4} ...^ 64);
 
         # Fill the rest of the scratchpad with permutations.
         @m.push(rol(([+^] @m[* <<-<< (3,8,14,16)]),+!$insecure_sha0_obselete))
@@ -216,6 +213,8 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
         # push that many addends, you probably have bigger problems.
 	return fail(X::Sum::Spill.new()) if $!o > 0xffffffffffffffff;
 
+        # This does not work yet on 32-bit machines
+        # :4294967296[@!s[]];
         [+|] (@!s[] »+<« (32 X* (4,3,2,1,0)));
     }
     method Numeric () { self.finalize };
@@ -429,10 +428,7 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
             # First 16 uint32's are a straight copy of the data.
             # When endianness matches and with native types,
             # this would boil down to a simple memcpy.
-            @m =  ((($block[      (4 X* 0..^16)]) X+< 24)
-            <<+|<< (($block[ 1 X+ (4 X* 0..^16)]) X+< 16)
-            <<+|<< (($block[ 2 X+ (4 X* 0..^16)]) X+< 8)
-            <<+|<< (($block[ 3 X+ (4 X* 0..^16)])));
+            @m = (:256[ $block[ $_ ..^ $_+4 ] ] for 0,{$^idx + 4} ...^ 64);
 
             # Fill the rest of the scratchpad with permutations.
             @m.push($rmask +& (
@@ -445,14 +441,7 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
             # First 16 uint64's are a straight copy of the data.
             # When endianness matches and with native types,
             # this would boil down to a simple memcpy.
-            @m =  ((($block[      (8 X* 0..^16)]) X+< 56)
-            <<+|<< (($block[ 1 X+ (8 X* 0..^16)]) X+< 48)
-            <<+|<< (($block[ 2 X+ (8 X* 0..^16)]) X+< 40)
-            <<+|<< (($block[ 3 X+ (8 X* 0..^16)]) X+< 32)
-            <<+|<< (($block[ 4 X+ (8 X* 0..^16)]) X+< 24)
-            <<+|<< (($block[ 5 X+ (8 X* 0..^16)]) X+< 16)
-            <<+|<< (($block[ 6 X+ (8 X* 0..^16)]) X+< 8)
-            <<+|<< (($block[ 7 X+ (8 X* 0..^16)])));
+            @m = (:256[ $block[ $_ ..^ $_+8 ] ] for 0,{$^idx + 8} ...^ 128);
 
             # Fill the rest of the scratchpad with permutations.
             @m.push($rmask +& (
@@ -494,6 +483,12 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
                 $columns < 257 and $!o > 0xffffffffffffffff;
 
         given $columns {
+
+            # These don't work yet
+            # when 224 { :4294967296[@!s[^7]] }
+            # when 256 { :4294967296[@!s[]]   }
+            # when 384 { :18446744073709551616[@!s[^6]] }
+            # when 512 { :18446744073709551616[@!s[]] }
             when 224 { [+|] (@!s[0..6] »+<« (32 X* (6,5,4,3,2,1,0)))   }
             when 256 { [+|] (@!s[]     »+<« (32 X* (7,6,5,4,3,2,1,0))) }
             when 384 { [+|] (@!s[0..5] »+<« (64 X* (5,4,3,2,1,0)))     }

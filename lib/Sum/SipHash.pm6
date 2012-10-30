@@ -129,11 +129,11 @@ role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum {
 	   $!k0 +|= $key +& 255;
 	   $key +>= 8;
 	}
-        # The internal key is also a little-endian representation.
-        $!v0 = [+|] $keyfrob[0..^8] »+<« [56,48,40,32,24,16,8,0];
-        $!v1 = [+|] $keyfrob[8..^16] »+<« [56,48,40,32,24,16,8,0];
-        $!v2 = [+|] $keyfrob[16..^24] »+<« [56,48,40,32,24,16,8,0];
-        $!v3 = [+|] $keyfrob[24..^32] »+<« [56,48,40,32,24,16,8,0];
+        # The internal key also uses a little-endian representation.
+        $!v0 = :256[$keyfrob[^8]];
+        $!v1 = :256[$keyfrob[8..^16]];
+        $!v2 = :256[$keyfrob[16..^24]];
+        $!v3 = :256[$keyfrob[24..^32]];
 	$!v0 +^= $!k0;
 	$!v1 +^= $!k1;
 	$!v2 +^= $!k0;
