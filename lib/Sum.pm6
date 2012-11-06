@@ -154,10 +154,10 @@ role Sum {
     this method will return an B<unthrown> C<X::Method::NotFound>.
 
     Otherwise, this method behaves similarly to the C<.elems> method
-    of C<List> and C<Array>, and may even be an lvalue attribute for some types
-    of C<Sum>.  Note, however, that only some types of C<Sum> support random
-    access of addends, and most of those will only support write-once access
-    to addends.
+    of C<List> and C<Array>, and may even be an lvalue attribute for some
+    types of C<Sum>.  Note, however, that only some types of C<Sum> support
+    random access of addends, and most of those will only support write-once
+    access to addends.
 
     Note also that unlike C<Array>, pushing to a C<Sum> pushes to the
     addend at the C<.pos> index, which is not necessarily the same as
@@ -216,7 +216,9 @@ role Sum {
     incremented as appropriate, as is C<.elems> in the case of dynamically
     sized types of C<Sum>.
 
-    This method is also called when the C<Sum> is used as a feed tap.
+    This method is also called when the C<Sum> is used as a feed tap.  (It
+    is for this reason that it is named "push" rather than "update" as
+    per NIST C conventions.)
 
     The values are "added" to the internal state of the C<Sum>.  A
     finalization step is usualy not performed, but might be, depending on
@@ -317,7 +319,8 @@ role Sum::Marshal::Raw {
 
     method push (*@addends --> Failure) {
         # Pass the whole list to the class's add method, unprocessed.
-        sink self.add(@addends).grep({$_.WHAT ~~ Failure }).map: { return $_ };
+        sink self.add(@addends).grep({$_.WHAT ~~ Failure }).map:
+             { return $_ };
         Failure.new(X::Sum::Push::Usage.new());
     };
 
@@ -346,7 +349,8 @@ role Sum::Marshal::Cooked {
         for @addends { self.marshal($_) }
     }
 
-    method push (*@addends --> Failure) {
+    # multi/constrained candidate to temporarily workaround diamond problem
+    multi method push ($self where {True}: *@addends --> Failure) {
         sink self.marshal(|@addends).map: {
             return $^addend if $addend ~~ Failure;
             given self.add($addend) {
@@ -460,11 +464,35 @@ role Sum::Marshal::Bits [ ::AT :$accept = (Int), ::CT :$coerce = (Int),
 =end pod
 
 role Sum::Marshal::Pack [ :$width = 8 ] {
-    has $.bitpos is rw = $width;
-    has $.packed is rw = 0;
-    has $.width = $width;
-    has $.violation is rw = False;
-    method whole () { $.bitpos == $width and not $.violation }
+
+# To deal with diamond inheritance these attributes must be emulated for now
+#    has $.bitpos is rw = $width;
+#    has $.packed is rw = 0;
+#    has $.width = $width;
+#    has $.violation is rw = False;
+# Note this will leak like a sieve as the entries never get cleared
+    my %attrs;
+    multi method bitpos ($self where {True}:) is rw {
+        %attrs{$self}<bitpos> //= $width;
+        %attrs{$self}<bitpos>;
+    }
+    multi method packed ($self where {True}:) is rw {
+        %attrs{$self}<packed> //= 0;
+        %attrs{$self}<packed>;
+    }
+    multi method width ($self where {True}:) is rw {
+        %attrs{$self}<width> //= $width;
+        %attrs{$self}<width>;
+    }
+    multi method violation ($self where {True}:) is rw {
+        %attrs{$self}<violation> //= False;
+        %attrs{$self}<violation>;
+    }
+
+    # use multi/contrained method to workaround diamond problem
+    multi method whole ($self where {True}:) {
+        $.bitpos == $width and not $.violation
+    }
 
     multi method marshal (*@addends) {
         for @addends { self.marshal($_) }
@@ -478,7 +506,8 @@ role Sum::Marshal::Pack [ :$width = 8 ] {
         $addend;
     }
 
-    method push (*@addends --> Failure) {
+    # use multi/contrained method to workaround diamond problem
+    multi method push ($self where {True}: *@addends --> Failure) {
         sink self.marshal(|@addends).map: {
             return $^addend if $addend ~~ Failure;
             given self.add($addend) {

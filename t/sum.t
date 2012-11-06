@@ -21,9 +21,8 @@ lives_ok { eval 'class foo5 does Sum does Sum::Marshal::BufValues { method final
 lives_ok { eval 'class foo6 does Sum does Sum::Marshal::Pack[] { method finalize { }; method add { }; }' }, 'Sum::Marshal::Pack composes and provides push';
 lives_ok { eval 'class foo7 does Sum::Marshal::Pack::Bits[ :accept(Int) ] { method finalize { }; method add { }; }' }, 'Sum::Marshal::Pack::Bits composes';
 
-todo "Waiting on resolution for diamond composition RT.",2;
-lives_ok { eval 'class fooC1 does Sum does Sum does Sum::Marshal::StrOrds does Sum::Marshal::BufValues { method finalize { }; method add { }; }' }, 'Two Sum::Marshal subroles can compose with same crony';
-lives_ok { eval 'class fooC2 does Sum does Sum does Sum::Marshal::Pack::Bits[ ] does Sum::Marshal::Pack::Bits[ :accept(Int) ] { method finalize { }; method add { }; }' }, 'Two Sum::Marshal::Pack subroles can compose with same crony';
+lives_ok { eval 'class fooC1 does Sum does Sum::Marshal::StrOrds does Sum::Marshal::BufValues { method finalize { }; method add { }; }' }, 'Two Sum::Marshal subroles can compose with same crony';
+lives_ok { eval 'class fooC2 does Sum does Sum::Marshal::Pack::Bits[ ] does Sum::Marshal::Pack::Bits[ :accept(Int) ] { method finalize { }; method add { }; }' }, 'Two Sum::Marshal::Pack subroles can compose with same crony';
 
 lives_ok {
 class Foo does Sum does Sum::Marshal::Cooked {
