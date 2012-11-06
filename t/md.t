@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 48;
+plan 41;
 
 use Sum::MD;
 ok 1,'We use Sum::MD and we are still alive';
