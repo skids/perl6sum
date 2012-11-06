@@ -290,21 +290,10 @@ ok $pgp.check(0x21,0xcf,0x02), "CRC_24_PGP self-verifies (0)";
 class CRC32 does Sum::CRC_32 does Sum::Marshal::Bits[ :bits(32), :reflect ]
                 does Sum::Marshal::Bits[ :accept(Str), :bits(8), :reflect ] {
 
-    # TODO: this should not be necessary, as they are from the same crony
-    method push (*@addends --> Failure) {
-        sink self.marshal(|@addends).map: {
-            return $^addend if $addend ~~ Failure;
-            given self.add($addend) {
-                when Failure { return $_ };
-            }
-        };
-        Failure.new(X::Sum::Push::Usage.new());
-    }
     multi method marshal ( $addend ) is default { $addend }
     multi method marshal (*@addends) is default {
         for @addends { self.marshal($_) }
     }
-
 }
 $s = CRC32.new();
 $i = $s.finalize("65","66","67","68","69","70","71","72"); # "ABCDEFGH"
