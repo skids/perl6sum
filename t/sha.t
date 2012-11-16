@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 48;
+plan 53;
 
 use Sum::SHA;
 ok 1,'We use Sum::SHA and we are still alive';
@@ -18,6 +18,7 @@ my SHA1t $s .= new();
 ok $s.WHAT === SHA1t, 'We create a SHA1 class and object';
 
 given (SHA1t.new()) {
+is .size, 160, "SHA1.size is correct";
 is .finalize(Buf.new()),
    0xda39a3ee5e6b4b0d3255bfef95601890afd80709,
    "SHA1 of an empty buffer is correct.";
@@ -64,6 +65,7 @@ my SHA256t $s2 .= new();
 ok $s2.WHAT === SHA256t, 'We create a SHA2 (SHA-256) class and object';
 
 given (SHA256t.new()) {
+  is .size, 256, "SHA2-256.size is correct";
   is .finalize(Buf.new()),
      0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,
      "SHA-256 of an empty buffer is correct.";
@@ -105,6 +107,7 @@ class SHA224t does Sum::SHA2[ :columns(224) ] does Sum::Marshal::Raw { };
 my SHA224t $s3 .= new();
 ok $s3.WHAT === SHA224t, 'We create a SHA2 (SHA-224) class and object';
 given (SHA224t.new()) {
+  is .size, 224, "SHA2-224.size is correct";
   is .finalize(Buf.new(97 xx 55)),
      0xfb0bd626a70c28541dfa781bb5cc4d7d7f56622a58f01a0b1ddd646f,
      "SHA-224 expected result is correct.";
@@ -116,6 +119,7 @@ my SHA512t $s4 .= new();
 ok $s4.WHAT === SHA512t, 'We create a SHA2 (SHA-512) class and object';
 
 given (SHA512t.new()) {
+  is .size, 512, "SHA2-512.size is correct";
   is .finalize(Buf.new()),
      0xcf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e,
      "SHA-512 of an empty buffer is correct.";
@@ -158,6 +162,7 @@ my SHA384t $s5 .= new();
 ok $s5.WHAT === SHA384t, 'We create a SHA2 (SHA-384) class and object';
 
 given (SHA384t.new()) {
+  is .size, 384, "SHA2-384.size is correct";
   is .finalize(Buf.new(97 xx 111)),
      0x3c37955051cb5c3026f94d551d5b5e2ac38d572ae4e07172085fed81f8466b8f90dc23a8ffcdea0b8d8e58e8fdacc80a,
      "SHA-384 expected result is correct.";

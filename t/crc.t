@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 127;
+plan 128;
 
 use Sum::CRC;
 ok(1,'We use Sum::CRC and we are still alive');
@@ -12,6 +12,7 @@ my ($i, $s);
 
 class ROHC does Sum::CRC_3_ROHC does Sum::Marshal::Bits { :reflect }
 my ROHC $rohc .= new();
+is ROHC.size, 3, "CRC .size method works.  And is a class method";
 is $rohc.finalize(0x31..0x39), 0x6, "CRC_3_ROHC gives expected results";
 ok $rohc.check(False,True,True), "CRC_3_ROHC self-verifies (0)";
 

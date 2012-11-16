@@ -44,8 +44,10 @@ class X::Sum::Recourse is Exception {
     use Sum;
 
     # Define a very simple Sum class that just adds normally
-    class MySum does Sum does Sum::Partial does Sum::Marshal::StrOrds {
+    class MySum does Sum::Partial
+                does Sum::Marshal::Method[:atype(Str), :method<ords>] {
         has $.accum is rw = 0;
+        method size { Inf }
         method finalize (*@addends) {
             self.push(@addends);
             $.accum;
@@ -71,8 +73,8 @@ class X::Sum::Recourse is Exception {
     # Since it does Sum::Partial, one can generate partials as a List
     $s.partials(1,1,2,1).say;            # 16 17 19 20
 
-    # Since it does Sum::Marshal::StrOrds, Str addends are exploded
-    # into multiple character ordinals.
+    # Since it does Sum::Marshal::Method[:atype(Str), :method<ords>]
+    # Str addends are exploded into multiple character ordinals.
     'abc'.ords.say;                      # 97 98 99
     $s.partials(1,'abc',1).say;          # 21 118 216 315 316
 
@@ -130,17 +132,21 @@ role Sum {
         C<$checksum = MySum.new.finalize(1,3,5,7,9);>
 
     A C<Sum> will generally provide coercion methods, such as C<.Numeric>,
-    which is often simply aliases for C<.finalize()>.  Which coercion methods
-    are available may vary across different types of C<Sum>.  In particular,
-    sums will provide a C<.buf8> coercion method if their results are always
-    expressed in bytes, and a C<.buf1> coercion method if their results
-    may contain a number of bits that does not pack evenly into bytes.  For
-    convenience the latter may also provide a C<.buf8> method.  The C<.Buf>
-    coercion method will eventually return one of the above results as
-    natural to the type of C<Sum>, but given that C<buf8> and C<buf1> are
-    not implemented in the language core yet, all such methods return a
-    C<Buf> at this time.  As such, explicit use of the C<.buf8> and C<.buf1>
-    methods is advised in the interim.
+    which is often simply an alias for C<.finalize()>.  Which coercion
+    methods are available may vary across different types of C<Sum>.  In
+    particular, sums will provide a C<.buf8> coercion method if their
+    results are conventionally expressed in bytes, and a C<.buf1> coercion
+    method if their results may contain a number of bits that does not
+    pack evenly into bytes.  For convenience the latter may also provide
+    a C<.buf8> method.  The C<.Buf> coercion method will eventually return
+    one of the above results as natural to the type of C<Sum>, but given
+    that C<buf8> and C<buf1> are not implemented in the language core yet,
+    all such methods return a C<Buf> at this time.  As such, explicit use
+    of the C<.buf8> and C<.buf1> methods is advised in the interim.
+
+    A C<.Str> coercion method will also usually be made available, and
+    will finalize the sum and express the result as a string in a format
+    conventional to the particular type of sum.
 
 =end pod
 
@@ -253,6 +259,23 @@ role Sum {
 
     method add (*@addends) { ... }
 
+=begin pod
+
+=head3 method size ()
+
+    The C<:size> method returns the number of significant bits
+    in the result.  It may be invoked on an instance or as a
+    class method.  Note that in the case of a result obtained
+    from the C<.buf1> coercion method, one may also just call
+    C<.elems> on the result, but the equivalent may not be true of
+    the result of the C<.buf8> coercion method, since the
+    C<.buf8> method is available even when the number of bits
+    in the result is not a multiple of 8.
+
+=end pod
+
+    method size () { ... }
+
     # The specs mention a .clear method when feeds are involved
     # but do not elaborate.
     #
@@ -264,14 +287,14 @@ role Sum {
 
 =begin pod
 
-=head2 role Sum::Partial
+=head2 role Sum::Partial does Sum
 
-    The C<Sum::Partial> role is used to designate types of C<Sum>
-    which may produce partial results at any addend index.
+    The C<Sum::Partial> role is used (instead of C<Sum>) to indicate
+    that a sum may produce partial results at any addend index.
 
 =end pod
 
-role Sum::Partial {
+role Sum::Partial does Sum {
 
 =begin pod
 
@@ -279,17 +302,26 @@ role Sum::Partial {
 
     The C<.partials> method acts the same as C<.push>, but returns
     a C<List> of the partial sums that result after finalizing the
-    C<Sum> immediately after each element of C<@addends> is provided.
-    It may be mixed into most progressively implemented C<Sum> roles.
+    C<Sum> after every addend is provided.  Note that when the
+    C<@addends> list is processed by any C<Sum::Marshal> roles, the
+    number of partial sums may differ from the number of elements
+    provided in C<@addends>.
 
-    Note that the finalization step for some types of C<Sum> may be
-    computationally expensive.
+    Note also that the finalization step for some types of C<Sum> may
+    be computationally expensive.
 
     This method may promulgate C<Failure>s that occur during
     marshalling addends or adding them to the C<Sum>, by returning
     them instead of the expected results.
 
 =end pod
+
+    # This default method is satisfactory for sums that do not ruin their
+    # state on finalization.  Sums that do, but which wish to provide
+    # Sum::Partial anyway, should define their own overriding method that
+    # clones the sum and finalizes the clone.  In those cases mixing in
+    # Sum::Partial can still be done, but serves only to ensure that the
+    # role is listed for introspective purposes.
 
     method partials (*@addends --> List) {
         flat self.marshal(|@addends).map: {
@@ -308,10 +340,17 @@ role Sum::Partial {
 
     The C<Sum::Marshal::Raw> role is used by classes that value efficiency
     over dwimmery.  A class with this role mixed in never processes
-    single arguments as though they may contain more than one addend.
-    The class will be less convenient to use as a result.  However,
-    there may be less overhead involved, and it may result in easier
-    code audits.
+    single arguments as though they may contain more than one addend,
+    nor combines multiple addends into a packed addend.  Addends are passed
+    directly to the C<Sum>'s C<.add> method.
+
+    The class will be less convenient to use as a result: the types of
+    argument accepted by the C<.add> method vary depending on the
+    underlying algorithm, so the user must consult the documentation
+    for that particular type of sum.
+
+    However, there will be less overhead involved, and it may result in
+    easier code audits.
 
 =end pod
 
@@ -324,7 +363,8 @@ role Sum::Marshal::Raw {
         Failure.new(X::Sum::Push::Usage.new());
     };
 
-    multi method marshal (*@addends) { for @addends { $_ }};
+    # This allows simultaneous mixin of Sum::Partial
+    multi method marshal (*@addends) { flat @addends };
 
 }
 
@@ -344,9 +384,29 @@ role Sum::Marshal::Raw {
 
 role Sum::Marshal::Cooked {
 
-    multi method marshal ( $addend ) { $addend }
+    # Subclasses may elect to handle finite numbers of addends in one
+    # method call.  Where they do not, handle each one individually.
     multi method marshal (*@addends) {
-        for @addends { self.marshal($_) }
+        @addends.map: { self.marshal($_) }
+    }
+
+    # Last resort if no subclass has a handler for this specific type of
+    # addend.  Pass the addend through, unless we are also one of the
+    # marshalling types that has restrictions.
+    multi method marshal ($addend) {
+        # See if we are also a Sum::Marshal::Pack
+        if self.^can('whole') and self.^can('violation') {
+
+            # If we get an addend that is not otherwise handled by a
+            # subclass, only pass it on if we are at a width boundary.
+            # Otherwise issue an exception, since we do not know how
+            # to pack the addend.
+	    unless self.whole {
+                $.violation = True;
+                return Failure.new(X::Sum::Missing.new());
+            }
+        }
+        $addend;
     }
 
     # multi/constrained candidate to temporarily workaround diamond problem
@@ -359,47 +419,35 @@ role Sum::Marshal::Cooked {
         };
         Failure.new(X::Sum::Push::Usage.new());
     }
-
-#    method whole () { True; }
-
 }
 
 =begin pod
 
-=head2 role Sum::Marshal::StrOrds does Sum::Marshal::Cooked
+=head2 role Sum::Marshal::Method [ ::T :$atype, Str :$method, Bool :$remarshal = False ]
+    does Sum::Marshal::Cooked
 
-    The C<Sum::Marshal::StrOrds> role will explode any provided C<Str>
-    arguments into multiple addends by calling C<.ords> on the string.
+    The C<Sum::Marshal::Method> role will substitute any provided addend
+    of type C<:atype> with the results of calling a method named C<:method>
+    on that addend.  If a List results, it will be flattenned into the
+    preceding list of addends.
 
-    Other types of provided arguments will not be processed normally,
-    unless additional C<Sum::Marshal> roles are mixed.
-
-    One should exercise care as to the current encoding pragma
-    or contents of provided strings when using this role.
-
-=end pod
-
-role Sum::Marshal::StrOrds does Sum::Marshal::Cooked {
-    multi method marshal (Str $addend) { $addend.ords }
-}
-
-=begin pod
-
-=head2 role Sum::Marshal::BufValues does Sum::Marshal::Cooked
-
-    The C<Sum::Marshal::BufValues> role will explode any provided C<Buf>
-    arguments into multiple addends by calling C<.values> on the buffer.
-
-    Other types of provided arguments will not be processed normally,
-    unless additional C<Sum::Marshal> roles are mixed.
-
-    One should excercise care as to the current encoding pragma
-    or contents of provided strings when using this role.
+    If the C<:remarshal> flag is provided, the results will instead
+    be fed back through another marshalling level rather than being
+    passed directly to the C<Sum>'s C<.add> method.  Note that care
+    must be taken to avoid marshalling loops, and that this is not
+    precisely equivalent to having the results appear in the original
+    addend list.
 
 =end pod
 
-role Sum::Marshal::BufValues does Sum::Marshal::Cooked {
-    multi method marshal (Str $addend) { $addend.values }
+role Sum::Marshal::Method [ ::T :$atype, Str :$method, Bool :$remarshal = False ]
+    does Sum::Marshal::Cooked {
+    multi method marshal (T $addend) {
+        given $addend."$method"() {
+            return flat $_ unless $remarshal;
+            self.marshal(flat $_);
+        }
+    }
 }
 
 =begin pod
@@ -419,9 +467,6 @@ role Sum::Marshal::BufValues does Sum::Marshal::Cooked {
 
     If C<:reflect> is provided, the bit values are emitted least
     significant bit first.
-
-    Other types of provided arguments will not be processed normally,
-    unless additional C<Sum::Marshal> roles are mixed.
 
 =end pod
 
@@ -446,24 +491,27 @@ role Sum::Marshal::Bits [ ::AT :$accept = (Int), ::CT :$coerce = (Int),
     used in situations where a C<Sum> works on addends of a certain width,
     but fragments of addends may be provided separately.  The fragments
     will be bitwise concatinated until a whole addend of C<$width> bits
-    is available, and the whole addend will then be added to the C<Sum>.
+    is available, and the whole addend (expressed as an Int) will then be
+    added to the C<Sum>.
 
     Any leftover bits will be kept to combine with further fragments.
+    However, if bits are left over when an addend is provided for
+    which there is no corresponding C<Sum::Marshal::Pack::*> role,
+    an C<X::Sum::Missing> unthrown exception will be returned.
 
-    Classes which use this role should call the C<.whole> method when
-    asked to finalize a C<Sum>, and return an unthrown C<X::Sum::Missing>
-    when this method does not return a true value.
+    Classes which wish to allow these roles to be mixed in should
+    call the C<.whole> method, when it is present, when finalizing a
+    C<Sum>.  This will return an unthrown C<X::Sum::Missing> unless
+    there are no leftover bits.
 
     Note that the C<pack> function may be used to pre-pack values,
     which can then be supplied to a less complicated type of C<Sum>.
-    This will often be a better choice than using this role.  The
-    C<Sum::Marshal::Packed> role is meant for use when the amount of
-    data involved is too large and eclectic to create C<Buf>s holding
-    the addends.
+    This will often be a better choice than using these roles.
 
 =end pod
 
-role Sum::Marshal::Pack [ :$width = 8 ] {
+role Sum::Marshal::Pack [ :$width = 8 ]
+    does Sum::Marshal::Cooked {
 
 # To deal with diamond inheritance these attributes must be emulated for now
 #    has $.bitpos is rw = $width;
@@ -489,32 +537,11 @@ role Sum::Marshal::Pack [ :$width = 8 ] {
         %attrs{$self}<violation>;
     }
 
-    # use multi/contrained method to workaround diamond problem
+    # use multi/constrained method to workaround diamond problem
     multi method whole ($self where {True}:) {
         $.bitpos == $width and not $.violation
-    }
-
-    multi method marshal (*@addends) {
-        for @addends { self.marshal($_) }
-    }
-
-    multi method marshal ($addend) {
-	unless self.whole {
-            $.violation = True;
-            return fail(X::Sum::Missing.new());
-        }
-        $addend;
-    }
-
-    # use multi/contrained method to workaround diamond problem
-    multi method push ($self where {True}: *@addends --> Failure) {
-        sink self.marshal(|@addends).map: {
-            return $^addend if $addend ~~ Failure;
-            given self.add($addend) {
-                when Failure { return $_ };
-            }
-        };
-        Failure.new(X::Sum::Push::Usage.new());
+            ?? True
+            !! Failure.new(X::Sum::Missing.new());
     }
 }
 
@@ -540,8 +567,8 @@ role Sum::Marshal::Pack [ :$width = 8 ] {
 
 =end pod
 
-role Sum::Marshal::Pack::Bits[ ::AT :$accept = (Bool), ::CT :$coerce = (Bool) ]
-     does Sum::Marshal::Pack[] {
+role Sum::Marshal::Pack::Bits[::AT :$accept = (Bool), ::CT :$coerce = (Bool)]
+{
 
     multi method marshal (AT $addend) {
         $.bitpos--;
@@ -553,5 +580,240 @@ role Sum::Marshal::Pack::Bits[ ::AT :$accept = (Bool), ::CT :$coerce = (Bool) ]
             return $packed;
         }
         return;
+    }
+}
+
+=begin pod
+
+=head2 role Sum::Marshal::Pack::Bits [ :$width!, :$accept, :$coerce = Int ]
+
+    When the C<:width> parameter is supplied, the C<Sum::Marshal::Pack::Bits>
+    role packs bitfields from provided addends.  This C<:width> parameter
+    should not be confused with the C<:width> parameter of the
+    C<Sum::Marshal::Pack> base role, which defines the width of the
+    produced addends.
+
+    Any addend of the type specified by C<$accept> will be coerced into
+    the type specified by C<$coerce>.  The least C<:width> significant
+    bits will be concatinated onto any leftover bits from previous results,
+    and when enough bits are collected, the resultant will be provided
+    as an C<Int> to the C<Sum>, keeping any remaining leftover bits to
+    combine with further addends.
+
+    The handling of leftover bits when a C<Sum> is finalized or when
+    an addend not handled by a C<Sum::Marshal::Pack::*> role is provided
+    proceeds as described above.
+
+    Note that this role will not be especially useful until native types
+    are available, unless the user defines an alternate integer-like type.
+
+=end pod
+
+role Sum::Marshal::Pack::Bits[:$width!, ::AT :$accept, ::CT :$coerce = (Int)]
+{
+    multi method marshal (AT $addend) {
+        my $a = CT($addend);
+        my $extrapos = max(0, $width - $.bitpos);
+        if ($extrapos) {
+            my $packed = $.packed +| ($a +> $extrapos);
+            $.packed = $extrapos +& ((1 +< $extrapos) - 1);
+            $.bitpos = $width - $extrapos;
+            return $packed;
+        }
+        else {
+            $.bitpos -= $width;
+            $.packed +|= $a +< $.bitpos;
+            unless $.bitpos {
+                my $packed = $.packed;
+	        $.packed = 0;
+                $.bitpos = $.width;
+                return $packed;
+            }
+        }
+        return;
+    }
+}
+
+=begin pod
+
+=head2 role Sum::Marshal::Block [:$BufT = Buf, :$elems = 64, :$BitT = Bool]
+
+    The C<Sum::Marshal::Block> role is a base role used to interface with
+    types of sum that divide their message into NIST-style blocks.
+
+    This role is usually not included directly, but rather through subroles.
+    It is not compatible with any other C<Sum::Marshal> roles, unless
+    those roles C<:remarshal> first.
+
+    Classes which wish to allow these roles to be mixed in should
+    call the C<.drain> method during finalization, if it is present,
+    immediately after pushing any final addends.  After this method
+    has been called, any further attempts to provide addends will
+    result in an unthrown C<X::Sum::Final>.
+
+    This base role contains fallback marshalling for C<BitT> addends which
+    will be treated as bits and packed, C<BufT> addends whose values
+    will be packed, and C<Any> addends which will be treated as C<Int>s
+    and whose least significant bits will be packed as per the bit width
+    of C<BufT>'s values.
+
+    Note: native typed buffers are not yet supported, but a punned C<Buf>
+    class will be treated as though it were a C<buf8> as per the spec,
+    which does adequately pretend to work.
+
+=end pod
+
+role Sum::Marshal::Block [::B :$BufT = Buf, :$elems = 64, ::b :$BitT = Bool]
+    does Sum::Marshal::Cooked
+{
+# To deal with diamond inheritance these attributes must be emulated for now
+#    has @.accum is rw;
+#    has @.bits is rw;
+#    has Bool $.drained is rw = False;
+# Note this will leak like a sieve as the entries never get cleared
+    my %attrs;
+    multi method accum ($self where {True}:) is rw {
+        %attrs{$self}<accum> //= [];
+        %attrs{$self}<accum>;
+    }
+    multi method bits ($self where {True}:) is rw {
+        %attrs{$self}<bits> //= [];
+        %attrs{$self}<bits>;
+    }
+    multi method drained ($self where {True}:) is rw {
+        %attrs{$self}<drained> //= False;
+        %attrs{$self}<drained>;
+    }
+
+    # Allow subroles to use our parameters.
+    # use multi/constrained method to workaround diamond problem
+    multi method B_elems ($self where {True}:) { $elems }
+    multi method B ($self where {True}:) { B }
+    multi method b ($self where {True}:) { b }
+
+    my Int $bw = (given (B) {
+                      # Maybe there will be an introspect for this...
+                      when Buf { 8 }
+                  });
+
+    multi method marshal () { }
+
+    # use multi/constrained method to workaround diamond problem
+    multi method emit ($self where {True}: *@addends) {
+
+        @.accum.push(@addends);
+
+        # Emit any completed blocks.
+        gather while (@.accum.elems > $elems) {
+            take B.new(@.accum.splice(0,$elems));
+        }
+    }
+
+    multi method marshal (b $addend) {
+
+        return fail(X::Sum::Final.new()) if $.drained;
+
+        @.bits.push($addend);
+        return unless +@.bits == $bw;
+
+        self.emit([+|] (+<<@.bits.splice(0, $bw)) Z+< (reverse ^$bw));
+    }
+
+    # Multidispatch seems to need a bit of a nudge, thus the ::?CLASS
+    multi method marshal (::?CLASS $self where { not +@.bits }: $addend) {
+
+        return fail(X::Sum::Final.new()) if $.drained;
+
+        self.emit($addend);
+
+    }
+
+    multi method marshal (::?CLASS $self where {  so +@.bits }: $addend) {
+
+        return fail(X::Sum::Final.new()) if $.drained;
+
+        @.bits.push(?<<(1 X+& ($addend X+> reverse(^$bw))));
+
+        self.emit([+|] (@.bits.splice(0, $bw)) Z+< (reverse ^$bw));
+    }
+
+    multi method marshal (B $addend) {
+        # punt on this mess for now
+        self.marshal($addend.values);
+    }
+
+    multi method marshal (::?CLASS $self where {not +@.bits}: B $addend) {
+        gather do {
+             my $i = 0;
+             while ($addend.elems - $i + +@.accum >= $elems) {
+                 take B.new(flat @.accum,
+                            $addend[$i..^($i + $elems - +@.accum)]);
+                 $i += $elems - +@.accum;
+                 @.accum = ();
+             }
+             @.accum = $addend[$i ..^ $addend.elems];
+        }
+    }
+
+    # use multi/constrained method to workaround diamond problem
+    multi method drain ($self where {True}:) {
+        $.drained = True;
+        B.new(@.accum), ?<<@.bits
+    }
+
+}
+
+=begin pod
+
+=head2 role Sum::Marshal::IO
+
+    The C<Sum::Marshal::IO> role will take open C<IO> objects
+    as addends, and provide their contents in an efficient manner
+    to a C<Sum>.
+
+    Currently this is done by repeatedly calling the C<.read> method
+    of the object with a sensible chunk size, and providing the
+    resulting values.  This may change as encoding and native type
+    support is improved.
+
+    This role may be mixed with C<Sum::Marshal::Block> roles in which
+    case remarshalling is done using C<Buf>s.
+
+=end pod
+
+role Sum::Marshal::IO {
+
+    # ^can("drain") is a poorman proxy for figuring out
+    # if a Sum::Marshal::Block[...] is mixed in with us.
+    multi method marshal (::?CLASS $self where { so $_.^can("drain") }:
+                          IO $addend) {
+
+        gather while not $addend.eof {
+            given $addend.read($.B_elems - +@.accum) {
+                when Buf {
+                    next unless $_.elems;
+                    take flat self.marshal($_);
+                }
+                default {
+                    take $_;
+                    last;
+                }
+            }
+        }
+     }
+
+    multi method marshal (IO $addend) {
+        flat gather while not $addend.eof {
+            given $addend.read(1024) {
+                when Buf {
+                    next unless $_.elems;
+                    take flat $_.values;
+                }
+                default {
+                    take $_;
+                    last;
+                }
+            }
+        }
     }
 }

@@ -88,6 +88,19 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
     # MD5 table of constants (a.k.a. T[1..64] in RFC1321)
     my @t = (Int(4294967296 * .sin.abs) for 1..64);
 
+    method size () {
+        given $alg {
+            when "MD4"|
+                 "MD5"|
+                 "RIPEMD-128" { 128 }
+            when "MD4ext"     { 256 }
+            when "RIPEMD-256" { 256 }
+            when "RIPEMD-160" { 160 }
+            when "RIPEMD-320" { 320 }
+            default           { Inf }
+        }
+    }
+
     submethod BUILD () {
         @!s = (0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476);
         if $alg eqv "MD4ext" {
@@ -476,6 +489,8 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
         my $bits = 0;
         my $byte = 0;
 
+#        $block.gist.say;
+
         # Count how many stray bits we have and build them into a byte
         ( $byte +|= +$_ +< (7 - $bits++) )
             if .defined for ($b7,$b6,$b5,$b4,$b3,$b2,$b1);
@@ -532,7 +547,11 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
     method add (*@addends) { self.do_add(|@addends) }
 
     method finalize(*@addends) {
-        self.push(@addends);
+        given self.push(@addends) {
+            return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
+        }
+
+        self.add(self.drain) if self.^can("drain");
 
         self.add(Buf.new()) unless $!final;
 

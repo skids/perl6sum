@@ -54,8 +54,7 @@ $Sum::SipHash::Doc::synopsis = $=pod[0].content[4].content.Str;
 
     The number of addends may be determined on the fly, and in this
     implementation, finalization is performed without altering internal
-    state, so the C<Sum::Partial> role may be mixed in when progressive
-    hashing of a growing datum is desired.
+    state, so the C<Sum::Partial> role is available.
 
     The C<$defkey> parameter defines a seed value that will be applied
     to all instances which do not specify their own.  There is an internal
@@ -97,7 +96,7 @@ $Sum::SipHash::Doc::synopsis = $=pod[0].content[4].content.Str;
 
 use Sum;
 
-role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum {
+role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
 
     my Buf $keyfrob = "somepseudorandomlygeneratedbytes".encode("ascii");
 
@@ -139,6 +138,8 @@ role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum {
 	$!v2 +^= $!k0;
 	$!v3 +^= $!k1;
     }
+
+    method size () { 64 };
 
     my sub rol ($v is rw, $count) {
         my $tmp = (($v +& (0xffffffffffffffff +> $count)) +< $count);

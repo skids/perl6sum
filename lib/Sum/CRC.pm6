@@ -30,7 +30,7 @@ Sum::CRC
 =head2 role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
                        :$iniv = Bool::False, :$finv = Bool::False,
                        :$columns = 8, :$poly, :$reflect = Bool::False ]
-            does Sum does Sum::Partial
+            does Sum::Partial
 
     The C<Sum::CRC> parametric role is used to create a type of C<Sum>
     that calculates a particular kind of cyclic redundancy checksum
@@ -104,12 +104,14 @@ Sum::CRC
 role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
                 :$iniv = Bool::False, :$finv = Bool::False,
                 :$columns = 8, :$poly, :$reflect = Bool::False ]
-     does Sum does Sum::Partial {
+     does Sum::Partial {
 
     # Eventually we want $.rem's type (from :iniv when not Bool)
     # to be predictable enough for optimization, and really it
     # should only be rw from inside the class.
     has $.rem is rw = ( ($iniv.WHAT === Bool) ?? (-$iniv +& ((1 +< $columns) - 1)) !! $iniv );
+
+    method size () { $columns }
 
     method add (*@addends) {
         for (@addends) -> $a {

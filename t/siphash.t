@@ -3,13 +3,14 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 6;
+plan 7;
 
 use Sum::SipHash;
 ok(1,'We use Sum::SipHash and we are still alive');
 
-class S does SipHash does Sum::Marshal::StrOrds does Sum::Partial { }
+class S does SipHash does Sum::Marshal::Method[:atype(Str),:method<ords>] { }
 my S $s .= new(:key(0x000102030405060708090a0b0c0d0e0f));
+is $s.size, 64, "SipHash.size works";
 my $h = $s.finalize("Please to checksum this text");
 is $h, 0x5cabf2fe9143a691, "SipHash (StrOrds) computes expected value";
 $h = $s.finalize(".");

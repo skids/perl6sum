@@ -3,15 +3,15 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 25;
+plan 26;
 
 use Sum::Adler;
 ok(1,'We use Sum::Adler and we are still alive');
 
-class S does Sum::Adler32 does Sum::Marshal::StrOrds does Sum::Partial { }
+class S does Sum::Adler32 does Sum::Marshal::Method[:atype(Str),:method<ords>] { }
 my S $s .= new();
 my $h = $s.finalize("Please to checksum this text");
-is $h, 0x96250a8e, "Adler32 (StrOrds) computes expected value";
+is $h, 0x96250a8e, "Adler32 (Str.ords) computes expected value";
 $h = $s.finalize(".");
 is $h, 0xa0e10abc, "append after finalization and get expected value";
 is $s.buf8.values, (0xa0, 0xe1, 0x0a, 0xbc), 'Adler32 buf8 coerce works';
@@ -20,6 +20,7 @@ is $s.Buf.values, (0xa0, 0xe1, 0x0a, 0xbc), 'Adler32 Buf yields buf8';
 
 class FLFoo does Sum::Fletcher[ :modulusA(17), :modulusB(13), :columnsA(8) ] does Sum::Marshal::Raw { }
 my FLFoo $flfoo;
+is $flfoo.size ~ FLFoo.size, "1616", 'size method works';
 $flfoo .= new();
 is $flfoo.finalize(1,2,3,4,5,255), 0xb0f, 'custom Fletcher produces expected value';
 is ($flfoo.checkvals),(4,15), 'custom Fletcher check values are as expected';

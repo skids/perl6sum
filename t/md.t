@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 41;
+plan 51;
 
 use Sum::MD;
 ok 1,'We use Sum::MD and we are still alive';
@@ -15,9 +15,10 @@ sub hexify ($i is copy) {
 
 class MD4t does Sum::MD4 does Sum::Marshal::Raw { };
 my MD4t $s .= new();
-ok $s.WHAT === MD4t, 'We create a SHA1 class and object';
+ok $s.WHAT === MD4t, 'We create a MD4 class and object';
 
 given (MD4t.new()) {
+is .size, 128, "MD4.size is correct";
 is .finalize(Buf.new()),
    0x31d6cfe0d16ae931b73c59d7e0c089c0,
    "MD4 of an empty buffer is correct.";
@@ -54,8 +55,21 @@ is MD4t.new().finalize(Buf.new(97 xx 63),True,False,True,False,True,False,False)
    0x0719b5d879deafc63150bc5aa45ba714,
    "MD4 of a 511-bit buffer is correct.";
 
-todo "Need extended MD4 test vector", 1;
+class MD4dwim does Sum::MD4 does Sum::Marshal::Block[] { }
+my MD4dwim $dwim .= new();
+ok $dwim.WHAT === MD4dwim, 'We create a dwimmy Block MD4 class and object';
+
+is $dwim.finalize(('0123456789' x 100).ords), 0x895ffd5f1acfe6f760c777e7883605e9, "MD4 of 1000 Ints is correct";
+
+$dwim .= new();
+
+is $dwim.finalize(Buf.new((0x30..0x39) xx 100)), 0x895ffd5f1acfe6f760c777e7883605e9, "MD4 of 8000-bit Buf is correct";
+
+
+
 class MD4ext does Sum::MD4ext[] does Sum::Marshal::Raw { };
+is MD4ext.size, 256, "extended MD4 .size is correct.  And a class method.";
+todo "Need extended MD4 test vector", 1;
 is hexify(MD4ext.new().finalize(Buf.new(97 xx 55))),
    0x0,
    "Extended MD4 works.";
@@ -65,6 +79,7 @@ my MD5t $md5 .= new();
 ok $md5.WHAT === MD5t, 'We create an MD5 class and object';
 
 given (MD5t.new()) {
+  is .size, 128, "MD5.size is correct";
   is .finalize(Buf.new()),
      0xd41d8cd98f00b204e9800998ecf8427e,
      "MD5 of an empty buffer is correct.";
@@ -84,6 +99,7 @@ my r160t $r160 .= new();
 ok $r160.WHAT === r160t, 'We create a RIPEMD-160 class and object';
 
 given (r160t.new()) {
+  is .size, 160, "RIPEMD-160.size is correct";
   is .finalize(Buf.new()),
      0x9c1185a5c5e9fc54612808977ee8f548b2258d31,
      "RIPEMD-160 of an empty buffer is correct.";
@@ -103,6 +119,7 @@ my r128t $r128 .= new();
 ok $r128.WHAT === r128t, 'We create a RIPEMD-128 class and object';
 
 given (r128t.new()) {
+  is .size, 128, "RIPEMD-128.size is correct";
   is .finalize(Buf.new()),
      0xcdf26213a150dc3ecb610f18f6b38b46,
      "RIPEMD-128 of an empty buffer is correct.";
@@ -123,6 +140,7 @@ my r320t $r320 .= new();
 ok $r320.WHAT === r320t, 'We create a RIPEMD-320 class and object';
 
 given (r320t.new()) {
+  is .size, 320, "RIPEMD-320.size is correct";
   is .finalize(Buf.new()),
      0x22d65d5661536cdc75c1fdf5c6de7b41b9f27325ebc61e8557177d705a0ec880151c3a32a00899b8,
      "RIPEMD-320 of an empty buffer is correct.";
@@ -142,6 +160,7 @@ my r256t $r256 .= new();
 ok $r256.WHAT === r256t, 'We create a RIPEMD-256 class and object';
 
 given (r256t.new()) {
+  is .size, 256, "RIPEMD-256.size is correct";
   is .finalize(Buf.new()),
      0x02ba4c4e5f8ecd1877fc52d64d30e37a2d9774fb1e5d026380ae0168e3c5522d,
      "RIPEMD-256 of an empty buffer is correct.";

@@ -77,7 +77,7 @@ class X::Sum::CheckVals is Exception {
 role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
                      :$inivA = 0, :$inivB = 0, :$finv = False,
                      :$columnsA = 16, :$columnsB = $columnsA ]
-     does Sum {
+     does Sum::Partial {
 
     has $!A is rw = ( ($inivA.WHAT === Bool)
                     ?? (-$inivA +& ((1 +< $columnsA)-1))
@@ -85,6 +85,8 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
     has $!B is rw = ( ($inivB.WHAT === Bool)
                     ?? (-$inivB +& ((1 +< $columnsB)-1))
                     !! $inivB );
+
+    method size () { $columnsA + $columnsB }
 
     method add (*@addends) {
         # TODO: when native type support improves, use effecient

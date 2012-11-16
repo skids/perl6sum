@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 66;
+plan 71;
 
 use Sum;
 ok(1,'We use Sum and we are still alive');
@@ -12,21 +12,21 @@ lives_ok { X::Sum::Missing.new() }, 'X::Sum::Missing is available';
 lives_ok { X::Sum::Spill.new() }, 'X::Sum::Spill is available';
 lives_ok { X::Sum::Push::Usage.new() }, 'X::Sum::Push::Usage is available';
 lives_ok { X::Sum::Recourse.new() }, 'X::Sum::Recourse is available';
-lives_ok { eval 'class foo1 does Sum { method finalize { }; method add { }; method push { }; }' }, 'Sum composes when interface is implemented';
+lives_ok { eval 'class foo1 does Sum { method size { }; method finalize { }; method add { }; method push { }; }' }, 'Sum composes when interface is implemented';
 dies_ok { eval 'class fooX does Sum { }' }, 'Sum requires interface to compose';
-lives_ok { eval 'class foo2 does Sum does Sum::Marshal::Raw { method finalize { }; method add { }; }' }, 'Sum::Marshal::Raw composes and provides push';
-lives_ok { eval 'class foo3 does Sum does Sum::Marshal::Cooked { method finalize { }; method add { }; }' }, 'Sum::Marshal::Cooked composes and provides push';
-lives_ok { eval 'class foo4 does Sum does Sum::Marshal::StrOrds { method finalize { }; method add { }; }' }, 'Sum::Marshal::StrOrds composes and provides push';
-lives_ok { eval 'class foo5 does Sum does Sum::Marshal::BufValues { method finalize { }; method add { }; }' }, 'Sum::Marshal::BufValues composes and provides push';
-lives_ok { eval 'class foo6 does Sum does Sum::Marshal::Pack[] { method finalize { }; method add { }; }' }, 'Sum::Marshal::Pack composes and provides push';
-lives_ok { eval 'class foo7 does Sum::Marshal::Pack::Bits[ :accept(Int) ] { method finalize { }; method add { }; }' }, 'Sum::Marshal::Pack::Bits composes';
+lives_ok { eval 'class foo2 does Sum does Sum::Marshal::Raw { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Raw composes and provides push';
+lives_ok { eval 'class foo3 does Sum does Sum::Marshal::Cooked { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Cooked composes and provides push';
+lives_ok { eval 'class foo4 does Sum does Sum::Marshal::Method[:atype(Str),:method<ords>] { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Method composes and provides push';
+lives_ok { eval 'class foo6 does Sum does Sum::Marshal::Pack[] { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Pack composes and provides push';
+lives_ok { eval 'class foo7 does Sum::Marshal::Pack[] does Sum::Marshal::Pack::Bits[ :accept(Int) ] { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Pack::Bits composes';
+lives_ok { eval 'class foo7a does Sum::Marshal::Pack[] does Sum::Marshal::Pack::Bits[ :width(4), :accept(Int) ] { method size { }; method finalize { }; method add { }; }' }, 'other Sum::Marshal::Pack::Bits composes';
 
-lives_ok { eval 'class fooC1 does Sum does Sum::Marshal::StrOrds does Sum::Marshal::BufValues { method finalize { }; method add { }; }' }, 'Two Sum::Marshal subroles can compose with same crony';
-lives_ok { eval 'class fooC2 does Sum does Sum::Marshal::Pack::Bits[ ] does Sum::Marshal::Pack::Bits[ :accept(Int) ] { method finalize { }; method add { }; }' }, 'Two Sum::Marshal::Pack subroles can compose with same crony';
+lives_ok { eval 'class fooC1 does Sum does Sum::Marshal::Method[:atype(Str),:method<ords>] does Sum::Marshal::Method[:atype(Buf),:method<values>] { method size { }; method finalize { }; method add { }; }' }, 'Two Sum::Marshal subroles can compose with same cronies';
 
 lives_ok {
 class Foo does Sum does Sum::Marshal::Cooked {
         has $.accum is rw = 0;
+        method size () { 64 };
         method finalize (*@addends) {
             self.push(@addends);
             $.accum;
@@ -58,6 +58,7 @@ is $f.accum, 31, "push with no arguments works(Cooked)";
 lives_ok {
 class Foo2 does Sum does Sum::Marshal::Raw {
         has $.accum is rw = 0;
+        method size () { 64 };
         method finalize (*@addends) {
             self.push(@addends);
             $.accum;
@@ -85,8 +86,9 @@ $g.push();
 is $g.accum, 31, "push with no arguments works(Raw)";
 
 lives_ok {
-class Foo3 does Sum does Sum::Partial does Sum::Marshal::Cooked {
+class Foo3 does Sum::Partial does Sum::Marshal::Cooked {
         has $.accum is rw = 0;
+        method size () { 64 };
         method finalize (*@addends) {
             self.push(@addends);
             $.accum;
@@ -120,8 +122,9 @@ my @d;
 #is @d.join(""), "3942", "partials inserts values in a feed"
 is $h.partials(4,5,Failure.new(X::AdHoc.new()),6).map({.WHAT.gist}), 'Int() Int() Failure()', "partials stops iterating on Failure (Partial,Cooked).";
 
-class Foo3r does Sum does Sum::Partial does Sum::Marshal::Raw {
+class Foo3r does Sum::Partial does Sum::Marshal::Raw {
         has $.accum is rw = 0;
+        method size () { 64 }
         method finalize (*@addends) {
             self.push(@addends);
             $.accum;
@@ -137,8 +140,9 @@ my Foo3r $hr .= new();
 is $hr.partials(4,5,Failure.new(X::AdHoc.new()),6).map({.WHAT.gist}), 'Int() Int() Failure()', "partials stops iterating on Failure (Partial,Raw).";
 
 lives_ok {
-class Foo4 does Sum does Sum::Partial does Sum::Marshal::StrOrds {
+class Foo4 does Sum::Partial does Sum::Marshal::Method[:atype(Str),:method<ords>] {
         has $.accum is rw = 0;
+        method size () { 64 }
         method finalize (*@addends) {
             self.push(@addends);
             $.accum;
@@ -147,7 +151,7 @@ class Foo4 does Sum does Sum::Partial does Sum::Marshal::StrOrds {
         method add (*@addends) {
             $.accum += [+] @addends;
         };
-} }, "can compose a basic Sum class (StrOrds)";
+} }, "can compose a basic Sum class (Str.ords)";
 
 my Foo4 $o1;
 lives_ok { $o1 .= new(); }, "can instantiate a basic Cooked subclass";
@@ -161,8 +165,13 @@ $o1.push(1,"ABC",2);
 is $o1.finalize, 65 + 66 + 67 + 3, "mix addends around exploding addend";
 
 lives_ok {
-class Foo5 does Sum does Sum::Marshal::Pack::Bits[] {
+class Foo5
+     does Sum does Sum::Marshal::Pack[]
+     does Sum::Marshal::Pack::Bits[]
+     does Sum::Marshal::Pack::Bits[ :width(4), :accept(Str), :coerce(Int) ]
+{
         has $.accum is rw = 0;
+        method size () { 64 }
         method finalize (*@addends) {
             self.push(@addends);
             return fail(X::Sum::Missing.new()) unless self.whole;
@@ -175,7 +184,7 @@ class Foo5 does Sum does Sum::Marshal::Pack::Bits[] {
 } }, "Can instantiate basic Pack subclass";
 
 my Foo5 $o2;
-lives_ok { $o2 .= new(); }, "can instantiate a basic Packed subclass";
+lives_ok { $o2 .= new(); }, "can instantiate Pack subclasses";
 $o2.push(True,False,False,False,True,False,True,False);
 is $o2.finalize, 138, "can combine 8 bits";
 $o2 .= new();
@@ -193,6 +202,25 @@ ok $o2.finalize.WHAT ~~ Failure, "Normal addend after 7 bits fails";
 $o2 .= new();
 $o2.push(True,False,False,False,True,False,True,8,False);
 ok $o2.finalize.WHAT ~~ Failure, "Normal addend amid 8 bits fails";
+$o2 .= new();
+$o2.push("8","4");
+is $o2.finalize, 0x84, "Bitfield addend works";
+$o2 .= new();
+$o2.push(True,False,False,False,"4");
+is $o2.finalize, 0x84, "Mixed bit and bitfields works";
+$o2 .= new();
+$o2.push("4");
+ok $o2.finalize.WHAT ~~ Failure, "Short bitfield finalize fails";
+$o2 .= new();
+$o2.push("4",8,"4");
+ok $o2.finalize.WHAT ~~ Failure, "Normal addend amid bitfields fails";
+$o2 .= new();
+$o2.push(8,"4","3");
+is $o2.finalize, 8 + 0x43, "Normal addend after bitfields works";
+$o2 .= new();
+$o2.push("4","3",8);
+is $o2.finalize, 0x43 + 8, "Normal addend before bitfields works";
+
 
 
 # Now grab the code in the synopsis from the POD and make sure it runs.

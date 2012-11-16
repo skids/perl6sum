@@ -11,20 +11,20 @@ Sum::SHA
     class mySHA1 does Sum::SHA1 does Sum::Marshal::Raw { }
     my mySHA1 $a .= new();
     $a.finalize("123456789".encode('ascii')).say;
-        # 1414485752856024225500297739715962456813268251713
+       # 1414485752856024225500297739715962456813268251713
 
     # SHA-224
     class mySHA2 does Sum::SHA2[:columns(224)] does Sum::Marshal::Raw { }
     my mySHA2 $b .= new();
     $b.finalize("123456789".encode('ascii')).say;
-        # 16349067602210014067037177823623301242625642097093531536712287864097
+       # 16349067602210014067037177823623301242625642097093531536712287864097
 
     # When dealing with obselete systems that use SHA0
     class mySHA0 does Sum::SHA1[:insecure_sha0_obselete]
         does Sum::Marshal::Raw { }
     my mySHA0 $c .= new();
     $c.finalize("123456789".encode('ascii')).say;
-        # 1371362676478658660830737973868471486175721482632
+       # 1371362676478658660830737973868471486175721482632
 
 
 =end pod
@@ -95,6 +95,8 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
     has $!final is rw;
     has @!w is rw;     # "Parsed" message gets bound here.
     has @!s is rw;     # Current hash state.  H in specification.
+
+    method size () { 160 }
 
     submethod BUILD () {
         @!s = (0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0);
@@ -201,7 +203,11 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
     method add (*@addends) { self.do_add(|@addends) }
 
     method finalize(*@addends) {
-        self.push(@addends);
+        given self.push(@addends) {
+            return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
+        }
+
+        self.add(self.drain) if self.^can("drain");
 
         self.add(Buf.new()) unless $!final;
 
@@ -296,6 +302,8 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
   0x28db77f523047d84,0x32caab7b40c72493,0x3c9ebe0a15c9bebc,0x431d67c49c100d4c,
   0x4cc5d4becb3e42b6,0x597f299cfc657e2a,0x5fcb6fab3ad6faec,0x6c44198c4a475817)
   »+>» (64 - $rwidth);
+
+    method size () { $columns }
 
     submethod BUILD () {
         @!s =
@@ -468,7 +476,11 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
     method add (*@addends) { self.do_add(|@addends) }
 
     method finalize(*@addends) {
-        self.push(@addends);
+        given self.push(@addends) {
+            return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
+        }
+
+        self.add(self.drain) if self.^can("drain");
 
         self.add(Buf.new()) unless $!final;
 
