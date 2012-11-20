@@ -575,6 +575,101 @@ role Sum::RIPEMD320 does Sum::MD4_5[ :alg<RIPEMD-320> ] { }
 
 =begin pod
 
+=head2 role Sum::MD2 does Sum
+
+    The C<Sum::MD2> role is used to create a type of C<Sum>
+    that calculates an MD2 message digest.  These digests should only
+    be used for compatibility with legacy systems, as MD2 is not
+    considered a cryptographically secure algorithm.
+
+    The resulting C<Sum> expects 16-byte blocks as addends.  Currently
+    that means a punned C<Buf> with 16 elements.  Passing a shorter Buf
+    may be done once, before or during finalization.  Attempts to provide
+    more blocks after passing a short block will result in an
+    C<X::Sum::Final>.
+
+    C<Sum::Marshal::Block> roles may be mixed in to allow for accumulation
+    of smaller addends, to split large messages into blocks, or to allow
+    for the mixin of the C<Sum::Partial> role.
+
+=end pod
+
+role Sum::MD2 does Sum {
+
+    # S-Box. Spec claims this is a "nothing up my sleeve" value based on pi
+    my @S =
+        < 41  46  67 201 162 216 124   1  61  54  84 161 236 240   6  19
+          98 167   5 243 192 199 115 140 152 147  43 217 188  76 130 202
+          30 155  87  60 253 212 224  22 103  66 111  24 138  23 229  18
+         190  78 196 214 218 158 222  73 160 251 245 142 187  47 238 122
+         169 104 121 145  21 178   7  63 148 194  16 137  11  34  95  33
+         128 127  93 154  90 144  50  39  53  62 204 231 191 247 151   3
+         255  25  48 179  72 165 181 209 215  94 146  42 172  86 170 198
+          79 184  56 210 150 164 125 182 118 252 107 226 156 116   4 241
+          69 157 112  89 100 113 135  32 134  91 207 101 230  45 168   2
+          27  96  37 173 174 176 185 246  28  70  97 105  52  64 126  15
+          85  71 163  35 221  81 175  58 195  92 249 206 186 197 234  38
+          44  83  13 110 133  40 132   9 211 223 205 244  65 129  77  82
+         106 220  55 200 108 193 171 250  36 225 123   8  12 189 177  74
+         120 136 149 139 227  99 232 109 233 203 213 254  59   0  29  57
+         242 239 183  14 102  88 208 228 166 119 114 248 235 117  75  10
+          49  68  80 180 143 237 31   26 219 153 141  51 159  17 131  20
+        >>>.Int;
+
+    has @!C is rw = 0 xx 16;   # The checksum, computed in parallel
+    has @!X is rw = 0 xx 48;   # The digest state
+    has $!final is rw = False; # whether pad/checksum is in state already
+
+    multi method do_add (*@addends) {
+        sink for (@addends) { self.add($_) }
+    }
+    multi method do_add ($addend) {
+        # TODO: Typed failure here?
+        die("Marshalling error.  Addends must be Buf with 0..16 bytes.");
+    }
+    multi method do_add (Buf $block where { -1 < .elems < 16 }) {
+        my Int $empty = 16 - $block.elems;
+        $!final = True;
+        self.do_add(Buf.new($block.values, $empty xx $empty));
+        self.do_add(Buf.new(@!C[]));
+    }
+    multi method do_add (Buf $block where { .elems == 16 }) {
+        @!X[16..^32] = $block.values;
+        @!X[32..^48] = @!X[^16] Z+^ @!X[16..^32];
+        for 15,^15 Z ^16 -> $last, $x {
+            @!C[$x] +^= @S[$block[$x] +^ @!C[$last]]
+        }
+        my $t = 0;
+        for ^18 -> $j {
+            for ^48 -> $k { $t = (@!X[$k] +^= @S[$t]) }
+            $t += $j;
+            $t +&= 0xff;
+        }
+        return;
+    }
+    method size { 128 };
+    method add (*@addends) { self.do_add(|@addends) }
+    method finalize(*@addends) {
+        given self.push(@addends) {
+            return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
+        }
+
+        self.add(self.drain) if self.^can("drain");
+
+        self.add(Buf.new()) unless $!final;
+
+        :256[ @!X[^16] ]
+    }
+    method Numeric () { self.finalize };
+    method buf8 () {
+        self.finalize;
+        Buf.new( @!X[^16] );
+    }
+    method Buf () { self.buf8 }
+}
+
+=begin pod
+
 =head1 AUTHOR
 
     Written by Brian S. Julin

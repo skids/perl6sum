@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 51;
+plan 59;
 
 use Sum::MD;
 ok 1,'We use Sum::MD and we are still alive';
@@ -174,6 +174,31 @@ is r256t.new().finalize(Buf.new(97 xx 64)),
 is r256t.new().finalize(Buf.new(97 xx 64), Buf.new(97 xx 64), Buf.new(97 xx 56)),
    0x8e7bc719ca3cdbb9411e43f18955a1f305e7643a0ae20a7a01823e80090fcf37,
    "RIPEMD-256 is correct (test vector 2).";
+
+
+class MD2t does Sum::MD2 does Sum::Marshal::Raw { };
+my MD2t $s2 .= new();
+ok $s2.WHAT === MD2t, 'We create a MD2 class and object';
+
+given (MD2t.new()) {
+is .size, 128, "MD2.size is correct";
+is .finalize(Buf.new()),
+   0x8350e5a3e24c153df2275c9f80692773,
+   "MD2 of an empty buffer is correct.";
+is .Buf.values, (0x83, 0x50, 0xe5, 0xa3, 0xe2, 0x4c, 0x15, 0x3d, 0xf2, 0x27, 0x5c, 0x9f, 0x80, 0x69, 0x27, 0x73), "MD2 Buf method works";
+}
+is MD2t.new().finalize(Buf.new(97)),
+   0x32ec01ec4a6dac72c0ab96fb34c0b5d1,
+   "MD2 of a 1-byte buffer is correct.";
+is MD2t.new().finalize(Buf.new(97 xx 15)),
+   0xa1379a1027d0d29af98200799b8d5d8e,
+   "MD2 of a 15-byte buffer is correct.";
+is MD2t.new().finalize(Buf.new(97 xx 16)),
+   0xb437ae50feb09a37c16b4c605cd642da,
+   "MD2 of a 16-byte buffer is correct.";
+is MD2t.new().finalize(Buf.new(97 xx 16), Buf.new(97)),
+   0xdbf15a5fdfd6f7e9ece27d5e310c58ed,
+   "MD2 of a 17-byte buffer is correct.";
 
 # Now grab the code in the synopsis from the POD and make sure it runs.
 # This is currently complete hackery but might improve when pod support does.
