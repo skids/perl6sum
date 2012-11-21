@@ -111,7 +111,7 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
     # should only be rw from inside the class.
     has $.rem is rw = ( ($iniv.WHAT === Bool) ?? (-$iniv +& ((1 +< $columns) - 1)) !! $iniv );
 
-    method size () { $columns }
+    method size ( --> int) { +$columns }
 
     method add (*@addends) {
         for (@addends) -> $a {
@@ -150,11 +150,11 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
     method buf8 () {
         my $f = self.finalize;
         my $bytes = ($columns + 7) div 8;
-        Buf.new( 255 X+& ($f X+> (8 X* reverse(^$bytes))) );
+        Buf.new( 255 X+& ($f X+> ($bytes*8-8,{$_-8}...0)));
     }
     method buf1 () {
         my $f = self.finalize;
-        Buf.new( 1 X+& ($f X+> reverse(^$columns)) );
+        Buf.new( 1 X+& ($f X+> ($columns-1...0)) );
     }
     method Buf () { self.buf1; }
 

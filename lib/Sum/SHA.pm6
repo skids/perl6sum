@@ -89,14 +89,14 @@ $Sum::SHA::Doc::synopsis = $=pod[0].content[3..6]>>.content.Str;
 
 use Sum;
 
-role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
+role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
 
     has $!o is rw = 0;
-    has $!final is rw;
+    has Bool $!final is rw;
     has @!w is rw;     # "Parsed" message gets bound here.
     has @!s is rw;     # Current hash state.  H in specification.
 
-    method size () { 160 }
+    method size ( --> int) { 160 }
 
     submethod BUILD () {
         @!s = (0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0);
@@ -105,7 +105,7 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
 
     method comp () {
 
-        my ($a,$b,$c,$d,$e) = @!s[];
+        my ($a, $b, $c, $d, $e) = @!s[];
 
         for ((0x5A827999,{ $b +& $c +| (+^$b) +& $d }).item xx 20,
              (0x6ED9EBA1,{ $b +^ $c +^ $d }).item xx 20,
@@ -119,12 +119,12 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
 
         }
 
-        @!s[] = 0xffffffff X+& (@!s[] >>+<< (0xffffffff X+& ($a,$b,$c,$d,$e)));
+        @!s[] = 0xffffffff X+& (@!s[] »+« (0xffffffff X+& ($a,$b,$c,$d,$e)));
     }
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub rol ($v, Int $count where { -1 < * < 32 }) {
+    my sub rol ($v, int $count where { -1 < * < 32 }) {
         my $tmp = ($v +< $count) +& 0xffffffff;
         $tmp +|= (($v +& 0xffffffff) +> (32 - $count));
 	$tmp;
@@ -142,19 +142,19 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
     multi method do_add (Buf $block where { -1 < .elems < 64 },
                          Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
                          Bool $b3?, Bool $b2?, Bool $b1?) {
-        my $bits = 0;
-        my $byte = 0;
+        my int $bits = 0;
+        my int $byte = 0;
 
         # Count how many stray bits we have and build them into a byte
-        ( $byte +|= +$_ +< (7 - $bits++) )
+        # Note: int cannot currently do +|= or ++
+        ( $byte = $byte +| (+$_ +< (7 - (($bits = $bits + 1) - 1))))
             if .defined for ($b7,$b6,$b5,$b4,$b3,$b2,$b1);
-
         # Update the count of the total number of bits sent.
         $!o += $block.elems * 8 + $bits;
         # See note in .finalize.
         $!o +&= 0x1ffffffffffffffff if ($!o >  0x1ffffffffffffffff);
 
-        # Check if buffer, bits, the added 1 bit, and the length fit in a block
+        # Check if buffer, bits, the added 1 bit, and the length fit in block
         if $block.elems * 8 + $bits + 1 + 64 < 513 { # Yes
 
             # Note 1 +< (7 - $bits) just happily also DTRT when !$bits
@@ -186,10 +186,10 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
         # First 16 uint32's are a straight copy of the data.
         # When endianness matches and with native types,
         # this would boil down to a simple memcpy.
-        my @m = (:256[ $block[ $_ ..^ $_+4 ] ] for 0,4,{$^idx + 4} ...^ 64);
+        my @m = (:256[ $block[ $_ ..^ $_+4 ] ] for 0,4 ...^ 64);
 
         # Fill the rest of the scratchpad with permutations.
-        @m.push(rol(([+^] @m[* <<-<< (3,8,14,16)]),+!$insecure_sha0_obselete))
+        @m.push(rol(([+^] @m[* «-« (3,8,14,16)]),+!$insecure_sha0_obselete))
             for 16..^80;
 
 	@!w := @m;
@@ -221,7 +221,7 @@ role Sum::SHA1 [ :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
 
         # This does not work yet on 32-bit machines
         # :4294967296[@!s[]];
-        [+|] (@!s[] »+<« (32 X* (4,3,2,1,0)));
+        [+|] (@!s[] »+<« (128,96...0));
     }
     method Numeric () { self.finalize };
     method buf8 () {
@@ -271,14 +271,14 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
      does Sum {
 
     has $!o is rw = 0;
-    has $!final is rw;
+    has Bool $!final is rw;
     has @!w is rw;     # "Parsed" message gets bound here.
     has @!s is rw;     # Current hash state.  H in specification.
 
-    my $rwidth = ($columns > 256) ?? 64 !! 32;
-    my $rmask = (1 +< $rwidth) - 1; # Hopefully will go away with native types
-    my $bbytes = ($columns > 256) ?? 128 !! 64;
-    my $lbits = ($columns > 256) ?? 128 !! 64;
+    my int $rwidth = ($columns > 256) ?? 64 !! 32;
+    my $rmask = (1 +< $rwidth) - 1; # Hopefully will go away with sized types
+    my int $bbytes = ($columns > 256) ?? 128 !! 64;
+    my int $lbits = ($columns > 256) ?? 128 !! 64;
 
     my @k =
  (0x428a2f98d728ae22,0x7137449123ef65cd,0xb5c0fbcfec4d3b2f,0xe9b5dba58189dbbc,
@@ -326,7 +326,7 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub infix:<ror> ($v, Int $count where { -1 < * < $rwidth }) {
+    my sub infix:<ror> ($v, int $count where { -1 < * < $rwidth }) {
         my $tmp = ($v +& $rmask) +> $count;
         $tmp +|= ($v +< ($rwidth - $count)) +& $rmask;
 	$tmp;
@@ -369,7 +369,7 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
         }
 
         # merge the new state
-        @!s[] = $rmask X+& (@!s[] >>+<< ($rmask X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
+        @!s[] = $rmask X+& (@!s[] »+« ($rmask X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
 
     }
 
@@ -383,11 +383,11 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
     multi method do_add (Buf $block where { -1 < .elems < $bbytes },
                          Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
                          Bool $b3?, Bool $b2?, Bool $b1?) {
-        my $bits = 0;
-        my $byte = 0;
+        my int $bits = 0;
+        my int $byte = 0;
 
         # Count how many stray bits we have and build them into a byte
-        ( $byte +|= +$_ +< (7 - $bits++) )
+        ( $byte = $byte +| +$_ +< (7 - (($bits = $bits + 1) - 1)) )
             if .defined for ($b7,$b6,$b5,$b4,$b3,$b2,$b1);
 
         # Update the count of the total number of bits sent.
@@ -436,7 +436,7 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
             # First 16 uint32's are a straight copy of the data.
             # When endianness matches and with native types,
             # this would boil down to a simple memcpy.
-            @m = (:256[ $block[ $_ ..^ $_+4 ] ] for 0,{$^idx + 4} ...^ 64);
+            @m = (:256[ $block[ $_ ..^ $_+4 ] ] for 0,4 ...^ 64);
 
             # Fill the rest of the scratchpad with permutations.
             @m.push($rmask +& (
@@ -449,7 +449,7 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
             # First 16 uint64's are a straight copy of the data.
             # When endianness matches and with native types,
             # this would boil down to a simple memcpy.
-            @m = (:256[ $block[ $_ ..^ $_+8 ] ] for 0,{$^idx + 8} ...^ 128);
+            @m = (:256[ $block[ $_ ..^ $_+8 ] ] for 0,8 ...^ 128);
 
             # Fill the rest of the scratchpad with permutations.
             @m.push($rmask +& (
@@ -501,20 +501,20 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
             # when 256 { :4294967296[@!s[]]   }
             # when 384 { :18446744073709551616[@!s[^6]] }
             # when 512 { :18446744073709551616[@!s[]] }
-            when 224 { [+|] (@!s[0..6] »+<« (32 X* (6,5,4,3,2,1,0)))   }
-            when 256 { [+|] (@!s[]     »+<« (32 X* (7,6,5,4,3,2,1,0))) }
-            when 384 { [+|] (@!s[0..5] »+<« (64 X* (5,4,3,2,1,0)))     }
-            when 512 { [+|] (@!s[]     »+<« (64 X* (7,6,5,4,3,2,1,0))) }
+            when 224 { [+|] (@!s[0..6] »+<« (192,160...0)) }
+            when 256 { [+|] (@!s[]     »+<« (224,192...0)) }
+            when 384 { [+|] (@!s[0..5] »+<« (320,256...0)) }
+            when 512 { [+|] (@!s[]     »+<« (448,384...0)) }
         }
     }
     method Numeric () { self.finalize };
     method buf8 () {
         Buf.new(255 X+&
                    (given $columns {
-                        when 224 { (@!s[0..6] X+> (8 X* (3,2,1,0)))         }
-                        when 256 { (@!s[]     X+> (8 X* (3,2,1,0)))         }
-                        when 384 { (@!s[0..5] X+> (8 X* (7,6,5,4,3,2,1,0))) }
-                        when 512 { (@!s[]     X+> (8 X* (7,6,5,4,3,2,1,0))) }
+                        when 224 { (@!s[0..6] X+> (24,16...0)) }
+                        when 256 { (@!s[]     X+> (24,16...0)) }
+                        when 384 { (@!s[0..5] X+> (56,48...0)) }
+                        when 512 { (@!s[]     X+> (56,48...0)) }
                     })
         );
     }

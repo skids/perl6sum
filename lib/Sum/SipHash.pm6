@@ -139,9 +139,9 @@ role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
 	$!v3 +^= $!k1;
     }
 
-    method size () { 64 };
+    method size ( --> int ) { 64 };
 
-    my sub rol ($v is rw, $count) {
+    my sub rol ($v is rw, int $count) {
         my $tmp = (($v +& (0xffffffffffffffff +> $count)) +< $count);
         $tmp +|= ($v +> (64 - $count));
 	$v = $tmp;

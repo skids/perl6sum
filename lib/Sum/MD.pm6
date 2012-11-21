@@ -78,17 +78,17 @@ $Sum::MD::Doc::synopsis = $=pod[0].content[3..4]>>.content.Str;
 
 use Sum;
 
-role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
+role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320 > } = "MD5",
                   :$mod8 = False ] does Sum {
     has $!o is rw = 0;
-    has $!final is rw;
+    has Bool $!final is rw;
     has @!w is rw;     # "Parsed" message gets bound here.
     has @!s is rw;     # Current hash state.  H in specification.
 
     # MD5 table of constants (a.k.a. T[1..64] in RFC1321)
     my @t = (Int(4294967296 * .sin.abs) for 1..64);
 
-    method size () {
+    method size ( --> int) {
         given $alg {
             when "MD4"|
                  "MD5"|
@@ -97,7 +97,6 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
             when "RIPEMD-256" { 256 }
             when "RIPEMD-160" { 160 }
             when "RIPEMD-320" { 320 }
-            default           { Inf }
         }
     }
 
@@ -119,13 +118,13 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub rol ($v, Int $count where { -1 < * < 32 }) {
+    my sub rol ($v, int $count where { -1 < * < 32 }) {
         my $tmp = ($v +< $count) +& 0xffffffff;
         $tmp +|= (($v +& 0xffffffff) +> (32 - $count));
 	$tmp;
     }
 
-    method md4_round1_step ($data, $shift) {
+    method md4_round1_step ($data, int $shift) {
         my $a := @!s[0];
         my $b := @!s[1];
         my $c := @!s[2];
@@ -134,7 +133,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
              rol(($a + $data + (($b +& $c) +| ((+^$b) +& $d))), $shift));
     }
 
-    method md4_ext_round1_step ($data, $shift) {
+    method md4_ext_round1_step ($data, int $shift) {
         my $a := @!s[4];
         my $b := @!s[5];
         my $c := @!s[6];
@@ -143,7 +142,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
              rol(($a + $data + (($b +& $c) +| ((+^$b) +& $d))), $shift));
     }
 
-    method md4_round2_step ($data, $shift) {
+    method md4_round2_step ($data, int $shift) {
         my $a := @!s[0];
         my $b := @!s[1];
         my $c := @!s[2];
@@ -153,7 +152,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
                  ([+|] (($b,$b,$c) Z+& ($c,$d,$d)))), $shift));
     }
 
-    method md4_ext_round2_step ($data, $shift) {
+    method md4_ext_round2_step ($data, int $shift) {
         my $a := @!s[4];
         my $b := @!s[5];
         my $c := @!s[6];
@@ -163,7 +162,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
                  ([+|] (($b,$b,$c) Z+& ($c,$d,$d)))), $shift));
     }
 
-    method md4_round3_step ($data, $shift) {
+    method md4_round3_step ($data, int $shift) {
         my $a := @!s[0];
         my $b := @!s[1];
         my $c := @!s[2];
@@ -172,7 +171,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
              rol(($a + $data + 0x6ed9eba1 + ([+^] $b, $c, $d)), $shift));
     }
 
-    method md4_ext_round3_step ($data, $shift) {
+    method md4_ext_round3_step ($data, int $shift) {
         my $a := @!s[4];
         my $b := @!s[5];
         my $c := @!s[6];
@@ -191,7 +190,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
                       (($b +& $c) +| (+^$b +& $d))), $shift)));
     }
 
-    method md5_round2_step ($data, $idx, $shift) {
+    method md5_round2_step ($data, int $idx, int $shift) {
         my $a := @!s[0];
         my $b := @!s[1];
         my $c := @!s[2];
@@ -201,7 +200,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
                       (($b +& $d) +| (+^$d +& $c))), $shift)));
     }
 
-    method md5_round3_step ($data, $idx, $shift) {
+    method md5_round3_step ($data, int $idx, int $shift) {
         my $a := @!s[0];
         my $b := @!s[1];
         my $c := @!s[2];
@@ -210,7 +209,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
              $b + rol(($a + $data + @t[$idx] + ([+^] $b, $c, $d)), $shift)));
     }
 
-    method md5_round4_step ($data, $idx, $shift) {
+    method md5_round4_step ($data, int $idx, int $shift) {
         my $a := @!s[0];
         my $b := @!s[1];
         my $c := @!s[2];
@@ -219,7 +218,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
           $b + rol(($a + $data + @t[$idx] + ($c +^ (+^$d +| $b))), $shift)));
     }
 
-    method ripe_f1_5 ($lr, $data, $k, $shift) {
+    method ripe_f1_5 (int $lr, $data, $k, int $shift) {
         my $a := @!s[$lr + 0];
         my $b := @!s[$lr + 1];
         my $c := @!s[$lr + 2];
@@ -229,7 +228,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
              ($e + rol($a + $k + $data + ([+^] $b, $c, $d), $shift)));
     }
 
-    method ripe_f1_4 ($lr, $data, $k, $shift) {
+    method ripe_f1_4 (int $lr, $data, $k, int $shift) {
         my $a := @!s[$lr + 0];
         my $b := @!s[$lr + 1];
         my $c := @!s[$lr + 2];
@@ -238,7 +237,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
              rol($a + $k + $data + ([+^] $b, $c, $d), $shift));
     }
 
-    method ripe_f2_5 ($lr, $data, $k, $shift) {
+    method ripe_f2_5 (int $lr, $data, $k, int $shift) {
         my $a := @!s[$lr + 0];
         my $b := @!s[$lr + 1];
         my $c := @!s[$lr + 2];
@@ -249,7 +248,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
                        $shift)));
     }
 
-    method ripe_f2_4 ($lr, $data, $k, $shift) {
+    method ripe_f2_4 (int $lr, $data, $k, int $shift) {
         my $a := @!s[$lr + 0];
         my $b := @!s[$lr + 1];
         my $c := @!s[$lr + 2];
@@ -258,7 +257,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
              rol($a + $k + $data + (($b +& $c) +| (+^$b +& $d)), $shift));
     }
 
-    method ripe_f3_5 ($lr, $data, $k, $shift) {
+    method ripe_f3_5 (int $lr, $data, $k, int $shift) {
         my $a := @!s[$lr + 0];
         my $b := @!s[$lr + 1];
         my $c := @!s[$lr + 2];
@@ -268,7 +267,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
              ($e + rol($a + $k + $data + ((+^$c +| $b) +^ $d), $shift)));
     }
 
-    method ripe_f3_4 ($lr, $data, $k, $shift) {
+    method ripe_f3_4 (int $lr, $data, $k, int $shift) {
         my $a := @!s[$lr + 0];
         my $b := @!s[$lr + 1];
         my $c := @!s[$lr + 2];
@@ -277,7 +276,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
              rol($a + $k + $data + ((+^$c +| $b) +^ $d), $shift));
     }
 
-    method ripe_f4_5 ($lr, $data, $k, $shift) {
+    method ripe_f4_5 (int $lr, $data, $k, int $shift) {
         my $a := @!s[$lr + 0];
         my $b := @!s[$lr + 1];
         my $c := @!s[$lr + 2];
@@ -288,7 +287,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
                        $shift)));
     }
 
-    method ripe_f4_4 ($lr, $data, $k, $shift) {
+    method ripe_f4_4 (int $lr, $data, $k, int $shift) {
         my $a := @!s[$lr + 0];
         my $b := @!s[$lr + 1];
         my $c := @!s[$lr + 2];
@@ -297,7 +296,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
              rol($a + $k + $data + (($b +& $d) +| (+^$d +& $c)), $shift));
     }
 
-    method ripe_f5_5 ($lr, $data, $k, $shift) {
+    method ripe_f5_5 (int $lr, $data, $k, int $shift) {
         my $a := @!s[$lr + 0];
         my $b := @!s[$lr + 1];
         my $c := @!s[$lr + 2];
@@ -486,13 +485,13 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
     multi method do_add (Buf $block where { -1 < .elems < 64 },
                          Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
                          Bool $b3?, Bool $b2?, Bool $b1?) {
-        my $bits = 0;
-        my $byte = 0;
+        my int $bits = 0;
+        my int $byte = 0;
 
 #        $block.gist.say;
 
         # Count how many stray bits we have and build them into a byte
-        ( $byte +|= +$_ +< (7 - $bits++) )
+        ( $byte = $byte +| (+$_ +< (7 - (($bits = $bits + 1)-1))) )
             if .defined for ($b7,$b6,$b5,$b4,$b3,$b2,$b1);
 
         # Update the count of the total number of bits sent.
@@ -505,7 +504,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
             # Note 1 +< (7 - $bits) just happily also DTRT when !$bits
             self.add(Buf.new($block[],$byte +| 1 +< (7 - $bits),
                      0 xx (55 - $block.elems),
-                     (255 X+& ($!o X+> (0,8,16,24,32,40,48,56)))));
+                     (255 X+& ($!o X+> (0,8...56)))));
             $!o -= 512; # undo what the other multimethod did.
         }
         else { # No
@@ -515,7 +514,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
                      0 xx (63 - $block.elems)));
             $!o -= 512;  # undo what the other multimethod did.
             self.add(Buf.new(0 xx 56,
-                     (255 X+& ($!o X+> (0,8,16,24,32,40,48,56)))));
+                     (255 X+& ($!o X+> (0,8...56)))));
             $!o -= 512; # undo what the other multimethod did.
         }
         $!final = True;
@@ -531,8 +530,7 @@ role Sum::MD4_5 [ :$alg where { * eqv [|] <MD5 MD4 MD4ext> } = "MD5",
         # First 16 uint32's are a straight copy of the data.
         # When endianness matches and with native types,
         # this would boil down to a simple memcpy.
-        my @m = (:256[ $block[ reverse($_ ..^ $_+4) ] ]
-                 for 0,{$^idx + 4} ...^ 64);
+        my @m = (:256[ $block[ $_+3 ... $_ ] ] for 0,4 ...^ 64);
 
 	@!w := @m;
         self.md4_comp if $alg eqv ("MD4"|"MD4ext");
@@ -618,7 +616,7 @@ role Sum::MD2 does Sum {
 
     has @!C is rw = 0 xx 16;   # The checksum, computed in parallel
     has @!X is rw = 0 xx 48;   # The digest state
-    has $!final is rw = False; # whether pad/checksum is in state already
+    has Bool $!final is rw = False; # whether pad/checksum is in state already
 
     multi method do_add (*@addends) {
         sink for (@addends) { self.add($_) }
@@ -628,7 +626,7 @@ role Sum::MD2 does Sum {
         die("Marshalling error.  Addends must be Buf with 0..16 bytes.");
     }
     multi method do_add (Buf $block where { -1 < .elems < 16 }) {
-        my Int $empty = 16 - $block.elems;
+        my int $empty = 16 - $block.elems;
         $!final = True;
         self.do_add(Buf.new($block.values, $empty xx $empty));
         self.do_add(Buf.new(@!C[]));
@@ -647,7 +645,7 @@ role Sum::MD2 does Sum {
         }
         return;
     }
-    method size { 128 };
+    method size ( --> int) { 128 };
     method add (*@addends) { self.do_add(|@addends) }
     method finalize(*@addends) {
         given self.push(@addends) {
