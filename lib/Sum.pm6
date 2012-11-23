@@ -25,6 +25,13 @@ class X::Sum::Spill is Exception {
     }
 }
 
+class X::Sum::Marshal is Exception {
+    has $.addend;
+    method message {
+        "Marshalling error.  Cannot handle addend of type $.addend."
+    }
+}
+
 class X::Sum::Recourse is Exception {
     method message {
         "No acceptable recourse found.  Verify third-party library support."
