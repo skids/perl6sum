@@ -138,9 +138,9 @@ role Sum::MDPad [ int :$blocksize where { not $_ %8 } = 512, :$lengthtype where 
 =end pod
 
     has Bool $!ignore_block_inc is rw = False;
-    has Bool $!final is rw = False;
+    has Bool $.final is rw = False;
     method pos_block_inc () {
-        fail(X::Sum::Final.new()) if $!final;
+        fail(X::Sum::Final.new()) if $.final;
         return if $!ignore_block_inc;
         unless ($overflow) {
             # TODO use :lengthtype
@@ -175,7 +175,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ %8 } = 512, :$lengthtype where 
                          Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
                          Bool $b3?, Bool $b2?, Bool $b1?) {
 
-        fail(X::Sum::Final.new()) if $!final;
+        fail(X::Sum::Final.new()) if $.final;
         my @bcat = ();
 
         @bcat.push($_) if .defined for ($b7,$b6,$b5,$b4,$b3,$b2,$b1);
@@ -206,7 +206,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ %8 } = 512, :$lengthtype where 
         self.add(Buf.new(@vals[^$bbytes]));
         self.add(Buf.new(@vals[$bbytes .. *-1])) if +@vals > $bbytes;
 
-        $!final = True;
+        $.final = True;
     }
     # Workaround for multis not satisfying prototypes in composed roles
     method add (*@addends) { self.do_add(|@addends) }
