@@ -77,7 +77,7 @@ class X::Sum::CheckVals is Exception {
 role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
                      :$inivA = 0, :$inivB = 0, :$finv = False,
                      :$columnsA = 16, :$columnsB = $columnsA ]
-     does Sum::Partial {
+     does Sum {
 
     has $!A is rw = ( ($inivA.WHAT === Bool)
                     ?? (-$inivA +& ((1 +< $columnsA)-1))
@@ -85,8 +85,6 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
     has $!B is rw = ( ($inivB.WHAT === Bool)
                     ?? (-$inivB +& ((1 +< $columnsB)-1))
                     !! $inivB );
-
-    method size () { $columnsA + $columnsB }
 
     method add (*@addends) {
         # TODO: when native type support improves, use effecient
@@ -123,18 +121,11 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
     }
     method Numeric () { self.finalize };
 
-    method buf8 () {
+    method Buf () {
         my $f = self.finalize;
         my $bytes = ($columnsA + $columnsB + 7) div 8;
         Buf.new( 255 X+& ($f X+> (8 X* reverse(^$bytes))) );
     }
-    method buf1 () {
-        my $f = self.finalize;
-        Buf.new( 1 X+& ($f X+> reverse(^($columnsA + $columnsB))) );
-    }
-    # Although these algorithms can produce results not evenly packable,
-    # common cases are packable and users will expect byte results.
-    method Buf () { (($columnsA + $columnsB) % 8) ?? self.buf1 !! self.buf8 }
 
     method checkvals(*@addends) {
         self.finalize(@addends);
@@ -155,7 +146,7 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
 
 =begin pod
 
-=head2 role Sum::Adler32
+=head2 role Sum::Adler32[ :$recourse? ]
        does Sum::Fletcher[ :inivA(1), :modulusA(65521), :columnsA(16) ] { }
 
     The C<Sum::Adler32> parametric role is used to create a type of C<Sum>
@@ -171,10 +162,51 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
     accumulators.  The results of this method in a C<Sum::Adler32>
     will likely not be expressable in bytes.
 
+    The C<:recourse> parameter chooses the back-end implementation, as
+    described in the C<Sum> documentation.
+
 =end pod
 
-role Sum::Adler32
+role Sum::Adler32 [ :$recourse! where { $_ eqv {:Perl6} } ]
      does Sum::Fletcher[ :inivA(1), :modulusA(65521), :columnsA(16) ] { }
+
+role Sum::Adler32 [ :$recourse? ] does Sum {
+    has $!cor;
+
+    method add (|c) { $!cor.add(|c) };
+    method finalize (|c) {
+        self.push(|c);
+        $!cor.finalize()
+    };
+    method Buf (|c) { $!cor.Buf(|c) };
+    method Numeric (|c) { $!cor.Numeric(|c) };
+
+use Sum::MHash;
+
+    # XXX There does not seem to be a BUILDALL solution for clone
+    # yet, so this stomps on mixins' ability to also define clone
+    method clone () {
+        self.bless(*,:cor($!cor.clone()));
+    }
+
+    submethod BUILD (:$cor) { # XXX attempting to use :$!cor here fails
+        my class P6Impl
+            does Sum::Adler32[:recourse{:Perl6}]
+            does Sum::Marshal::Raw { };
+        if defined($cor) {
+            $!cor = $cor;
+        } else {
+            my $o = $recourse;
+            $o = {:MHash,:Perl6} unless $recourse.defined and +$recourse.keys;
+            $!cor = Sum::MHash::Sum.new('ADLER32')
+                if $o<MHash> and $Sum::MHash::up.defined;
+            if (not $!cor.defined) and $o<Perl6> {
+                $!cor = P6Impl.new();
+            }
+            $!cor = Failure.new(X::Sum::Recourse.new()) unless $!cor.defined;
+        }
+    }
+}
 
 =begin pod
 
@@ -200,7 +232,7 @@ role Sum::Fletcher16
 =end pod
 
 role Sum::Fletcher32
-     does Sum::Fletcher[ ] { }
+     does Sum::Fletcher { }
 
 =begin pod
 
