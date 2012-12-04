@@ -252,7 +252,7 @@ role Sum {
     The C<.push> method is usually provided by mixing in C<Sum::Marshal>
     roles, which define how addends lists are pre-processed.
 
-=head3 method add (*addends)
+=head3 method add (*@addends)
 
     The C<.add> method implements the raw arithmetic of the C<Sum>.
     It is usually not called directly, but rather is called as
@@ -261,6 +261,10 @@ role Sum {
     C<X::Sum::Missing> and C<X::Sum::Final> if needed.  Any
     Failure returned will be passed through to the caller of
     wrapping methods such as C<.push> or C<.finalize>.
+
+    The type and number of arguments accepted by this method may
+    vary depending on the type of C<Sum>.  Consult the relevant
+    manpages.
 
 =end pod
 
