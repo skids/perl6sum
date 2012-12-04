@@ -33,9 +33,10 @@ Sum::MDPad
 
     The role parameter C<:blocksize> sets the size of message blocks in
     bits.  The C<:firstpad> parameter specifies a bit pattern appended
-    to the message before zero-padding.  It is an Array of Bool, and
-    defaults to C<[True]>, which causes one set bit to be appended before
-    padding the unused portion of the last block with clear bits.
+    to the message before zero-padding.  Currently this must be an Array
+    of Bool values, and defaults to C<[True]>, which causes one set bit
+    to be appended before padding the unused portion of the last block
+    with clear bits.
 
     The C<:lengthtype> and C<:overflow> parameters control the format
     and behavior of the length counter and are described with the relevant
@@ -45,7 +46,7 @@ Sum::MDPad
 
 use Sum;
 
-role Sum::MDPad [ int :$blocksize where { not $_ %8 } = 512, :$lengthtype where { $_ eqv one("uint64_be","uint64_le") } = "uint64_be", Bool :$overflow = True, :@firstpad = [True] ] does Sum {
+role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where { $_ eqv one("uint64_be","uint64_le") } = "uint64_be", Bool :$overflow = True, :@firstpad = [True] ] does Sum {
 
     my $bbytes = $blocksize/8;
     my @lenshifts = (
@@ -73,7 +74,8 @@ role Sum::MDPad [ int :$blocksize where { not $_ %8 } = 512, :$lengthtype where 
     or simply truncate higher bits off the length counter when storing it
     in the final block.  The default is C<True>, the latter, which is
     relatively benign with large counter sizes.  The option is mainly provided
-    for strict specification compliance.
+    for strict specification compliance, and will rarely be relevant in
+    common usage scenarios.
 
 =end pod
 
@@ -109,7 +111,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ %8 } = 512, :$lengthtype where 
             FETCH => { $!expect ?? $!expect !! $!o },
             STORE => -> $self, $v {
                 if ($!o) {
-                    Failure.new(X::AdHoc.new(:payload("Cannot presage length after providing addends")))
+                    Failure.new(X::AdHoc.new(:payload("Cannot presage length after providing addends.")))
                 }
                 else {
                     $!expect = $v
@@ -124,8 +126,8 @@ role Sum::MDPad [ int :$blocksize where { not $_ %8 } = 512, :$lengthtype where 
 
     The C<!pos_block_inc> method should be called by the C<.add>
     multi-candidate which handles complete blocks, in order to update
-    the message bit count.  This will eventually be a private method
-    which only composers may use, but is currently public.
+    the message bit count.  This will be a private method which only
+    composers may use, but is currently public (C<.pos_block_inc>).
 
     It automatically handles finagling the count on the last blocks,
     so from the composer's side it should simply be called once for
@@ -155,29 +157,40 @@ role Sum::MDPad [ int :$blocksize where { not $_ %8 } = 512, :$lengthtype where 
 
 =head2 multi method add
 
-    The C<Sum::MDPad> role provides all the multi candidates for the
-    C<.add> method which are generic.  Each type of sum need only
-    provide a single additional candidate which processes one complete
-    block of message.
+    The C<Sum::MDPad> role provides multi candidates for the C<.add>
+    method which handle erroneous addends, missing addends, and short
+    blocks.  The algorithm-specific code which mixes in C<Sum::MDPad>
+    need only provide a single additional candidate which processes
+    one complete block of message.
+
+    The resulting C<Sum> expects single blocks as addends.  Currently,
+    that means a C<Buf> with C<blocksize/8> elements.  Passing a shorter
+    C<Buf> with C<0..^blocksize/8> elements may be done once, before or
+    during finalization.  Such a short C<Buf> may optionally be followed
+    by up to 7 bits (currently, 7 xx Bool) if the message does not end on a
+    byte boundary.  Attempts to provide more blocks after passing a short
+    block will result in an C<X::Sum::Final>.
+
+    Note that C<.add> does not handle slurpy argument lists, and when
+    using C<Sum::Marshal::Raw>, one call to C<.push> should be made per
+    block.  Slurpy lists may be C<.push>ed if C<Sum::Marshal::Block> roles
+    are mixed instead.
 
     As an interim workaround, these multi candidates are currently
     named C<.do_add> instead, and so should be the provided candidate.
 
 =end pod
 
-    multi method do_add (*@addends) {
-        sink for (@addends) { self.add($_) }
-    }
     multi method do_add ($addend) {
         fail(X::Sum::Marshal.new(:addend($addend.WHAT.^name)))
     }
+    multi method do_add () { }
     multi method do_add (Buf $block where { -1 < .elems < $bbytes },
                          Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
                          Bool $b3?, Bool $b2?, Bool $b1?) {
 
         fail(X::Sum::Final.new()) if $.final;
         my @bcat = ();
-
         @bcat.push($_) if .defined for ($b7,$b6,$b5,$b4,$b3,$b2,$b1);
         my int $bits = @bcat.elems;
         @bcat.push(@firstpad);
