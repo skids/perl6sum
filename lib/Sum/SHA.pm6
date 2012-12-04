@@ -60,7 +60,7 @@ $Sum::SHA::Doc::synopsis = $=pod[0].content[3..6]>>.content.Str;
 
 =head1 ROLES
 
-=head2 role Sum::SHA1 [ :$insecure_sha0_old = False, :$mod8 = False ] does Sum
+=head2 role Sum::SHA1 [ :$insecure_sha0_old = False ] does Sum::MDPad
 
     The C<Sum::SHA1> parametric role is used to create a type of C<Sum>
     that calculates a SHA1 message digest.
@@ -88,11 +88,11 @@ $Sum::SHA::Doc::synopsis = $=pod[0].content[3..6]>>.content.Str;
 =end pod
 
 use Sum;
+use Sum::MDPad;
 
-role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False, :$mod8 = False ] does Sum {
+role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False, :$mod8 = False ]
+     does Sum::MDPad[ :lengthtype<uint64_be>, :!overflow ] {
 
-    has $!o is rw = 0;
-    has Bool $!final is rw;
     has @!w is rw;     # "Parsed" message gets bound here.
     has @!s is rw;     # Current hash state.  H in specification.
 
@@ -100,7 +100,6 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False, :$mod8 = False ] does Su
 
     submethod BUILD () {
         @!s = (0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0);
-        $!final = False;
     }
 
     method comp () {
@@ -130,56 +129,12 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False, :$mod8 = False ] does Su
 	$tmp;
     }
 
-    # TODO: when role trusts work for private attributes, these first three
-    # candidates can be made generic across the main roles.
-    multi method do_add (*@addends) {
-        sink for (@addends) { self.add($_) }
-    }
-    multi method do_add ($addend) {
-        # TODO: Typed failure here?
-        die("Marshalling error.  Addends must be Buf with 0..64 bytes.");
-    }
-    multi method do_add (Buf $block where { -1 < .elems < 64 },
-                         Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
-                         Bool $b3?, Bool $b2?, Bool $b1?) {
-        my int $bits = 0;
-        my int $byte = 0;
-
-        # Count how many stray bits we have and build them into a byte
-        # Note: int cannot currently do +|= or ++
-        ( $byte = $byte +| (+$_ +< (7 - (($bits = $bits + 1) - 1))))
-            if .defined for ($b7,$b6,$b5,$b4,$b3,$b2,$b1);
-        # Update the count of the total number of bits sent.
-        $!o += $block.elems * 8 + $bits;
-        # See note in .finalize.
-        $!o +&= 0x1ffffffffffffffff if ($!o >  0x1ffffffffffffffff);
-
-        # Check if buffer, bits, the added 1 bit, and the length fit in block
-        if $block.elems * 8 + $bits + 1 + 64 < 513 { # Yes
-
-            # Note 1 +< (7 - $bits) just happily also DTRT when !$bits
-            self.add(Buf.new($block[],$byte +| 1 +< (7 - $bits),
-                     0 xx (55 - $block.elems),
-                     (255 X+& ($!o X+> (56,48,40,32,24,16,8,0)))));
-            $!o -= 512; # undo what the other multimethod did.
-        }
-        else { # No
-
-            # So break it into two blocks.
-            self.add(Buf.new($block[],$byte +| 1 +< (7 - $bits),
-                     0 xx (63 - $block.elems)));
-            $!o -= 512;  # undo what the other multimethod did.
-            self.add(Buf.new(0 xx 56,
-                     (255 X+& ($!o X+> (56,48,40,32,24,16,8,0)))));
-            $!o -= 512; # undo what the other multimethod did.
-        }
-        $!final = True;
-    }
     multi method do_add (Buf $block where { .elems == 64 }) {
 
-        # We now have a complete block to crunch.
-
-#        $block.gist.say;
+        # Update the length count and check for problems via Sum::MDPad
+        given self.pos_block_inc {
+            when Failure { return $_ };
+        }
 
         # Explode the message block into a scratchpad
 
@@ -194,13 +149,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False, :$mod8 = False ] does Su
 
 	@!w := @m;
         self.comp;
-
-        # Update the size in bits.
-        $!o += 512;
-        # See note in .finalize.
-        $!o +&= 0x1ffffffffffffffff if ($!o >  0x1ffffffffffffffff);
     };
-    method add (*@addends) { self.do_add(|@addends) }
 
     method finalize(*@addends) {
         given self.push(@addends) {
@@ -209,15 +158,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False, :$mod8 = False ] does Su
 
         self.add(self.drain) if self.^can("drain");
 
-        self.add(Buf.new()) unless $!final;
-
-	# Whether or not allowing $!o to wrap is cryptographically
-        # wise, the specification does limit the length of messages
-        # by writ.  Above we let the values wrap at a bit above the
-        # limit.  This means one can continue to push addends into
-        # a sum that is destined to fail, but if you've let them
-        # push that many addends, you probably have bigger problems.
-	return fail(X::Sum::Spill.new()) if $!o > 0xffffffffffffffff;
+        self.add(Buf.new()) unless $.final;
 
         # This does not work yet on 32-bit machines
         # :4294967296[@!s[]];
