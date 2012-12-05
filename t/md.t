@@ -3,8 +3,9 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 59;
+plan 61;
 
+use Sum;
 use Sum::MD;
 ok 1,'We use Sum::MD and we are still alive';
 
@@ -220,6 +221,13 @@ is MD2t.new().finalize(Buf.new(97 xx 16)),
 is MD2t.new().finalize(Buf.new(97 xx 16), Buf.new(97)),
    0xdbf15a5fdfd6f7e9ece27d5e310c58ed,
    "MD2 of a 17-byte buffer is correct.";
+
+class MD2d does Sum::MD2 does Sum::Marshal::Block[:elems(16)] { };
+my MD2d $s3 .= new();
+ok $s3.WHAT === MD2d, 'We create a dwimmy Block MD2 class and object';
+
+is $s3.finalize(Buf.new(97 xx 17)), 0xdbf15a5fdfd6f7e9ece27d5e310c58ed,
+   "MD2 of a 17-byte buffer using Sum::Marshal::Block.";
 
 # Now grab the code in the synopsis from the POD and make sure it runs.
 # This is currently complete hackery but might improve when pod support does.
