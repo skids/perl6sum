@@ -30,8 +30,10 @@ $Sum::MD::Doc::synopsis = $=pod[0].content[3..4]>>.content.Str;
 =head1 DESCRIPTION
 
     Using C<Sum::MD> defines roles for generating types of C<Sum> that
-    calculate the MD series of message digests (MD2, MD4, MD5, and MD6.)
-    Note that all but the latter are considered deprecated for new
+    calculate the MD series of message digests (MD2, MD4, MD5) and
+    close variants.  MD6 is not yet implemented.
+
+    Note that many of these algorithms are considered deprecated for new
     applications, and insecure in some current applications.
 
     These sums require a small but significant memory profile while not
@@ -45,42 +47,10 @@ $Sum::MD::Doc::synopsis = $=pod[0].content[3..4]>>.content.Str;
 
 =end pod
 
-=begin pod
-
-=head1 ROLES
-
-=head2 role Sum::MD4 [ :$mod8 = False ] does Sum::MDPad
-
-    The C<Sum::MD4> parametric role is used to create a type of C<Sum>
-    that calculates an MD4 message digest.
-
-    The resulting C<Sum> expects blocks as addends.  Currently, that
-    means a Buf with 64 elements.  Passing a shorter Buf may be done
-    once, before or during finalization.  Such a short Buf may optionally
-    be followed by up to 7 bits (currently, Bool) if the message does
-    not end on a byte boundary.  Attempts to provide more blocks after
-    passing a short block will result in an C<X::Sum::Final>.
-
-    C<Sum::Marshal::Block> roles may be mixed in to allow for accumulation
-    of smaller addends and to split large messages into blocks.
-
-    If the C<:mod8> flag is provided, then the resulting C<Sum> will
-    only be able to handle messages that end on a byte boundary.
-    The S<Sum> will no longer accept up to seven bit addends after a
-    short block.  You probably do want to specify this flag unless you
-    actually need to process bitfields of lengths that are not modulo 8.
-    This may speed up the pure Perl6 implementation slightly, and since
-    most third party high-speed hash libraries cannot handle raw bit
-    data, it will be necessary to provide this flag to enable use
-    of some of these libraries in the future (presently not implemented.)
-
-=end pod
-
 use Sum;
 use Sum::MDPad;
 
-role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320 > } = "MD5",
-                  :$mod8 = False ] does Sum::MDPad[:lengthtype<uint64_le>] {
+role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320 > } = "MD5" ] does Sum::MDPad[:lengthtype<uint64_le>] {
     has @!w is rw;     # "Parsed" message gets bound here.
     has @!s is rw;     # Current hash state.  H in specification.
 
@@ -510,9 +480,30 @@ role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160
     method Buf () { self.buf8 }
 }
 
-role Sum::MD4       does Sum::MD4_5[ :alg<MD4> ]        { }
-role Sum::MD4ext    does Sum::MD4_5[ :alg<MD4ext> ]     { }
-role Sum::MD5       does Sum::MD4_5[ :alg<MD5> ]        { }
+=begin pod
+
+=head1 ROLES
+
+=head2 role Sum::MD4 does Sum::MDPad
+       role Sum::MD4ext does Sum::MDPad
+       role Sum::MD5 does Sum::MDPad
+       role Sum::RIPEMD128 does Sum::MDPad
+       role Sum::RIPEMD160 does Sum::MDPad
+       role Sum::RIPEMD256 does Sum::MDPad
+       role Sum::RIPEMD320 does Sum::MDPad
+
+    Classes using these roles behave as described in C<Sum::MDPad>,
+    which means they have rather restrictive rules as to the type
+    and number of provided addends when used with C<Sum::Marshal::Raw>.
+
+    Mixing a C<Sum::Marshal::Block> role is recommended except for
+    implementations that wish to optimize performance.
+
+=end pod
+
+role Sum::MD4       does Sum::MD4_5[ :alg<MD4>        ] { }
+role Sum::MD4ext    does Sum::MD4_5[ :alg<MD4ext>     ] { }
+role Sum::MD5       does Sum::MD4_5[ :alg<MD5>        ] { }
 role Sum::RIPEMD128 does Sum::MD4_5[ :alg<RIPEMD-128> ] { }
 role Sum::RIPEMD160 does Sum::MD4_5[ :alg<RIPEMD-160> ] { }
 role Sum::RIPEMD256 does Sum::MD4_5[ :alg<RIPEMD-256> ] { }
