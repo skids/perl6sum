@@ -46,13 +46,15 @@ Sum::MDPad
 
 use Sum;
 
-role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where { $_ eqv one("uint64_be","uint64_le") } = "uint64_be", Bool :$overflow = True, :@firstpad = [True] ] does Sum {
+role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where { $_ eqv one("uint64_be","uint64_le","uint128_be","uint128_le") } = "uint64_be", Bool :$overflow = True, :@firstpad = [True] ] does Sum {
 
     my $bbytes = $blocksize/8;
     my @lenshifts = (
         given $lengthtype {
             when "uint64_le" { (0,8...^64) }
+            when "uint128_le" { (0,8...^128) }
             when "uint64_be" { (56,48...0) }
+            when "uint128_be" { (120,112...0) }
             # TODO: other widths of counter, as needed
         }
     );
@@ -66,8 +68,8 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
     role parameter determines how it is stored in the padding.  Until sized
     unsigned types are available, it should be set to the string "uint64_be"
     or the string "uint64_le" to specify storage in big-endian or
-    little-endian format, respectively.  These are currently the only two
-    supported formats.
+    little-endian format, respectively, or for 128-bit lengths, "uint128_be"
+    or "uint128_le".  These are the only four formats currently supported.
 
     The C<:overflow> role attribute specifies whether the sum should fail
     if a message larger than the C<:lengthtype> can express is provided,
@@ -145,8 +147,8 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
         fail(X::Sum::Final.new()) if $.final;
         return if $!ignore_block_inc;
         unless ($overflow) {
-            # TODO use :lengthtype
-            fail(X::Sum::Spill.new()) if $!o > 0xffffffffffffffff - $blocksize
+            fail(X::Sum::Spill.new())
+                if $!o >= (1 +< (+@lenshifts * 8)) - $blocksize;
         }
         fail(X::Sum::Spill.new()) if $!expect and $!o + $blocksize > $!expect;
         $!o += $blocksize;
@@ -199,8 +201,8 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
 
         my int $inc = $block.elems * 8 + $bits;
         unless ($overflow) {
-            # TODO: use :lengthtype
-            fail(X::Sum::Spill.new()) if $!o > 0xffffffffffffffff - $inc
+            fail(X::Sum::Spill.new())
+                if $!o >= (1 +< (+@lenshifts * 8)) - $inc;
         }
         if ($!expect) {
             fail(X::Sum::Spill.new()) if $!o + $inc > $!expect;
