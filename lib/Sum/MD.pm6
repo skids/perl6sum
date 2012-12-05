@@ -49,7 +49,7 @@ $Sum::MD::Doc::synopsis = $=pod[0].content[3..4]>>.content.Str;
 
 =head1 ROLES
 
-=head2 role Sum::MD4 [ :$mod8 = False ] does Sum
+=head2 role Sum::MD4 [ :$mod8 = False ] does Sum::MDPad
 
     The C<Sum::MD4> parametric role is used to create a type of C<Sum>
     that calculates an MD4 message digest.
@@ -77,11 +77,10 @@ $Sum::MD::Doc::synopsis = $=pod[0].content[3..4]>>.content.Str;
 =end pod
 
 use Sum;
+use Sum::MDPad;
 
 role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320 > } = "MD5",
-                  :$mod8 = False ] does Sum {
-    has $!o is rw = 0;
-    has Bool $!final is rw;
+                  :$mod8 = False ] does Sum::MDPad[:lengthtype<uint64_le>] {
     has @!w is rw;     # "Parsed" message gets bound here.
     has @!s is rw;     # Current hash state.  H in specification.
 
@@ -113,7 +112,6 @@ role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160
                 (0xf0f0f0f0 +& ($_ +< 4)) +|
                 (0x0f0f0f0f +& ($_ +> 4)) }));
         }
-        $!final = False;
     }
 
     # A moment of silence for the pixies that die every time something
@@ -472,58 +470,12 @@ role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160
         @!s = 0xffffffff X+& @!s;
     }
 
-    # TODO: when role trusts work for private attributes, these first three
-    # candidates can be made generic across a main role and the above
-    # conglomeration of functions and constant split up into proper subroles.
-    multi method do_add (*@addends) {
-        sink for (@addends) { self.add($_) }
-    }
-    multi method do_add ($addend) {
-        # TODO: Typed failure here?
-        die("Marshalling error.  Addends must be Buf with 0..64 bytes.");
-    }
-    multi method do_add (Buf $block where { -1 < .elems < 64 },
-                         Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
-                         Bool $b3?, Bool $b2?, Bool $b1?) {
-        my int $bits = 0;
-        my int $byte = 0;
-
-#        $block.gist.say;
-
-        # Count how many stray bits we have and build them into a byte
-        ( $byte = $byte +| (+$_ +< (7 - (($bits = $bits + 1)-1))) )
-            if .defined for ($b7,$b6,$b5,$b4,$b3,$b2,$b1);
-
-        # Update the count of the total number of bits sent.
-        $!o += $block.elems * 8 + $bits;
-        $!o +&= 0xffffffffffffffff;
-
-        # Check if buffer, bits, the added 1 bit, and the length fit in block
-        if $block.elems * 8 + $bits + 1 + 64 < 513 { # Yes
-
-            # Note 1 +< (7 - $bits) just happily also DTRT when !$bits
-            self.add(Buf.new($block[],$byte +| 1 +< (7 - $bits),
-                     0 xx (55 - $block.elems),
-                     (255 X+& ($!o X+> (0,8...56)))));
-            $!o -= 512; # undo what the other multimethod did.
-        }
-        else { # No
-
-            # So break it into two blocks.
-            self.add(Buf.new($block[],$byte +| 1 +< (7 - $bits),
-                     0 xx (63 - $block.elems)));
-            $!o -= 512;  # undo what the other multimethod did.
-            self.add(Buf.new(0 xx 56,
-                     (255 X+& ($!o X+> (0,8...56)))));
-            $!o -= 512; # undo what the other multimethod did.
-        }
-        $!final = True;
-    }
     multi method do_add (Buf $block where { .elems == 64 }) {
 
-        # We now have a complete block to crunch.
-
-#        $block.gist.say;
+        # Update the length count and check for problems via Sum::MDPad
+        given self.pos_block_inc {
+            when Failure { return $_ };
+        }
 
         # Explode the message block into a scratchpad
 
@@ -537,12 +489,7 @@ role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160
         self.md5_comp if $alg eqv "MD5";
         self.ripe4_comp if $alg eqv ("RIPEMD-128"|"RIPEMD-256");
         self.ripe5_comp if $alg eqv ("RIPEMD-160"|"RIPEMD-320");
-
-        # Update the size in bits.
-        $!o += 512;  # spec permits this to wrap for large messages
-        $!o +&= 0xffffffffffffffff; # Should go away with sized types
     };
-    method add (*@addends) { self.do_add(|@addends) }
 
     method finalize(*@addends) {
         given self.push(@addends) {
@@ -551,7 +498,7 @@ role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160
 
         self.add(self.drain) if self.^can("drain");
 
-        self.add(Buf.new()) unless $!final;
+        self.add(Buf.new()) unless $.final;
 
         :256[ 255 X+& (@!s[] X+> (0,8,16,24)) ]
     }

@@ -90,9 +90,13 @@ given (MD5t.new()) {
 is MD5t.new().finalize(Buf.new(97 xx 64)),
    0x014842d480b571495a4a0363793f7367,
    "MD5 is correct (test vector 1).";
-is MD5t.new().finalize(Buf.new(97 xx 64), Buf.new(97 xx 64), Buf.new(97 xx 56)),
-   0x63642b027ee89938c922722650f2eb9b,
+
+given (MD5t.new()) {
+   .push(Buf.new(97 xx 64));
+   .push(Buf.new(97 xx 64));
+   is .finalize(Buf.new(97 xx 56)), 0x63642b027ee89938c922722650f2eb9b,
    "MD5 is correct (test vector 2).";
+}
 
 class r160t does Sum::RIPEMD160[] does Sum::Marshal::Raw { };
 my r160t $r160 .= new();
@@ -110,9 +114,13 @@ given (r160t.new()) {
 is r160t.new().finalize(Buf.new(97 xx 64)),
    0x9dfb7d374ad924f3f88de96291c33e9abed53e32,
    "RIPEMD-160 is correct (test vector 1).";
-is r160t.new().finalize(Buf.new(97 xx 64), Buf.new(97 xx 64), Buf.new(97 xx 56)),
-   0x52a7ad26b98c60e2f14e0863c1b58de525888b11,
+
+given (r160t.new()) {
+   .push(Buf.new(97 xx 64));
+   .push(Buf.new(97 xx 64));
+   is .finalize(Buf.new(97 xx 56)), 0x52a7ad26b98c60e2f14e0863c1b58de525888b11,
    "RIPEMD-160 is correct (test vector 2).";
+}
 
 class r128t does Sum::RIPEMD128[] does Sum::Marshal::Raw { };
 my r128t $r128 .= new();
@@ -130,10 +138,13 @@ given (r128t.new()) {
 is r128t.new().finalize(Buf.new(97 xx 64)),
    0x680716ac638f0d601982c696d37e5e56,
    "RIPEMD-128 is correct (test vector 1).";
-is r128t.new().finalize(Buf.new(97 xx 64), Buf.new(97 xx 64), Buf.new(97 xx 56)),
-   0x481285089b4b03da9eeffc2721680354,
-   "RIPEMD-128 is correct (test vector 2).";
 
+given r128t.new() {
+   .push(Buf.new(97 xx 64));
+   .push(Buf.new(97 xx 64));
+   is .finalize(Buf.new(97 xx 56)), 0x481285089b4b03da9eeffc2721680354,
+   "RIPEMD-128 is correct (test vector 2).";
+}
 
 class r320t does Sum::RIPEMD320[] does Sum::Marshal::Raw { };
 my r320t $r320 .= new();
@@ -146,14 +157,20 @@ given (r320t.new()) {
      "RIPEMD-320 of an empty buffer is correct.";
   is .Buf.values.fmt("%x"), "22 d6 5d 56 61 53 6c dc 75 c1 fd f5 c6 de 7b 41 b9 f2 73 25 eb c6 1e 85 57 17 7d 70 5a e c8 80 15 1c 3a 32 a0 8 99 b8", "RIPEMD-320 Buf method works";
 }
+
 # Since it uses the same buffering code as MD4 we don't need to test
 # different lengths thoroughly, but a few more test vectors would be good.
 is r320t.new().finalize(Buf.new(97 xx 64)),
    0x6e815badcf69d2978caf8b8bbaba941239f9847d1ff140062484cb57a0745bccf21c427705fdd30d,
    "RIPEMD-320 is correct (test vector 1).";
-is r320t.new().finalize(Buf.new(97 xx 64), Buf.new(97 xx 64), Buf.new(97 xx 56)),
+
+given r320t.new() {
+    .push(Buf.new(97 xx 64));
+    .push(Buf.new(97 xx 64));
+    is .finalize(Buf.new(97 xx 56)),
    0x82c5b5ffb960376afb6e21b33bd2367197080dd9724f7e2947e1075347462e603649bca32ad1b824,
    "RIPEMD-320 is correct (test vector 2).";
+}
 
 class r256t does Sum::RIPEMD256[] does Sum::Marshal::Raw { };
 my r256t $r256 .= new();
@@ -171,10 +188,14 @@ given (r256t.new()) {
 is r256t.new().finalize(Buf.new(97 xx 64)),
    0x8147678472c129cabb59f57f637c622ccd5707af80a583303e6dde7d0800ced6,
    "RIPEMD-256 is correct (test vector 1).";
-is r256t.new().finalize(Buf.new(97 xx 64), Buf.new(97 xx 64), Buf.new(97 xx 56)),
+
+given r256t.new() {
+   .push(Buf.new(97 xx 64));
+   .push(Buf.new(97 xx 64));
+   is .finalize(Buf.new(97 xx 56)),
    0x8e7bc719ca3cdbb9411e43f18955a1f305e7643a0ae20a7a01823e80090fcf37,
    "RIPEMD-256 is correct (test vector 2).";
-
+}
 
 class MD2t does Sum::MD2 does Sum::Marshal::Raw { };
 my MD2t $s2 .= new();
