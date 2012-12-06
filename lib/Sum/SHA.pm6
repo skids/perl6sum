@@ -41,9 +41,9 @@ $Sum::SHA::Doc::synopsis = $=pod[0].content[3..6]>>.content.Str;
 =head1 DESCRIPTION
 
     Using C<Sum::SHA> defines roles for generating types of C<Sum> that
-    calculate the widely used SHA1 and SHA2 cryptographic hash functions.
-    It is also possible to calculate legacy SHA0 checksums, which are
-    obselete and not cryptographically secure.
+    implement the widely used SHA1 and SHA2 cryptographic hash function
+    families.  It is also possible to calculate legacy SHA0 checksums,
+    which are obselete and not cryptographically secure.
 
     SHA sums can be computationally intense.  They also require a small
     but significant memory profile while not finalized, so care must be
@@ -63,34 +63,23 @@ $Sum::SHA::Doc::synopsis = $=pod[0].content[3..6]>>.content.Str;
 =head2 role Sum::SHA1 [ :$insecure_sha0_old = False ] does Sum::MDPad
 
     The C<Sum::SHA1> parametric role is used to create a type of C<Sum>
-    that calculates a SHA1 message digest.
+    that calculates a SHA1 message digest.  A SHA0 may be calculated
+    instead if C<:insecure_sha0_old> is specified.
 
-    The resulting C<Sum> expects blocks as addends.  Currently, that
-    means a Buf with 64 elements.  Passing a shorter Buf may be done
-    once, before or during finalization.  Such a short Buf may optionally
-    be followed by up to 7 bits (currently, Bool) if the message does
-    not end on a byte boundary.  Attempts to provide more blocks after
-    passing a short block will result in an C<X::Sum::Final>.
+    Classes using these roles behave as described in C<Sum::MDPad>,
+    which means they have rather restrictive rules as to the type
+    and number of provided addends when used with C<Sum::Marshal::Raw>.
+    The block size used is 64 bytes.
 
-    C<Sum::Marshal::Block> roles may be mixed in to allow for accumulation
-    of smaller addends and to split large messages into blocks.
-
-    If the C<:mod8> flag is provided, then the resulting C<Sum> will
-    only be able to handle messages that end on a byte boundary.
-    The S<Sum> will no longer accept up to seven bit addends after a
-    short block.  You probably do want to specify this flag unless you
-    actually need to process bitfields of lengths that are not modulo 8.
-    This may speed up the pure Perl6 implementation slightly, and since
-    most third party high-speed hash libraries cannot handle raw bit
-    data, it will be necessary to provide this flag to enable use
-    of some of these libraries in the future (presently not implemented.)
+    Mixing a C<Sum::Marshal::Block> role is recommended except for
+    implementations that wish to optimize performance.
 
 =end pod
 
 use Sum;
 use Sum::MDPad;
 
-role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False, :$mod8 = False ]
+role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
      does Sum::MDPad[ :lengthtype<uint64_be>, :!overflow ] {
 
     has @!w is rw;     # "Parsed" message gets bound here.
@@ -173,7 +162,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False, :$mod8 = False ]
 
 =begin pod
 
-=head2 role Sum::SHA2 [ :$columns = 256, :$mod8 = False ] does Sum
+=head2 role Sum::SHA2 [ :$columns = 256 ] does Sum::MDPad
 
     The C<Sum::SHA2> parametric role is used to create a type of C<Sum>
     that calculates a SHA2 message digest.
@@ -182,47 +171,21 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False, :$mod8 = False ]
     be 224, 256, 384, or 512, yielding SHA-224, SHA-256, SHA-384, or
     SHA-512 respectively.
 
-    The resulting C<Sum> expects blocks as addends.  Currently, that
-    means a Buf with 64 elements (128 when C<$columns> is 384 or 512).
-    Passing a shorter Buf may be done once, before or during finalization.
-    Such a short Buf may optionally be followed by up to 7 bits (currently,
-    Bool) if the message does not end on a byte boundary.  Attempts to
-    provide more blocks after passing a short block will result in an
-    C<X::Sum::Final>.
+    Classes using these roles behave as described in C<Sum::MDPad>,
+    which means they have rather restrictive rules as to the type
+    and number of provided addends when used with C<Sum::Marshal::Raw>.
+    The block size used is 64 bytes, or 128 when C<$columns> is 384 or 512.
 
-    C<Sum::Marshal::Block> roles may be mixed in to allow for accumulation
-    of smaller addends and to split large messages into blocks.
-
-    If the C<:mod8> flag is provided, then the resulting C<Sum> will
-    only be able to handle messages that end on a byte boundary.
-    The S<Sum> will no longer accept up to seven bit addends after a
-    short block.  You probably do want to specify this flag unless you
-    actually need to process bitfields of lengths that are not modulo 8.
-    This may speed up the pure Perl6 implementation slightly, and since
-    most third party high-speed hash libraries cannot handle raw bit
-    data, it will be necessary to provide this flag to enable use
-    of some of these libraries in the future (presently not implemented.)
+    Mixing a C<Sum::Marshal::Block> role is recommended except for
+    implementations that wish to optimize performance.
 
 =end pod
 
 use Sum;
+use Sum::MDPad;
 
-role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
-                 :$mod8 = False ]
-     does Sum {
-
-    has $!o is rw = 0;
-    has Bool $!final is rw;
-    has @!w is rw;     # "Parsed" message gets bound here.
-    has @!s is rw;     # Current hash state.  H in specification.
-
-    my int $rwidth = ($columns > 256) ?? 64 !! 32;
-    my $rmask = (1 +< $rwidth) - 1; # Hopefully will go away with sized types
-    my int $bbytes = ($columns > 256) ?? 128 !! 64;
-    my int $lbits = ($columns > 256) ?? 128 !! 64;
-
-    my @k =
- (0x428a2f98d728ae22,0x7137449123ef65cd,0xb5c0fbcfec4d3b2f,0xe9b5dba58189dbbc,
+my @Sum::SHA::k64 =
+  0x428a2f98d728ae22,0x7137449123ef65cd,0xb5c0fbcfec4d3b2f,0xe9b5dba58189dbbc,
   0x3956c25bf348b538,0x59f111f1b605d019,0x923f82a4af194f9b,0xab1c5ed5da6d8118,
   0xd807aa98a3030242,0x12835b0145706fbe,0x243185be4ee4b28c,0x550c7dc3d5ffb4e2,
   0x72be5d74f27b896f,0x80deb1fe3b1696b1,0x9bdc06a725c71235,0xc19bf174cf692694,
@@ -241,227 +204,211 @@ role Sum::SHA2 [ :$columns where { * == (224|256|384|512) } = 256,
   0xca273eceea26619c,0xd186b8c721c0c207,0xeada7dd6cde0eb1e,0xf57d4f7fee6ed178,
   0x06f067aa72176fba,0x0a637dc5a2c898a6,0x113f9804bef90dae,0x1b710b35131c471b,
   0x28db77f523047d84,0x32caab7b40c72493,0x3c9ebe0a15c9bebc,0x431d67c49c100d4c,
-  0x4cc5d4becb3e42b6,0x597f299cfc657e2a,0x5fcb6fab3ad6faec,0x6c44198c4a475817)
-  »+>» (64 - $rwidth);
+  0x4cc5d4becb3e42b6,0x597f299cfc657e2a,0x5fcb6fab3ad6faec,0x6c44198c4a475817;
 
-    method size () { $columns }
+my @Sum::SHA::k32 = @Sum::SHA::k64 X+> 32;
 
-    submethod BUILD () {
-        @!s =
-            (given $columns {
-                 when 224 { (0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
-                             0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4)}
-	         when 256 { (0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
-                             0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19)}
-                 when 384 { (0xcbbb9d5dc1059ed8, 0x629a292a367cd507,
-                             0x9159015a3070dd17, 0x152fecd8f70e5939,
-                             0x67332667ffc00b31, 0x8eb44a8768581511,
-                             0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4) }
-                 when 512 { (0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
-                             0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
-                             0x510e527fade682d1, 0x9b05688c2b3e6c1f,
-                             0x1f83d9abfb41bd6b, 0x5be0cd19137e2179) }
-             });
-        $!final = False;
-    }
+role Sum::SHA2common {
+    has @.w is rw;                   # "Parsed" message gets bound here.
+    has @.s is rw = self.init();     # Current hash state.  H in specification.
 
-    # A moment of silence for the pixies that die every time something
-    # like this gets written in an HLL.
-    my sub infix:<ror> ($v, int $count where { -1 < * < $rwidth }) {
-        my $tmp = ($v +& $rmask) +> $count;
-        $tmp +|= ($v +< ($rwidth - $count)) +& $rmask;
-	$tmp;
-    }
-
-    method comp () {
-
-        my ($a,$b,$c,$d,$e,$f,$g,$h) = @!s[];
-
-        if ($bbytes == 64) {
-            for ^64 -> $i {
-                # We'll mask this below
-                my $t1 = [+] $h, @k[$i], @!w[$i],
-                             ($g +^ ($e +& ($f +^ $g))),
-                             ([+^] ($e Xror (6,11,25)));
-                # We'll mask this below
-                my $t2 = [+] ([+^] ($a Xror (2,13,22))),
-                             ([+^] (($a,$a,$b) >>+&<< ($b,$c,$c)));
-
-                ($a,$b,$c,$d,$e,$f,$g,$h) =
-                    $rmask +& ($t1 + $t2), $a, $b, $c,
-                    $rmask +& ($d + $t1), $e, $f, $g;
-            }
+    multi method do_add (Buf $block where { .elems == self.bsize/8 }) {
+        # Update the length count and check for problems via Sum::MDPad
+        given self.pos_block_inc {
+            when Failure { return $_ };
         }
-        else {
-            for ^80 -> $i {
-                # We'll mask this below
-                my $t1 = [+] $h, @k[$i], @!w[$i],
-                             ($g +^ ($e +& ($f +^ $g))),
-                             ([+^] ($e Xror (14,18,41)));
-
-                # We'll mask this below
-                my $t2 = [+] ([+^] ($a Xror (28,34,39))),
-                             ([+^] (($a,$a,$b) >>+&<< ($b,$c,$c)));
-
-                ($a,$b,$c,$d,$e,$f,$g,$h) =
-                    $rmask +& ($t1 + $t2), $a, $b, $c,
-                    $rmask +& ($d + $t1), $e, $f, $g;
-            }
-        }
-
-        # merge the new state
-        @!s[] = $rmask X+& (@!s[] »+« ($rmask X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
-
-    }
-
-    multi method do_add (*@addends) {
-        sink for (@addends) { self.add($_) }
-    }
-    multi method do_add ($addend) {
-        # TODO: Typed failure here?
-        die("Marshalling error.  Addends must be Buf with 0..$bbytes bytes.");
-    }
-    multi method do_add (Buf $block where { -1 < .elems < $bbytes },
-                         Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
-                         Bool $b3?, Bool $b2?, Bool $b1?) {
-        my int $bits = 0;
-        my int $byte = 0;
-
-        # Count how many stray bits we have and build them into a byte
-        ( $byte = $byte +| +$_ +< (7 - (($bits = $bits + 1) - 1)) )
-            if .defined for ($b7,$b6,$b5,$b4,$b3,$b2,$b1);
-
-        # Update the count of the total number of bits sent.
-        $!o += $block.elems * 8 + $bits;
-        if ($columns > 256) {
-            $!o +&= 0x1ffffffffffffffffffffffffffffffff
-                if $!o > 0x1ffffffffffffffffffffffffffffffff;
-        }
-        else {
-            $!o +&= 0x1ffffffffffffffff
-                if $!o > 0x1ffffffffffffffff;
-        }
-
-        # Check if buffer, bits, the added 1 bit, and the length fit in a block
-        if $block.elems * 8 + $bits + 1 + $lbits < $bbytes * 8 + 1 { # Yes
-
-            # Note 1 +< (7 - $bits) just happily also DTRT when !$bits
-            self.add(Buf.new($block[],$byte +| 1 +< (7 - $bits),
-                     0 xx (($bbytes - $lbits/8 - 1) - $block.elems),
-                     (255 X+& ($!o X+> reverse(8 X* (0..^($lbits/8)))))));
-            $!o -= $bbytes * 8; # undo what the other multimethod did.
-        }
-        else { # No
-
-            # So break it into two blocks.
-            self.add(Buf.new($block[],$byte +| 1 +< (7 - $bits),
-                     0 xx ($bbytes - $block.elems - 1)));
-            $!o -= $bbytes * 8;  # undo what the other multimethod did.
-            self.add(Buf.new(0 xx ($bbytes - $lbits/8),
-                     (255 X+& ($!o X+> reverse(8 X* (0..^($lbits/8)))))));
-            $!o -= $bbytes * 8; # undo what the other multimethod did.
-        }
-        $!final = True;
-    }
-    multi method do_add (Buf $block where { .elems == $bbytes }) {
-
-        # We now have a complete block to crunch.
-
-#        $block.gist.say;
-
-        # Explode the message block into a scratchpad
-
-        my @m;
-
-        if ($bbytes == 64) {
-            # First 16 uint32's are a straight copy of the data.
-            # When endianness matches and with native types,
-            # this would boil down to a simple memcpy.
-            @m = (:256[ $block[ $_ ..^ $_+4 ] ] for 0,4 ...^ 64);
-
-            # Fill the rest of the scratchpad with permutations.
-            @m.push($rmask +& (
-                [+] @m[*-16,*-7],
-                    ([+^] ((@m[*-15] Xror (7,18)),  @m[*-15] +> 3 )),
-                    ([+^] ((@m[*-2]  Xror (17,19)), @m[*-2]  +> 10))
-                )) for 16..^64;
-        }
-        else {
-            # First 16 uint64's are a straight copy of the data.
-            # When endianness matches and with native types,
-            # this would boil down to a simple memcpy.
-            @m = (:256[ $block[ $_ ..^ $_+8 ] ] for 0,8 ...^ 128);
-
-            # Fill the rest of the scratchpad with permutations.
-            @m.push($rmask +& (
-                [+] @m[*-7,*-16],
-                    ([+^] ((@m[*-15] Xror (1,8)),  @m[*-15] +> 7 )),
-                    ([+^] ((@m[*-2]  Xror (19,61)),@m[*-2]  +> 6))
-                )) for 16..^80;
-        }
-
-	@!w := @m;
+        self.scratchpad($block);
         self.comp;
-
-        # Update the size in bits.
-        $!o += $bbytes * 8;
-        if ($columns > 256) {
-            $!o +&= 0x1ffffffffffffffffffffffffffffffff
-                if $!o > 0x1ffffffffffffffffffffffffffffffff;
-        }
-        else {
-            $!o +&= 0x1ffffffffffffffff
-                if $!o > 0x1ffffffffffffffff;
-        }
     };
-    method add (*@addends) { self.do_add(|@addends) }
 
     method finalize(*@addends) {
         given self.push(@addends) {
             return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
         }
-
         self.add(self.drain) if self.^can("drain");
-
-        self.add(Buf.new()) unless $!final;
-
-	# Whether or not allowing $!o to wrap is cryptographically
-        # harmless, the specification does limit the length of
-        # messages by writ.  Above we let the values wrap at a bit above
-        # the limit.  This means one can continue to push addends into
-        # a sum that is destined to fail, but if you've let them push
-        # that many addends, you probably have bigger problems.
-	return fail(X::Sum::Spill.new())
-            if $!o > 0xffffffffffffffffffffffffffffffff or
-                $columns < 257 and $!o > 0xffffffffffffffff;
-
-        given $columns {
-
-            # These don't work yet
-            # when 224 { :4294967296[@!s[^7]] }
-            # when 256 { :4294967296[@!s[]]   }
-            # when 384 { :18446744073709551616[@!s[^6]] }
-            # when 512 { :18446744073709551616[@!s[]] }
-            when 224 { [+|] (@!s[0..6] »+<« (192,160...0)) }
-            when 256 { [+|] (@!s[]     »+<« (224,192...0)) }
-            when 384 { [+|] (@!s[0..5] »+<« (320,256...0)) }
-            when 512 { [+|] (@!s[]     »+<« (448,384...0)) }
-        }
+        self.add(Buf.new()) unless $.final;
+        self.Int_internal;
     }
     method Numeric () { self.finalize };
-    method buf8 () {
-        Buf.new(255 X+&
-                   (given $columns {
-                        when 224 { (@!s[0..6] X+> (24,16...0)) }
-                        when 256 { (@!s[]     X+> (24,16...0)) }
-                        when 384 { (@!s[0..5] X+> (56,48...0)) }
-                        when 512 { (@!s[]     X+> (56,48...0)) }
-                    })
-        );
-    }
     method Buf () { self.buf8 }
 }
 
+role Sum::SHAmix32 does Sum::SHA2common {
+    my @k := @Sum::SHA::k32;
+
+    # A moment of silence for the pixies that die every time something
+    # like this gets written in an HLL.
+    my sub infix:<ror> ($v, int $count where { -1 < * < 32 }) {
+        my $tmp = ($v +& 0xffffffff) +> $count;
+        $tmp +|= ($v +< (32 - $count)) +& 0xffffffff;
+	$tmp;
+    }
+
+    method bsize { 512 };
+
+    method scratchpad ($block) {
+        my @m;
+
+        # First 16 uint32's are a straight copy of the data.
+        # When endianness matches and with native types,
+        # this would boil down to a simple memcpy.
+        @m = (:256[ $block[ $_ ..^ $_+4 ] ] for 0,4 ...^ 64);
+
+        # Fill the rest of the scratchpad with permutations.
+        @m.push(0xffffffff +& (
+                [+] @m[*-16,*-7],
+                ([+^] ((@m[*-15] Xror (7,18)),  @m[*-15] +> 3 )),
+                ([+^] ((@m[*-2]  Xror (17,19)), @m[*-2]  +> 10))
+                )) for 16..^64;
+	@.w = @m;
+    }
+
+    method comp () {
+        my ($a,$b,$c,$d,$e,$f,$g,$h) = @.s[];
+        for ^64 -> $i {
+            # We'll mask this below
+            my $t1 = [+] $h, @k[$i], @.w[$i],
+                         ($g +^ ($e +& ($f +^ $g))),
+                         ([+^] ($e Xror (6,11,25)));
+            # We'll mask this below
+            my $t2 = [+] ([+^] ($a Xror (2,13,22))),
+                         ([+^] (($a,$a,$b) >>+&<< ($b,$c,$c)));
+
+            ($a,$b,$c,$d,$e,$f,$g,$h) =
+                0xffffffff +& ($t1 + $t2), $a, $b, $c,
+                0xffffffff +& ($d + $t1), $e, $f, $g;
+        }
+        # merge the new state
+        @.s[] = 0xffffffff
+                X+&
+                (@.s[] »+« (0xffffffff X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
+    }
+}
+role Sum::SHAmix64 does Sum::SHA2common {
+    my @k := @Sum::SHA::k64;
+
+    # A moment of silence for the pixies that die every time something
+    # like this gets written in an HLL.
+    my sub infix:<ror> ($v, int $count where { -1 < * < 64 }) {
+        my $tmp = ($v +& 0xffffffffffffffff) +> $count;
+        $tmp +|= ($v +< (64 - $count)) +& 0xffffffffffffffff;
+	$tmp;
+    }
+
+    method bsize { 1024 };
+
+    method scratchpad ($block) {
+        my @m;
+
+        # First 16 uint64's are a straight copy of the data.
+        # When endianness matches and with native types,
+        # this would boil down to a simple memcpy.
+        @m = (:256[ $block[ $_ ..^ $_+8 ] ] for 0,8 ...^ 128);
+
+        # Fill the rest of the scratchpad with permutations.
+        @m.push(0xffffffffffffffff +& (
+                [+] @m[*-7,*-16],
+                ([+^] ((@m[*-15] Xror (1,8)),  @m[*-15] +> 7 )),
+                ([+^] ((@m[*-2]  Xror (19,61)),@m[*-2]  +> 6))
+                )) for 16..^80;
+	@.w = @m;
+    }
+
+    method comp () {
+        my ($a,$b,$c,$d,$e,$f,$g,$h) = @.s[];
+        for ^80 -> $i {
+            # We'll mask this below
+            my $t1 = [+] $h, @k[$i], @.w[$i],
+                         ($g +^ ($e +& ($f +^ $g))),
+                         ([+^] ($e Xror (14,18,41)));
+            # We'll mask this below
+            my $t2 = [+] ([+^] ($a Xror (28,34,39))),
+                         ([+^] (($a,$a,$b) >>+&<< ($b,$c,$c)));
+
+            ($a,$b,$c,$d,$e,$f,$g,$h) =
+                0xffffffffffffffff +& ($t1 + $t2), $a, $b, $c,
+                0xffffffffffffffff +& ($d + $t1), $e, $f, $g;
+        }
+        # merge the new state
+        @.s[] = 0xffffffffffffffff
+                X+&
+                (@.s[] »+« (0xffffffffffffffff X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
+    }
+}
+
+role Sum::SHA224 does Sum::SHAmix32 does Sum::MDPad {
+    my @s_init = 0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
+                 0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4;
+    method init () { @s_init }
+    method buf8 () {
+        self.finalize;
+        Buf.new(255 X+& (@.s[0..6] X+> (24,16...0)))
+    }
+    method Int_internal () {
+        # Doesn't work yet:
+        # :4294967296[@.s[^7]]
+        [+|] (@.s[0..6] »+<« (192,160...0))
+    }
+    method size () { 224 }
+}
+role Sum::SHA256 does Sum::SHAmix32 does Sum::MDPad {
+    my @s_init = 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+                 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19;
+    method init () { @s_init }
+    method buf8 () {
+        self.finalize;
+        Buf.new(255 X+& (@.s[]     X+> (24,16...0)))
+    }
+    method Int_internal () {
+        # Doesn't work yet:
+        # :4294967296[@.s[]]
+        [+|] (@.s[] »+<« (224,192...0))
+    }
+    method size () { 256 }
+}
+role Sum::SHA384 does Sum::SHAmix64
+     does Sum::MDPad[:blocksize(1024), :lengthtype<uint128_be>] {
+
+    my @s_init = 0xcbbb9d5dc1059ed8, 0x629a292a367cd507,
+                 0x9159015a3070dd17, 0x152fecd8f70e5939,
+                 0x67332667ffc00b31, 0x8eb44a8768581511,
+                 0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4;
+    method init () { @s_init }
+    method buf8 () {
+        self.finalize;
+        Buf.new(255 X+& (@.s[0..5] X+> (56,48...0)))
+    }
+    method Int_internal () {
+        # Doesn't work yet:
+        # :18446744073709551616[@.s[^6]]
+        [+|] (@.s[0..5] »+<« (320,256...0))
+    }
+    method size () { 384 }
+}
+role Sum::SHA512 does Sum::SHAmix64
+     does Sum::MDPad[:blocksize(1024), :lengthtype<uint128_be>] {
+
+    my @s_init = 0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
+                 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
+                 0x510e527fade682d1, 0x9b05688c2b3e6c1f,
+                 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179;
+    method init () { @s_init }
+    method buf8 () {
+        self.finalize;
+        Buf.new(255 X+& (@.s[]     X+> (56,48...0)))
+    }
+    method Int_internal () {
+        # Doesn't work yet:
+        # :18446744073709551616[@.s[]]
+        [+|] (@.s[]     »+<« (448,384...0))
+    }
+    method size () { 512 }
+}
+
+role Sum::SHA2[ :$columns where { $_ == 224 } ] does Sum::SHA224 { }
+role Sum::SHA2[ :$columns where { $_ == 256 } ] does Sum::SHA256 { }
+role Sum::SHA2[ :$columns where { $_ == 384 } ] does Sum::SHA384 { }
+role Sum::SHA2[ :$columns where { $_ == 512 } ] does Sum::SHA512 { }
 
 =begin pod
 
