@@ -37,11 +37,11 @@ $Sum::SipHash::Doc::synopsis = $=pod[0].content[4].content.Str;
 =head2 role Sum::SipHash [ :$c = 2, :$d = 4, :$defkey = 0 ] does Sum
 
     The C<Sum::SipHash> parametric role is used to create a type of C<Sum>
-    that calculates a variant of SipHash.  By default, it calculates
-    SipHash-2-4, which is the suggested variant for general use.
+    that calculates a variant of SipHash.
 
-    The C<:defkey> parameter provides an integer seed value that will be
-    applied to all instances which do not specify their own.
+    The C<:defkey> parameter provides an integer key value that will be
+    applied to all instances which do not specify their own.  See the
+    documentation below for C<.new>'s C<:key> parameter.
 
     The C<:c> parameter specifies the number of SipRounds performed
     during a "compression" (which happens about once per eight bytes of
@@ -49,16 +49,14 @@ $Sum::SipHash::Doc::synopsis = $=pod[0].content[4].content.Str;
     when the C<Sum> is C<.finalize>d.  Together they determine the
     strength of the hash: increasing either parameter yields more
     resistance to collision analysis, but will increase the computational
-    cost.
-
-    The resulting C<Sum> expects values that will numerically coerce to
-    single byte addends.  A C<Sum::Marshal::*> role must be mixed into
-    the class, and some such roles may also be used to properly process
-    wider or narrower addends as appropriate to the application.
+    cost.  By default, the role calculates SipHash-2-4, which is the
+    standard's notation for C<:c(2), :d(4)>.  This is the suggested
+    variant for general use.  When extra collision resistance is desired,
+    the specification suggests using the "conservative" SipHash-4-8.
 
     The number of addends may be determined on the fly, and in this
     implementation, finalization is performed without altering internal
-    state, so the C<Sum::Partial> role is available.
+    state, so the C<Sum::Partial> role may be mixed.
 
 =end pod
 
@@ -84,19 +82,31 @@ role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
 =head3 method new(:$key?)
 
     There is an internal well-known seed built into the SipHash
-    specification.  The least significant 128 bits of a key may
-    be used to alter this seed if provided.
+    specification.  The least significant 128 bits of an integer key
+    may be used to alter this seed.
 
     The constructor allows an individual instance to use its own seed
-    by providing a C<:key> argument.  The class may supply a default
-    seed if the C<:key> argument is omitted from the constructor.
-    The class-provided seed will not be used at all if the seed is
-    provided through this parameter, and as such, two instances of
-    classes with compatible parameters will always generate the same
-    results if they provide the same seed, even if their parent
-    classes specified different seeds.
+    by providing a C<:key> argument.  An individual class may supply
+    a default key which will be used if the C<:key> argument is omitted
+    from the constructor.
+
+    The class-provided key will not be used at all if C<:key> is provided.
+    As such, two instances of different C<Sum::SipHash> classes which
+    differ only in the class's C<:defkey> will always generate the same
+    results if the instances use the same C<:key> argument.
+
+    As such, explicitly specifying C<:key(0)> always uses the naked
+    well-known seed, which is more likely to have been analyzed by
+    potential adversaries.  Classes which do not provide a default key
+    (or which explicity set C<:defkey(0)>) will create instances that
+    use the naked seed if they do not specify C<:key>.
+
+    The process of modifying the seed is resilient against accidentally
+    zeroing the seed, so any other value can be safely chosen.
 
 =end pod
+
+    # There is not actually a custom constructor, it is just docced as-if
 
     submethod BUILD (:$key is copy = $defkey) {
         # The K constants must be a little-endian encoding of the key.
@@ -137,6 +147,27 @@ role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
         SipRound($w, $v0, $v1, $v2, $v3) for ^$c;
         $v0 +^= $w;
     }
+
+=begin pod
+
+=head3 multi method add(uint8(Any) *@addends)
+
+    The C<.add> method expects a list of single byte addends.  It is
+    generally not used directly by applications.
+
+    A C<Sum::Marshal::*> role must be mixed into the class, and some
+    such roles may also be used to properly process wider or narrower
+    addends as appropriate to the application through the C<.push>
+    method.
+
+    NOTE: Currently no sized native type support is available, so rather than
+    being coerced to C<uint8>, addends are coerced to C<Int> and 8 lsb are
+    used.  This behavior should be stable, barring any surprises in the
+    semantics of C<uint8>'s coercion operation.  Any future cut-through
+    optimizations for wider low-level types will be done behind the scenes
+    and presented as C<Sum::Marshal> mixins.
+
+=end pod
 
     method add (*@addends) {
         for (@addends) -> $a {
