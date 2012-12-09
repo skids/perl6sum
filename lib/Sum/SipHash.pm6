@@ -62,18 +62,18 @@ $Sum::SipHash::Doc::synopsis = $=pod[0].content[4].content.Str;
 
 use Sum;
 
-role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
+role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
 
     my Buf $keyfrob = "somepseudorandomlygeneratedbytes".encode("ascii");
 
-    has $!k0 is rw   = 0;
-    has $!k1 is rw   = 0;
-    has $!v0 is rw   = 0;
-    has $!v1 is rw   = 0;
-    has $!v2 is rw   = 0;
-    has $!v3 is rw   = 0;
-    has $!b is rw    = 0;
-    has $!left is rw = 0;
+    has Int $!k0 is rw   = 0;
+    has Int $!k1 is rw   = 0;
+    has Int $!v0 is rw   = 0;
+    has Int $!v1 is rw   = 0;
+    has Int $!v2 is rw   = 0;
+    has Int $!v3 is rw   = 0;
+    has Int $!b is rw    = 0;
+    has Int $!left is rw = 0;
 
 =begin pod
 
@@ -109,6 +109,8 @@ role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
     # There is not actually a custom constructor, it is just docced as-if
 
     submethod BUILD (:$key is copy = $defkey) {
+        $key = Int($key);
+
         # The K constants must be a little-endian encoding of the key.
         $!k1 = :256[ 255 X+& ($key X+> 0,8...^64)    ];
         $!k0 = :256[ 255 X+& ($key X+> 64,72...^128) ];
@@ -120,15 +122,17 @@ role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
         $!v3 = $!k1 +^ :256[$keyfrob[24..^32]];
     }
 
+#    has Int $.size = 64; should work, but doesn't during multirole mixin
     method size ( --> int ) { 64 };
 
-    my sub rol ($v is rw, int $count) {
+    my sub rol (Int $v is rw, int $count) {
         my $tmp = (($v +& (0xffffffffffffffff +> $count)) +< $count);
         $tmp +|= ($v +> (64 - $count));
 	$v = $tmp;
     }
 
-    my sub SipRound ($w, $v0 is rw, $v1 is rw, $v2 is rw, $v3 is rw) {
+    my sub SipRound (Int $v0 is rw, Int $v1 is rw,
+                     Int $v2 is rw, Int $v3 is rw) {
         $v0 += $v1; $v0 +&= 0xffffffffffffffff;
         $v2 += $v3; $v2 +&= 0xffffffffffffffff;
         rol($v1, 13);  rol($v3, 16);
@@ -142,9 +146,10 @@ role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
         rol($v2, 32);
     }
 
-    my sub compression ($w, $v0 is rw, $v1 is rw, $v2 is rw, $v3 is rw) {
+    my sub compression (Int $w, Int $v0 is rw, Int $v1 is rw,
+                                Int $v2 is rw, Int $v3 is rw) {
         $v3 +^= $w;
-        SipRound($w, $v0, $v1, $v2, $v3) for ^$c;
+        SipRound($v0, $v1, $v2, $v3) for ^$c;
         $v0 +^= $w;
     }
 
@@ -170,11 +175,13 @@ role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
 =end pod
 
     method add (*@addends) {
-        for (@addends) -> $a {
+        for (@addends) -> $a is copy {
+            $a = Int($a) +& 255;
+
             my $pos = $!b;
             $!b++;
 
-            $!left +|= (($a +& 255) +< (8 * ($pos % 8)));
+            $!left +|= ($a +< (8 * ($pos % 8)));
             unless ($!b % 8) {
                 compression($!left, $!v0, $!v1, $!v2, $!v3);
                 $!left = 0;
@@ -191,14 +198,11 @@ role SipHash [ :$c = 2, :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
 
         my ($v0, $v1, $v2, $v3) = $!v0, $!v1, $!v2, $!v3;
 
-        my $left = $!left;
-        $left +|= ($!b +& 255) +< 56;
-
-        compression($left,$v0,$v1,$v2,$v3);
+        compression($!left +| (($!b +& 255) +< 56),$v0,$v1,$v2,$v3);
 
         $v2 +^= 0xff;
 
-        SipRound($left, $v0, $v1, $v2, $v3) for ^$d;
+        SipRound($v0, $v1, $v2, $v3) for ^$d;
 
         [+^] $v0, $v1, $v2, $v3;
     }
