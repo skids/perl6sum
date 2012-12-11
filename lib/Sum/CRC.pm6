@@ -99,17 +99,14 @@ Sum::CRC
 
 =end pod
 
-
-
 role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
                 :$iniv = Bool::False, :$finv = Bool::False,
                 :$columns = 8, :$poly, :$reflect = Bool::False ]
      does Sum::Partial {
 
-    # Eventually we want $.rem's type (from :iniv when not Bool)
-    # to be predictable enough for optimization, and really it
-    # should only be rw from inside the class.
-    has $.rem is rw = ( ($iniv.WHAT === Bool) ?? (-$iniv +& ((1 +< $columns) - 1)) !! $iniv );
+    my Int $mask = :2[1 xx $columns];
+
+    has Int $.rem is rw = ($iniv.WHAT === Bool) ?? (-$iniv +& $mask) !! +$iniv;
 
     method size ( --> int) { +$columns }
 
@@ -117,7 +114,7 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
         for (@addends) -> $a {
             my $b = $.rem +& (1 +< ($columns - 1));
             $.rem +<= 1;
-	    $.rem +&= (1 +< $columns) - 1;
+	    $.rem +&= $mask;
             $.rem +^= $poly if $a xor $b;
         }
     };
@@ -139,8 +136,8 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
             $rev = $rev2;
         }
         if ($finv) {
-           return $rev +^ ((1 +< $columns) - 1) if ($finv.WHAT === Bool);
-           return $rev +^ $finv;
+           return $rev +^ $mask if ($finv.WHAT === Bool);
+           return $rev +^ +$finv;
         }
         return $rev;
     }
@@ -148,13 +145,11 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
     method Numeric () { self.finalize };
 
     method buf8 () {
-        my $f = self.finalize;
         my $bytes = ($columns + 7) div 8;
-        Buf.new( 255 X+& ($f X+> ($bytes*8-8,{$_-8}...0)));
+        Buf.new( 255 X+& (self.finalize X+> ($bytes*8-8,{$_-8}...0)));
     }
     method buf1 () {
-        my $f = self.finalize;
-        Buf.new( 1 X+& ($f X+> ($columns-1...0)) );
+        Buf.new( 1 X+& (self.finalize X+> ($columns-1...0)) );
     }
     method Buf () { self.buf1; }
 
