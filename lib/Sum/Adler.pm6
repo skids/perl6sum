@@ -28,6 +28,9 @@ $Sum::Adler::Doc::synopsis = $=pod[0].content[4].content.Str;
     Using C<Sum::Adler> defines roles for generating types of C<Sum>
     that calculate variations of the Fletcher and Adler checksums.
 
+    These are rather old algorithms which have fallen out of general
+    use.  However, they persist in several network protocols.
+
 =head1 ROLES
 
 =head2 role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
@@ -64,6 +67,10 @@ $Sum::Adler::Doc::synopsis = $=pod[0].content[4].content.Str;
     the corresponding accumulator is initialized to the provided value
     when a new object is instantiated.
 
+    All these sums keep no positional state, so C<.pos> and C<.elems>
+    are not provided by the base role.  They also retain all state
+    after finalization, so C<Sum::Partial> may be mixed.
+
 =end pod
 
 use Sum;
@@ -79,12 +86,12 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
                      :$columnsA = 16, :$columnsB = $columnsA ]
      does Sum::Partial {
 
-    has $!A is rw = ( ($inivA.WHAT === Bool)
-                    ?? (-$inivA +& ((1 +< $columnsA)-1))
-                    !! $inivA );
-    has $!B is rw = ( ($inivB.WHAT === Bool)
-                    ?? (-$inivB +& ((1 +< $columnsB)-1))
-                    !! $inivB );
+    has Int $!A is rw = ( ($inivA.WHAT === Bool)
+                          ?? (-$inivA +& ((1 +< $columnsA)-1))
+                          !! $inivA );
+    has Int $!B is rw = ( ($inivB.WHAT === Bool)
+                          ?? (-$inivB +& ((1 +< $columnsB)-1))
+                          !! $inivB );
 
     method size () { $columnsA + $columnsB }
 
@@ -139,6 +146,7 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
     method checkvals(*@addends) {
         self.finalize(@addends);
         return fail(X::Sum::CheckVals.new()) if ($modulusB > $modulusA);
+
         # TODO: in the case of Adler these are impossible because of the addend
         # size.  We are agnostic to that.  So the values we return may
         # end up being larger than bytes.  We should probably warn instead.
@@ -248,6 +256,10 @@ role Sum::Fletcher64
     Copyright (c) 2012 Brian S. Julin. All rights reserved.  This program is
     free software; you can redistribute it and/or modify it under the terms
     of the Perl Artistic License 2.0.
+
+=head1 REFERENCES
+
+    RFC905 Annex B, RFC2960
 
 =head1 SEE ALSO
 
