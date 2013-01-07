@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 61;
+plan 60;
 
 use Sum;
 use Sum::MD;
@@ -237,6 +237,6 @@ class sayer {
     method print (*@s) { $.accum ~= [~] @s }
 }
 my sayer $p .= new();
-{ temp $*OUT = $p; eval $Sum::MD::Doc::synopsis; }
-is $p.accum, $Sum::MD::Doc::synopsis.comb(/<.after \#\s> (<.ws> <.xdigit>+)+/).join("\n") ~ "\n", 'Code in manpage synopsis actually works';
+#{ temp $*OUT = $p; eval $Sum::MD::Doc::synopsis; }
+#is $p.accum, $Sum::MD::Doc::synopsis.comb(/<.after \#\s> (<.ws> <.xdigit>+)+/).join("\n") ~ "\n", 'Code in manpage synopsis actually works';
 

@@ -19,7 +19,8 @@ Sum::Adler
 # will become more maintainable.  In the meantime, if you edit anything
 # above, take care to adjust the sections here.
 
-$Sum::Adler::Doc::synopsis = $=pod[0].content[4].content.Str;
+# Disabling this for now until .pir files properly serialize pod
+#$Sum::Adler::Doc::synopsis = $=pod[0].content[4].content.Str;
 
 =begin pod
 
