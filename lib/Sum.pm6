@@ -3,7 +3,7 @@
 class X::Sum::Push::Usage is Exception {
     method message {
         "Sums do not retain previous addends, so "
-        ~ "push does cannot return a useful value."
+        ~ "push cannot return a useful value."
     }
 }
 
