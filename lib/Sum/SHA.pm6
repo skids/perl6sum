@@ -88,11 +88,11 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
 
     method size ( --> int) { 160 }
 
-    submethod BUILD () {
+    submethod BUILD {
         @!s = (0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0);
     }
 
-    method comp () {
+    method comp {
 
         my ($a, $b, $c, $d, $e) = @!s[];
 
@@ -113,7 +113,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub rol ($v, int $count where { -1 < * < 32 }) {
+    my sub rol ($v, int $count where 0..32) {
         my $tmp = ($v +< $count) +& 0xffffffff;
         $tmp +|= (($v +& 0xffffffff) +> (32 - $count));
 	$tmp;
@@ -154,11 +154,9 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
         # :4294967296[@!s[]];
         [+|] (@!s[] »+<« (128,96...0));
     }
-    method Numeric () { self.finalize };
-    method buf8 () {
-        Buf.new(255 X+& (@!s[] X+> (24,16,8,0)));
-    }
-    method Buf () { self.buf8 }
+    method Numeric { self.finalize };
+    method buf8 { Buf.new(255 X+& (@!s[] X+> (24,16,8,0))); }
+    method Buf { self.buf8 }
 }
 
 =begin pod
@@ -230,8 +228,8 @@ role Sum::SHA2common {
         self.add(Buf.new()) unless $.final;
         self.Int_internal;
     }
-    method Numeric () { self.finalize };
-    method Buf () { self.buf8 }
+    method Numeric { self.finalize };
+    method Buf { self.buf8 }
 }
 
 role Sum::SHAmix32 does Sum::SHA2common {
@@ -239,7 +237,7 @@ role Sum::SHAmix32 does Sum::SHA2common {
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub infix:<ror> ($v, int $count where { -1 < * < 32 }) {
+    my sub infix:<ror> ($v, int $count where 0..32) {
         my $tmp = ($v +& 0xffffffff) +> $count;
         $tmp +|= ($v +< (32 - $count)) +& 0xffffffff;
 	$tmp;
@@ -264,7 +262,7 @@ role Sum::SHAmix32 does Sum::SHA2common {
 	@.w = @m;
     }
 
-    method comp () {
+    method comp {
         my ($a,$b,$c,$d,$e,$f,$g,$h) = @.s[];
         for ^64 -> $i {
             # We'll mask this below
@@ -290,7 +288,7 @@ role Sum::SHAmix64 does Sum::SHA2common {
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub infix:<ror> ($v, int $count where { -1 < * < 64 }) {
+    my sub infix:<ror> ($v, int $count where 0..64) {
         my $tmp = ($v +& 0xffffffffffffffff) +> $count;
         $tmp +|= ($v +< (64 - $count)) +& 0xffffffffffffffff;
 	$tmp;
@@ -315,7 +313,7 @@ role Sum::SHAmix64 does Sum::SHA2common {
 	@.w = @m;
     }
 
-    method comp () {
+    method comp {
         my ($a,$b,$c,$d,$e,$f,$g,$h) = @.s[];
         for ^80 -> $i {
             # We'll mask this below
@@ -340,32 +338,32 @@ role Sum::SHAmix64 does Sum::SHA2common {
 role Sum::SHA224 does Sum::SHAmix32 does Sum::MDPad {
     my @s_init = 0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
                  0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4;
-    method init () { @s_init }
-    method buf8 () {
+    method init { @s_init }
+    method buf8 {
         self.finalize;
         Buf.new(255 X+& (@.s[0..6] X+> (24,16...0)))
     }
-    method Int_internal () {
+    method Int_internal {
         # Doesn't work yet:
         # :4294967296[@.s[^7]]
         [+|] (@.s[0..6] »+<« (192,160...0))
     }
-    method size () { 224 }
+    method size { 224 }
 }
 role Sum::SHA256 does Sum::SHAmix32 does Sum::MDPad {
     my @s_init = 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
                  0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19;
-    method init () { @s_init }
-    method buf8 () {
+    method init { @s_init }
+    method buf8 {
         self.finalize;
-        Buf.new(255 X+& (@.s[]     X+> (24,16...0)))
+        Buf.new(255 X+& (@.s[] X+> (24,16...0)))
     }
-    method Int_internal () {
+    method Int_internal {
         # Doesn't work yet:
         # :4294967296[@.s[]]
         [+|] (@.s[] »+<« (224,192...0))
     }
-    method size () { 256 }
+    method size { 256 }
 }
 role Sum::SHA384 does Sum::SHAmix64
      does Sum::MDPad[:blocksize(1024), :lengthtype<uint128_be>] {
@@ -374,17 +372,17 @@ role Sum::SHA384 does Sum::SHAmix64
                  0x9159015a3070dd17, 0x152fecd8f70e5939,
                  0x67332667ffc00b31, 0x8eb44a8768581511,
                  0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4;
-    method init () { @s_init }
-    method buf8 () {
+    method init { @s_init }
+    method buf8 {
         self.finalize;
         Buf.new(255 X+& (@.s[0..5] X+> (56,48...0)))
     }
-    method Int_internal () {
+    method Int_internal {
         # Doesn't work yet:
         # :18446744073709551616[@.s[^6]]
         [+|] (@.s[0..5] »+<« (320,256...0))
     }
-    method size () { 384 }
+    method size { 384 }
 }
 role Sum::SHA512 does Sum::SHAmix64
      does Sum::MDPad[:blocksize(1024), :lengthtype<uint128_be>] {
@@ -393,23 +391,23 @@ role Sum::SHA512 does Sum::SHAmix64
                  0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
                  0x510e527fade682d1, 0x9b05688c2b3e6c1f,
                  0x1f83d9abfb41bd6b, 0x5be0cd19137e2179;
-    method init () { @s_init }
-    method buf8 () {
+    method init { @s_init }
+    method buf8 {
         self.finalize;
-        Buf.new(255 X+& (@.s[]     X+> (56,48...0)))
+        Buf.new(255 X+& (@.s[] X+> (56,48...0)))
     }
-    method Int_internal () {
+    method Int_internal {
         # Doesn't work yet:
         # :18446744073709551616[@.s[]]
-        [+|] (@.s[]     »+<« (448,384...0))
+        [+|] (@.s[] »+<« (448,384...0))
     }
-    method size () { 512 }
+    method size { 512 }
 }
 
-role Sum::SHA2[ :$columns where { $_ == 224 } ] does Sum::SHA224 { }
-role Sum::SHA2[ :$columns where { $_ == 256 } ] does Sum::SHA256 { }
-role Sum::SHA2[ :$columns where { $_ == 384 } ] does Sum::SHA384 { }
-role Sum::SHA2[ :$columns where { $_ == 512 } ] does Sum::SHA512 { }
+role Sum::SHA2[ :$columns where 224 ] does Sum::SHA224 { }
+role Sum::SHA2[ :$columns where 256 ] does Sum::SHA256 { }
+role Sum::SHA2[ :$columns where 384 ] does Sum::SHA384 { }
+role Sum::SHA2[ :$columns where 512 ] does Sum::SHA512 { }
 
 =begin pod
 
