@@ -51,7 +51,7 @@ Sum::MD
 use Sum;
 use Sum::MDPad;
 
-role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320 > } = "MD5" ] does Sum::MDPad[:lengthtype<uint64_le>] {
+role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320>) = "MD5" ] does Sum::MDPad[:lengthtype<uint64_le>] {
     has @!w is rw;     # "Parsed" message gets bound here.
     has @!s is rw;     # Current hash state.  H in specification.
 
@@ -70,8 +70,8 @@ role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160
         }
     }
 
-    submethod BUILD () {
-        @!s = (0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476);
+    submethod BUILD {
+        @!s = 0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476;
         if $alg eqv "MD4ext" {
             @!s.push(0x33221100,0x77665544,0xbbaa9988,0xffeeddcc);
         }
@@ -87,7 +87,7 @@ role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub rol ($v, int $count where { -1 < * < 32 }) {
+    my sub rol ($v, int $count where 0..32) {
         my $tmp = ($v +< $count) +& 0xffffffff;
         $tmp +|= (($v +& 0xffffffff) +> (32 - $count));
 	$tmp;
@@ -275,7 +275,7 @@ role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160
              ($e + rol($a + $k + $data + ($b +^ (+^$d +| $c)), $shift)));
     }
 
-    method md4_comp () {
+    method md4_comp {
         my @s = @!s[];
         for (^16) Z (3,7,11,19) xx 4 {
             self.md4_round1_step(@!w[$^idx],$^shift);
@@ -297,7 +297,7 @@ role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160
         @!s[0,4] = @!s[4,0] if $alg eqv "MD4ext";
     }
 
-    method md5_comp () {
+    method md5_comp {
         my @s = @!s[];
         for (^16) Z (^16) Z (7,12,17,22) xx 4 {
             self.md5_round1_step(@!w[$^didx], $^idx, $^shift);
@@ -323,8 +323,8 @@ role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160
         ... *[0]  == 4;
     my @rperms = [(9 * $_ + 5) % 16 for ^16], { [ @lperms[1][$_[]] ] }
         ... *[0]  == 12;
-    my @kl = (0,0x5a827999,0x6ed9eba1,0x8f1bbcdc,0xa953fd4e);
-    my @kr = (0x50a28be6,0x5c4dd124,0x6d703ef3,0x7a6d76e9,0);
+    my @kl = 0,0x5a827999,0x6ed9eba1,0x8f1bbcdc,0xa953fd4e;
+    my @kr = 0x50a28be6,0x5c4dd124,0x6d703ef3,0x7a6d76e9,0;
 
     # These shifts appear in the spec, but are not used in the
     # example code, which seems to be what is used in other
@@ -473,12 +473,12 @@ role Sum::MD4_5 [ :$alg where { $_ eqv [|] <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160
 
         :256[ 255 X+& (@!s[] X+> (0,8,16,24)) ]
     }
-    method Numeric () { self.finalize };
-    method buf8 () {
+    method Numeric { self.finalize };
+    method buf8 {
         self.finalize;
         Buf.new(255 X+& (@!s[] X+> (0,8,16,24)));
     }
-    method Buf () { self.buf8 }
+    method Buf { self.buf8 }
 }
 
 =begin pod
@@ -597,12 +597,12 @@ role Sum::MD2 does Sum {
 
         :256[ @!X[^16] ]
     }
-    method Numeric () { self.finalize };
-    method buf8 () {
+    method Numeric { self.finalize };
+    method buf8 {
         self.finalize;
         Buf.new( @!X[^16] );
     }
-    method Buf () { self.buf8 }
+    method Buf { self.buf8 }
 }
 
 =begin pod
