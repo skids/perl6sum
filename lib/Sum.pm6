@@ -372,7 +372,9 @@ role Sum::Marshal::Raw {
         # Pass the whole list to the class's add method, unprocessed.
         sink self.add(@addends).grep({$_.WHAT ~~ Failure }).map:
              { return $_ };
-        Failure.new(X::Sum::Push::Usage.new());
+        my $res = Failure.new(X::Sum::Push::Usage.new());
+        $res.defined;
+        $res;
     };
 
     # This allows simultaneous mixin of Sum::Partial
@@ -429,7 +431,9 @@ role Sum::Marshal::Cooked {
                 when Failure { return $_ };
             }
         };
-        Failure.new(X::Sum::Push::Usage.new());
+        my $res = Failure.new(X::Sum::Push::Usage.new());
+        $res.defined;
+        $res;
     }
 }
 

@@ -175,7 +175,7 @@ class Foo5
         method size () { 64 }
         method finalize (*@addends) {
             self.push(@addends);
-            return fail(X::Sum::Missing.new()) unless self.whole;
+            return Failure.new(X::Sum::Missing.new()) unless self.whole;
             $.accum;
         }
         method Numeric () { self.finalize };
