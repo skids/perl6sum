@@ -188,6 +188,7 @@ role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
                 $!left = 0;
 	    }
         }
+        return;
     };
 
     method pos () { $!b };

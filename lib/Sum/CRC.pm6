@@ -117,6 +117,7 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
 	    $.rem +&= $mask;
             $.rem +^= $poly if $a xor $b;
         }
+        return;
     };
 
     method finalize(*@addends) {

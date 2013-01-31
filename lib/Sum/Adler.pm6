@@ -112,6 +112,7 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
             $!B += $!A;
             $!B %= $modulusB;
         }
+        return;
     };
 
     method finalize(*@addends) {
