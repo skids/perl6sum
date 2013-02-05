@@ -370,7 +370,7 @@ role Sum::Marshal::Raw {
 
     method push (*@addends --> Failure) {
         # Pass the whole list to the class's add method, unprocessed.
-        sink self.add(@addends).grep({$_.WHAT ~~ Failure }).map:
+        sink self.add(|@addends).grep({$_.WHAT ~~ Failure }).map:
              { return $_ };
         my $res = Failure.new(X::Sum::Push::Usage.new());
         $res.defined;
@@ -717,7 +717,7 @@ role Sum::Marshal::Block [::B :$BufT = Buf, :$elems = 64, ::b :$BitT = Bool]
     # use multi/constrained method to workaround diamond problem
     multi method emit ($self where {True}: *@addends) {
 
-        @.accum.push(@addends);
+        @.accum.push(|@addends);
 
         # Emit any completed blocks.
         gather while (@.accum.elems > $elems) {
@@ -762,8 +762,7 @@ role Sum::Marshal::Block [::B :$BufT = Buf, :$elems = 64, ::b :$BitT = Bool]
         gather do {
              my $i = 0;
              while ($addend.elems - $i + +@.accum >= $elems) {
-                 take B.new(flat @.accum,
-                            $addend[$i..^($i + $elems - +@.accum)]);
+                 take B.new(|@.accum, $addend[$i..^($i + $elems - +@.accum)]);
                  $i += $elems - +@.accum;
                  @.accum = ();
              }
@@ -774,7 +773,7 @@ role Sum::Marshal::Block [::B :$BufT = Buf, :$elems = 64, ::b :$BitT = Bool]
     # use multi/constrained method to workaround diamond problem
     multi method drain ($self where {True}:) {
         $.drained = True;
-        B.new(@.accum), ?<<@.bits
+        flat B.new(@.accum), ?<<@.bits
     }
 
 }
@@ -833,3 +832,5 @@ role Sum::Marshal::IO {
         }
     }
 }
+
+1; # Avoid sink-punning of last role

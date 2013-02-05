@@ -226,6 +226,8 @@ role Sum::Fletcher32
 role Sum::Fletcher64
      does Sum::Fletcher[ :modulusA(4294967295), :columnsA(32) ] { }
 
+1; # Avoid sink-punning of last role
+
 =begin pod
 
 =head1 METHODS

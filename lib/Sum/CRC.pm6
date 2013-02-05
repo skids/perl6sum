@@ -1009,6 +1009,8 @@ role Sum::CRC_64_Jones
 role Sum::CRC_82_DARC
     does Sum::CRC[ :reflect, :columns(82), :poly(0x0308c0111011401440411) ] { }
 
+1; # Avoid sink-punning of last role
+
 =begin pod
 
 =head1 AUTHOR

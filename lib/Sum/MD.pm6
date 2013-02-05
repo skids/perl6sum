@@ -441,7 +441,7 @@ role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-
         @!s = 0xffffffff X+& @!s;
     }
 
-    multi method do_add (Buf $block where { .elems == 64 }) {
+    multi method add (Buf $block where { .elems == 64 }) {
 
         # Update the length count and check for problems via Sum::MDPad
         given self.pos_block_inc {
@@ -467,7 +467,7 @@ role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-
             return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
         }
 
-        self.add(self.drain) if self.^can("drain");
+        self.add(|self.drain) if self.^can("drain");
 
         self.add(Buf.new()) unless $.final;
 
@@ -557,20 +557,21 @@ role Sum::MD2 does Sum {
     has @!X is rw = 0 xx 48;   # The digest state
     has Bool $!final is rw = False; # whether pad/checksum is in state already
 
-    multi method do_add (*@addends) {
-        sink for (@addends) { self.add($_) }
+    proto method add (|cap) {*}
+    multi method add (*@addends) {
+        sink for @addends { self.add($_) }
     }
-    multi method do_add ($addend) {
+    multi method add ($addend) {
         # TODO: Typed failure here?
         die("Marshalling error.  Addends must be Buf with 0..16 bytes.");
     }
-    multi method do_add (Buf $block where { -1 < .elems < 16 }) {
+    multi method add (Buf $block where { -1 < .elems < 16 }) {
         my int $empty = 16 - $block.elems;
         $!final = True;
-        self.do_add(Buf.new($block.values, $empty xx $empty));
-        self.do_add(Buf.new(@!C[]));
+        self.add(Buf.new($block.values, $empty xx $empty));
+        self.add(Buf.new(@!C[]));
     }
-    multi method do_add (Buf $block where { .elems == 16 }) {
+    multi method add (Buf $block where { .elems == 16 }) {
         @!X[16..^32] = $block.values;
         @!X[32..^48] = @!X[^16] Z+^ @!X[16..^32];
         for 15,^15 Z ^16 -> $last, $x {
@@ -585,13 +586,12 @@ role Sum::MD2 does Sum {
         return;
     }
     method size ( --> int) { 128 };
-    method add (*@addends) { self.do_add(|@addends) }
     method finalize(*@addends) {
-        given self.push(@addends) {
+        given self.push(|@addends) {
             return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
         }
 
-        self.add(self.drain) if self.^can("drain");
+        self.add(|self.drain) if self.^can("drain");
 
         self.add(Buf.new()) unless $!final;
 
@@ -604,6 +604,8 @@ role Sum::MD2 does Sum {
     }
     method Buf { self.buf8 }
 }
+
+1; # Avoid sink-punning of role
 
 =begin pod
 

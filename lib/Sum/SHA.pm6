@@ -119,7 +119,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
 	$tmp;
     }
 
-    multi method do_add (Buf $block where { .elems == 64 }) {
+    multi method add (Buf $block where { .elems == 64 }) {
 
         # Update the length count and check for problems via Sum::MDPad
         given self.pos_block_inc {
@@ -211,7 +211,7 @@ role Sum::SHA2common {
     has @.w is rw;                   # "Parsed" message gets bound here.
     has @.s is rw = self.init();     # Current hash state.  H in specification.
 
-    multi method do_add (Buf $block where { .elems == self.bsize/8 }) {
+    multi method add (Buf $block where { .elems == self.bsize/8 }) {
         # Update the length count and check for problems via Sum::MDPad
         given self.pos_block_inc {
             when Failure { return $_ };
@@ -408,6 +408,8 @@ role Sum::SHA2[ :$columns where 224 ] does Sum::SHA224 { }
 role Sum::SHA2[ :$columns where 256 ] does Sum::SHA256 { }
 role Sum::SHA2[ :$columns where 384 ] does Sum::SHA384 { }
 role Sum::SHA2[ :$columns where 512 ] does Sum::SHA512 { }
+
+1; # Avoid sink-punning of last role
 
 =begin pod
 

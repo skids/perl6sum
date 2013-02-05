@@ -178,18 +178,16 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
     block.  Slurpy lists may be C<.push>ed if C<Sum::Marshal::Block> roles
     are mixed instead.
 
-    As an interim workaround, these multi candidates are currently
-    named C<.do_add> instead, and so should be the provided candidate.
-
 =end pod
 
-    multi method do_add ($addend) {
+    proto method add (|c) {*}
+    multi method add ($addend) {
         fail(X::Sum::Marshal.new(:addend($addend.WHAT.^name)))
     }
-    multi method do_add () { }
-    multi method do_add (Buf $block where { -1 < .elems < $bbytes },
-                         Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
-                         Bool $b3?, Bool $b2?, Bool $b1?) {
+    multi method add () { }
+    multi method add (Buf $block where { -1 < .elems < $bbytes },
+                      Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
+                      Bool $b3?, Bool $b2?, Bool $b1?) {
 
         fail(X::Sum::Final.new()) if $.final;
         my @bcat = ();
@@ -223,10 +221,9 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
 
         $.final = True;
     }
-    # Workaround for multis not satisfying prototypes in composed roles
-    method add (*@addends) { self.do_add(|@addends) }
-
 }
+
+1; # Avoid sink-punning of last role
 
 =begin pod
 

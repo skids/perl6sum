@@ -215,6 +215,8 @@ role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
     method Buf () { self.buf8 }
 }
 
+1; # Avoid sink-punning of last role
+
 =begin pod
 
 =head1 AUTHOR

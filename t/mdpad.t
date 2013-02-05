@@ -13,7 +13,7 @@ class M1 does Sum::MDPad does Sum::Marshal::Raw {
     has $.lastblock is rw;
     method finalize { $.total }
     method size { Inf }
-    multi method do_add (Buf $block where { .elems == 64 }) {
+    multi method add (Buf $block where { .elems == 64 }) {
         given self.pos_block_inc {
             when Failure { return $_ };
         }
@@ -87,7 +87,7 @@ class M2 does Sum::MDPad[:lengthtype<uint64_le>] does Sum::Marshal::Raw {
     has $.lastblock is rw;
     method finalize { $.total }
     method size { Inf }
-    multi method do_add (Buf $block where { .elems == 64 }) {
+    multi method add (Buf $block where { .elems == 64 }) {
         given self.pos_block_inc {
             when Failure { return $_ };
         }
