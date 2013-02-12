@@ -21,7 +21,7 @@ Sum::MDPad
 
 =head1 ROLES
 
-=head2 role Sum::MDPad [ :$blocksize, :$lengthtype, :$overflow, :@firstpad ]
+=head2 role Sum::MDPad [ :$blocksize, :$lengthtype, :$overflow, :@firstpad, :@lastpad ]
             does Sum {
 
     The C<Sum::MDPad> parametric role defines an interface and shared
@@ -36,7 +36,9 @@ Sum::MDPad
     to the message before zero-padding.  Currently this must be an Array
     of Bool values, and defaults to C<[True]>, which causes one set bit
     to be appended before padding the unused portion of the last block
-    with clear bits.
+    with clear bits.  The C<:lastpad> parameter specifies a similar bit
+    pattern placed at the end of the padding, before any embedded length
+    field, and it is empty by default.
 
     The C<:lengthtype> and C<:overflow> parameters control the format
     and behavior of the length counter and are described with the relevant
@@ -46,7 +48,7 @@ Sum::MDPad
 
 use Sum;
 
-role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where { $_ eqv one("uint64_be","uint64_le","uint128_be","uint128_le") } = "uint64_be", Bool :$overflow = True, :@firstpad = [True] ] does Sum {
+role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where { $_ eqv one("uint64_be","uint64_le","uint128_be","uint128_le") } = "uint64_be", Bool :$overflow = True, :@firstpad = [True], :@lastpad ] does Sum {
 
     my $bbytes = $blocksize/8;
     my @lenshifts = (
@@ -193,9 +195,6 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
         my @bcat = ();
         @bcat.push($_) if .defined for ($b7,$b6,$b5,$b4,$b3,$b2,$b1);
         my int $bits = @bcat.elems;
-        @bcat.push(@firstpad);
-        @bcat.push(False) while +@bcat % 8;
-        my @bytes = (gather while +@bcat { take :2[@bcat.splice(0,8)] });
 
         my int $inc = $block.elems * 8 + $bits;
         unless ($overflow) {
@@ -211,11 +210,17 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
         # We took care of the length increment already.
         $!ignore_block_inc = True;
 
-        my $padbytes = ($bbytes*2 - $block.elems - +@bytes - +@lenshifts);
-        $padbytes -= $bbytes if $padbytes >= $bbytes;
+        @bcat.push(@firstpad);
 
-        my @vals = ($block[], @bytes, 0 xx $padbytes,
-                    (255 X+& ($!o X+> (flat @lenshifts))));
+        my $padbits = ($bbytes * 16 - $block.elems * 8 - +@lenshifts * 8
+                       - +@bcat - +@lastpad);
+        $padbits -= $bbytes * 8 if $padbits >= $bbytes * 8;
+
+        @bcat.push(False xx $padbits);
+        @bcat.push(@lastpad);
+        my @bytes = (gather while +@bcat { take :2[@bcat.splice(0,8)] });
+
+        my @vals = ($block[], @bytes, (255 X+& ($!o X+> (flat @lenshifts))));
         self.add(Buf.new(@vals[^$bbytes]));
         self.add(Buf.new(@vals[$bbytes .. *-1])) if +@vals > $bbytes;
 
