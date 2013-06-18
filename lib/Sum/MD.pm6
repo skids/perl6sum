@@ -319,10 +319,8 @@ role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-
     }
 
     # RIPEMD constants
-    my @lperms = [^16], { [ (7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8)[$_[]] ] }
-        ... *[0]  == 4;
-    my @rperms = [(9 * $_ + 5) % 16 for ^16], { [ @lperms[1][$_[]] ] }
-        ... *[0]  == 12;
+    my @lperms = [^16], { [ (7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8)[$_[]] ] } ... *[0]  == 4;
+    my @rperms = [(9 * $_ + 5) % 16 for ^16], { [ @lperms[1][$_[]] ] } ... *[0]  == 12;
     my @kl = 0,0x5a827999,0x6ed9eba1,0x8f1bbcdc,0xa953fd4e;
     my @kr = 0x50a28be6,0x5c4dd124,0x6d703ef3,0x7a6d76e9,0;
 
