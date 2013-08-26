@@ -135,7 +135,7 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
     method buf8 () {
         my $f = self.finalize;
         my $bytes = ($columnsA + $columnsB + 7) div 8;
-        Buf.new( 255 X+& ($f X+> (8 X* reverse(^$bytes))) );
+        buf8.new($f X+> (8 X* reverse(^$bytes)));
     }
     method buf1 () {
         my $f = self.finalize;

@@ -221,8 +221,8 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
         my @bytes = (gather while +@bcat { take :2[@bcat.splice(0,8)] });
 
         my @vals = ($block[], @bytes, (255 X+& ($!o X+> (flat @lenshifts))));
-        self.add(Buf.new(@vals[^$bbytes]));
-        self.add(Buf.new(@vals[$bbytes .. *-1])) if +@vals > $bbytes;
+        self.add(buf8.new(@vals[^$bbytes]));
+        self.add(buf8.new(@vals[$bbytes .. *-1])) if +@vals > $bbytes;
 
         $.final = True;
     }

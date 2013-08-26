@@ -210,7 +210,7 @@ role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
     }
     method Numeric () { self.finalize };
     method buf8 () {
-        buf8.new(255 X+& (self.finalize X+> (56,48,40,32,24,16,8,0)));
+        buf8.new(self.finalize X+> (56,48,40,32,24,16,8,0));
     }
     method Buf () { self.buf8 }
 }

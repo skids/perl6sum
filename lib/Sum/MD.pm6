@@ -474,7 +474,7 @@ role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-
     method Numeric { self.finalize };
     method buf8 {
         self.finalize;
-        Buf.new(255 X+& (@!s[] X+> (0,8,16,24)));
+        buf8.new(@!s[] X+> (0,8,16,24));
     }
     method Buf { self.buf8 }
 }
@@ -598,7 +598,7 @@ role Sum::MD2 does Sum {
     method Numeric { self.finalize };
     method buf8 {
         self.finalize;
-        Buf.new( @!X[^16] );
+        buf8.new( @!X[^16] );
     }
     method Buf { self.buf8 }
 }
