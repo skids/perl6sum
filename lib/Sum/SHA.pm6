@@ -108,7 +108,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
 
         }
 
-        @!s[] = 0xffffffff X+& (@!s[] »+« (0xffffffff X+& ($a,$b,$c,$d,$e)));
+        @!s[] = 0xffffffff X+& (@!s[] Z+ (0xffffffff X+& ($a,$b,$c,$d,$e)));
     }
 
     # A moment of silence for the pixies that die every time something
@@ -152,7 +152,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
 
         # This does not work yet on 32-bit machines
         # :4294967296[@!s[]];
-        [+|] (@!s[] »+<« (128,96...0));
+        [+|] (@!s[] Z+< (128,96...0));
     }
     method Numeric { self.finalize };
     method buf8 { buf8.new(@!s[] X+> (24,16,8,0)); }
@@ -280,7 +280,7 @@ role Sum::SHAmix32 does Sum::SHA2common {
         # merge the new state
         @.s[] = 0xffffffff
                 X+&
-                (@.s[] »+« (0xffffffff X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
+                (@.s[] Z+ (0xffffffff X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
     }
 }
 role Sum::SHAmix64 does Sum::SHA2common {
@@ -331,7 +331,7 @@ role Sum::SHAmix64 does Sum::SHA2common {
         # merge the new state
         @.s[] = 0xffffffffffffffff
                 X+&
-                (@.s[] »+« (0xffffffffffffffff X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
+                (@.s[] Z+ (0xffffffffffffffff X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
     }
 }
 
@@ -346,7 +346,7 @@ role Sum::SHA224 does Sum::SHAmix32 does Sum::MDPad {
     method Int_internal {
         # Doesn't work yet:
         # :4294967296[@.s[^7]]
-        [+|] (@.s[0..6] »+<« (192,160...0))
+        [+|] (@.s[0..6] Z+< (192,160...0))
     }
     method size { 224 }
 }
@@ -361,7 +361,7 @@ role Sum::SHA256 does Sum::SHAmix32 does Sum::MDPad {
     method Int_internal {
         # Doesn't work yet:
         # :4294967296[@.s[]]
-        [+|] (@.s[] »+<« (224,192...0))
+        [+|] (@.s[] Z+< (224,192...0))
     }
     method size { 256 }
 }
@@ -380,7 +380,7 @@ role Sum::SHA384 does Sum::SHAmix64
     method Int_internal {
         # Doesn't work yet:
         # :18446744073709551616[@.s[^6]]
-        [+|] (@.s[0..5] »+<« (320,256...0))
+        [+|] (@.s[0..5] Z+< (320,256...0))
     }
     method size { 384 }
 }
@@ -399,7 +399,7 @@ role Sum::SHA512 does Sum::SHAmix64
     method Int_internal {
         # Doesn't work yet:
         # :18446744073709551616[@.s[]]
-        [+|] (@.s[] »+<« (448,384...0))
+        [+|] (@.s[] Z+< (448,384...0))
     }
     method size { 512 }
 }

@@ -130,7 +130,7 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
         }
         if ($reflect) {
             my $rev2 = $rev +& 0; # Think types.
-	    for (1 «+<« [0 ..^ $columns]) {
+	    for (1 X+< ^$columns) {
                 $rev2 +<= 1;
 	        $rev2 +|= 1 if $rev +& $_;
 	    }
