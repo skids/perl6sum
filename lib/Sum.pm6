@@ -148,8 +148,8 @@ role Sum {
     pack evenly into bytes.  For convenience the latter may also provide
     a C<.buf8> method.  The C<.Buf> coercion method will eventually return
     one of the above results as natural to the type of C<Sum>, but given
-    that C<buf8> and C<buf1> are not implemented in the language core yet,
-    all such methods return a C<Buf> at this time.  As such, explicit use
+    that C<buf1> is not implemented in the language core yet, some such
+    methods return a C<Buf> at this time.  As such, explicit use
     of the C<.buf8> and C<.buf1> methods is advised in the interim.
 
     A C<.Str> coercion method will also usually be made available, and
@@ -180,8 +180,8 @@ role Sum {
     When C<.elems> is an lvalue method and is explicity assigned to, the
     C<Sum> may not be finalized until addends at all indices have been
     provided, either through assignment, through a default value, or by
-    pushing addends to the sum until C<.pos == .elems>.  This also applies
-    when the type of C<Sum> has a fixed value for C<.elems>.
+    pushing addends until C<.pos == .elems>.  This also applies when the
+    type of C<Sum> has a fixed value for C<.elems>.
 
     Some types of C<Sum> may only support assigning to C<.elems> before
     the first addend is provided.
@@ -199,7 +199,7 @@ role Sum {
 
     Most types of C<Sum> allow addends to be provided progressively, such
     that large lists of addends acquired from asyncronous or lazy sources
-    may be efficiently processed.  Many C<Sums> will keep track of the
+    may be efficiently processed.  Many C<Sum>s will keep track of the
     index at which the next provided addend would be placed, but not all
     algorithms require maintaining this state.  For the few that do not,
     this method may return an B<unthrown> C<X::Method::NotFound>.
@@ -234,9 +234,11 @@ role Sum {
     is for this reason that it is named "push" rather than "update" as
     per NIST C conventions.)
 
-    The values are "added" to the internal state of the C<Sum>.  A
-    finalization step is usualy not performed, but might be, depending on
-    the type of C<Sum>.
+    The values are "added" to the internal state of the C<Sum> according
+    to the particular algorithm and the original values will be forgotten
+    and may thus be destroyed or altered after the call returns.  A
+    finalization step is usualy not performed until requested, but might be,
+    depending on the type of C<Sum>.
 
     The C<@addends> list may be eagerly evaluated, or not, depending on
     the exact type of C<Sum>.  Some types of C<Sum> only allow calling this
@@ -251,7 +253,8 @@ role Sum {
     to have all its addends and may not accept more.
 
     The C<.push> method is usually provided by mixing in C<Sum::Marshal>
-    roles, which define how addends lists are pre-processed.
+    roles, which define how addends lists are pre-processed and what types
+    of addends are accepted.
 
 =head3 method add (*@addends)
 

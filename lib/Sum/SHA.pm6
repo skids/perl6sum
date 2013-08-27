@@ -119,7 +119,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
 	$tmp;
     }
 
-    multi method add (Buf $block where { .elems == 64 }) {
+    multi method add (blob8 $block where { .elems == 64 }) {
 
         # Update the length count and check for problems via Sum::MDPad
         given self.pos_block_inc {
@@ -148,7 +148,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
 
         self.add(self.drain) if self.^can("drain");
 
-        self.add(Buf.new()) unless $.final;
+        self.add(blob8.new()) unless $.final;
 
         # This does not work yet on 32-bit machines
         # :4294967296[@!s[]];
@@ -211,7 +211,7 @@ role Sum::SHA2common {
     has @.w is rw;                   # "Parsed" message gets bound here.
     has @.s is rw = self.init();     # Current hash state.  H in specification.
 
-    multi method add (Buf $block where { .elems == self.bsize/8 }) {
+    multi method add (blob8 $block where { .elems == self.bsize/8 }) {
         # Update the length count and check for problems via Sum::MDPad
         given self.pos_block_inc {
             when Failure { return $_ };
@@ -225,7 +225,7 @@ role Sum::SHA2common {
             return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
         }
         self.add(self.drain) if self.^can("drain");
-        self.add(Buf.new()) unless $.final;
+        self.add(blob8.new()) unless $.final;
         self.Int_internal;
     }
     method Numeric { self.finalize };

@@ -382,7 +382,7 @@ role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-
         @!s = 0xffffffff X+& @!s;
     }
 
-    multi method add (Buf $block where { .elems == 64 }) {
+    multi method add (blob8 $block where { .elems == 64 }) {
 
         # Update the length count and check for problems via Sum::MDPad
         given self.pos_block_inc {
@@ -410,7 +410,7 @@ role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-
 
         self.add(|self.drain) if self.^can("drain");
 
-        self.add(Buf.new()) unless $.final;
+        self.add(blob8.new()) unless $.final;
 
         :256[ 255 X+& (@!s[] X+> (0,8,16,24)) ]
     }

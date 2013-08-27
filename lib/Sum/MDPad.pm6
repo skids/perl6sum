@@ -167,13 +167,12 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
     need only provide a single additional candidate which processes
     one complete block of message.
 
-    The resulting C<Sum> expects single blocks as addends.  Currently,
-    that means a C<Buf> with C<blocksize/8> elements.  Passing a shorter
-    C<Buf> with C<0..^blocksize/8> elements may be done once, before or
-    during finalization.  Such a short C<Buf> may optionally be followed
-    by up to 7 bits (currently, 7 xx Bool) if the message does not end on a
-    byte boundary.  Attempts to provide more blocks after passing a short
-    block will result in an C<X::Sum::Final>.
+    The resulting C<Sum> expects a C<buf8> or C<blob8> with C<blocksize/8>
+    elements.  Passing a shorter buffer with C<0..^blocksize/8> elements may
+    be done once, before or during finalization.  Such a short buffer may
+    optionally be followed by up to 7 bits (currently, 7 xx Bool) if the
+    message does not end on a byte boundary.  Attempts to provide more
+    blocks after passing a short block will result in an C<X::Sum::Final>.
 
     Note that C<.add> does not handle slurpy argument lists, and when
     using C<Sum::Marshal::Raw>, one call to C<.push> should be made per
@@ -187,7 +186,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
         fail(X::Sum::Marshal.new(:addend($addend.WHAT.^name)))
     }
     multi method add () { }
-    multi method add (Buf $block where { -1 < .elems < $bbytes },
+    multi method add (blob8 $block where { -1 < .elems < $bbytes },
                       Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
                       Bool $b3?, Bool $b2?, Bool $b1?) {
 
