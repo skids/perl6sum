@@ -491,8 +491,8 @@ role Sum::Marshal::Bits [ ::AT :$accept = (Int), ::CT :$coerce = (Int),
      does Sum::Marshal::Cooked {
 
     multi method marshal (AT $addend) {
-        ?<<($reflect ?? ((CT($addend) <<+><< [0 ..^ $bits]) >>+&>> 1)
-                     !! ((CT($addend) <<+><< ($bits <<-<< [0^..$bits])) >>+&>> 1));
+        ?«($reflect ?? (1 X+& (CT($addend) X+> [^$bits]))
+                    !! (1 X+& (CT($addend) X+> ($bits-1...0))));
     }
 
 }
@@ -732,7 +732,7 @@ role Sum::Marshal::Block [::B :$BufT = Buf, :$elems = 64, ::b :$BitT = Bool]
         @.bits.push($addend);
         return unless +@.bits == $bw;
 
-        self.emit([+|] (+<<@.bits.splice(0, $bw)) Z+< (reverse ^$bw));
+        self.emit([+|] (+«@.bits.splice(0, $bw)) Z+< (reverse ^$bw));
     }
 
     # Multidispatch seems to need a bit of a nudge, thus the ::?CLASS
@@ -748,7 +748,7 @@ role Sum::Marshal::Block [::B :$BufT = Buf, :$elems = 64, ::b :$BitT = Bool]
 
         return fail(X::Sum::Final.new()) if $.drained;
 
-        @.bits.push(?<<(1 X+& ($addend X+> reverse(^$bw))));
+        @.bits.push(?«(1 X+& ($addend X+> reverse(^$bw))));
 
         self.emit([+|] (@.bits.splice(0, $bw)) Z+< (reverse ^$bw));
     }
