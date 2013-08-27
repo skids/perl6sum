@@ -94,183 +94,126 @@ role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-
     }
 
     method md4_round1_step ($data, int $shift) {
-        my $a := @!s[0];
-        my $b := @!s[1];
-        my $c := @!s[2];
-        my $d := @!s[3];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + (($b +& $c) +| ((+^$b) +& $d))), $shift));
     }
 
     method md4_ext_round1_step ($data, int $shift) {
-        my $a := @!s[4];
-        my $b := @!s[5];
-        my $c := @!s[6];
-        my $d := @!s[7];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[4,5,6,7];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + (($b +& $c) +| ((+^$b) +& $d))), $shift));
     }
 
     method md4_round2_step ($data, int $shift) {
-        my $a := @!s[0];
-        my $b := @!s[1];
-        my $c := @!s[2];
-        my $d := @!s[3];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + 0x5a827999 +
                  ([+|] (($b,$b,$c) Z+& ($c,$d,$d)))), $shift));
     }
 
     method md4_ext_round2_step ($data, int $shift) {
-        my $a := @!s[4];
-        my $b := @!s[5];
-        my $c := @!s[6];
-        my $d := @!s[7];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[4,5,6,7];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + 0x50a28be6 +
                  ([+|] (($b,$b,$c) Z+& ($c,$d,$d)))), $shift));
     }
 
     method md4_round3_step ($data, int $shift) {
-        my $a := @!s[0];
-        my $b := @!s[1];
-        my $c := @!s[2];
-        my $d := @!s[3];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + 0x6ed9eba1 + ([+^] $b, $c, $d)), $shift));
     }
 
     method md4_ext_round3_step ($data, int $shift) {
-        my $a := @!s[4];
-        my $b := @!s[5];
-        my $c := @!s[6];
-        my $d := @!s[7];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[4,5,6,7];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + 0x5c4dd124 + ([+^] $b, $c, $d)), $shift));
     }
 
     method md5_round1_step ($data, $idx, $shift) {
-        my $a := @!s[0];
-        my $b := @!s[1];
-        my $c := @!s[2];
-        my $d := @!s[3];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
              $b + rol(($a + @t[$idx] + $data +
                       (($b +& $c) +| (+^$b +& $d))), $shift)));
     }
 
     method md5_round2_step ($data, int $idx, int $shift) {
-        my $a := @!s[0];
-        my $b := @!s[1];
-        my $c := @!s[2];
-        my $d := @!s[3];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
              $b + rol(($a + @t[$idx] + $data +
                       (($b +& $d) +| (+^$d +& $c))), $shift)));
     }
 
     method md5_round3_step ($data, int $idx, int $shift) {
-        my $a := @!s[0];
-        my $b := @!s[1];
-        my $c := @!s[2];
-        my $d := @!s[3];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
              $b + rol(($a + $data + @t[$idx] + ([+^] $b, $c, $d)), $shift)));
     }
 
     method md5_round4_step ($data, int $idx, int $shift) {
-        my $a := @!s[0];
-        my $b := @!s[1];
-        my $c := @!s[2];
-        my $d := @!s[3];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
           $b + rol(($a + $data + @t[$idx] + ($c +^ (+^$d +| $b))), $shift)));
     }
 
     method ripe_f1_5 (int $lr, $data, $k, int $shift) {
-        my $a := @!s[$lr + 0];
-        my $b := @!s[$lr + 1];
-        my $c := @!s[$lr + 2];
-        my $d := @!s[$lr + 3];
-        my $e := @!s[$lr + 4];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
+	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
              ($e + rol($a + $k + $data + ([+^] $b, $c, $d), $shift)));
     }
 
     method ripe_f1_4 (int $lr, $data, $k, int $shift) {
-        my $a := @!s[$lr + 0];
-        my $b := @!s[$lr + 1];
-        my $c := @!s[$lr + 2];
-        my $d := @!s[$lr + 3];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[$lr X+ ^4];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol($a + $k + $data + ([+^] $b, $c, $d), $shift));
     }
 
     method ripe_f2_5 (int $lr, $data, $k, int $shift) {
-        my $a := @!s[$lr + 0];
-        my $b := @!s[$lr + 1];
-        my $c := @!s[$lr + 2];
-        my $d := @!s[$lr + 3];
-        my $e := @!s[$lr + 4];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
+	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
              ($e + rol($a + $k + $data + (($b +& $c) +| (+^$b +& $d)),
                        $shift)));
     }
 
     method ripe_f2_4 (int $lr, $data, $k, int $shift) {
-        my $a := @!s[$lr + 0];
-        my $b := @!s[$lr + 1];
-        my $c := @!s[$lr + 2];
-        my $d := @!s[$lr + 3];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[$lr X+ ^4];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol($a + $k + $data + (($b +& $c) +| (+^$b +& $d)), $shift));
     }
 
     method ripe_f3_5 (int $lr, $data, $k, int $shift) {
-        my $a := @!s[$lr + 0];
-        my $b := @!s[$lr + 1];
-        my $c := @!s[$lr + 2];
-        my $d := @!s[$lr + 3];
-        my $e := @!s[$lr + 4];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
+	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
              ($e + rol($a + $k + $data + ((+^$c +| $b) +^ $d), $shift)));
     }
 
     method ripe_f3_4 (int $lr, $data, $k, int $shift) {
-        my $a := @!s[$lr + 0];
-        my $b := @!s[$lr + 1];
-        my $c := @!s[$lr + 2];
-        my $d := @!s[$lr + 3];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[$lr X+ ^4];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol($a + $k + $data + ((+^$c +| $b) +^ $d), $shift));
     }
 
     method ripe_f4_5 (int $lr, $data, $k, int $shift) {
-        my $a := @!s[$lr + 0];
-        my $b := @!s[$lr + 1];
-        my $c := @!s[$lr + 2];
-        my $d := @!s[$lr + 3];
-        my $e := @!s[$lr + 4];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
+	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
              ($e + rol($a + $k + $data + (($b +& $d) +| (+^$d +& $c)),
                        $shift)));
     }
 
     method ripe_f4_4 (int $lr, $data, $k, int $shift) {
-        my $a := @!s[$lr + 0];
-        my $b := @!s[$lr + 1];
-        my $c := @!s[$lr + 2];
-        my $d := @!s[$lr + 3];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[$lr X+ ^4];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol($a + $k + $data + (($b +& $d) +| (+^$d +& $c)), $shift));
     }
 
     method ripe_f5_5 (int $lr, $data, $k, int $shift) {
-        my $a := @!s[$lr + 0];
-        my $b := @!s[$lr + 1];
-        my $c := @!s[$lr + 2];
-        my $d := @!s[$lr + 3];
-        my $e := @!s[$lr + 4];
+    	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
+	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
              ($e + rol($a + $k + $data + ($b +^ (+^$d +| $c)), $shift)));
     }
