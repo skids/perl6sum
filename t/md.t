@@ -23,7 +23,6 @@ is .size, 128, "MD4.size is correct";
 is .finalize(Buf.new()),
    0x31d6cfe0d16ae931b73c59d7e0c089c0,
    "MD4 of an empty buffer is correct.";
-is .Buf.values, (0x31,0xd6,0xcf,0xe0,0xd1,0x6a,0xe9,0x31,0xb7,0x3c,0x59,0xd7,0xe0,0xc0,0x89,0xc0), "MD4 Buf method works";
 }
 is MD4t.new().finalize(Buf.new(97)),
    0xbde52cb31de33e46245e05fbdbd6fb24,
@@ -55,6 +54,11 @@ is MD4t.new().finalize(Buf.new(97 xx 56),True),
 is MD4t.new().finalize(Buf.new(97 xx 63),True,False,True,False,True,False,False),
    0x0719b5d879deafc63150bc5aa45ba714,
    "MD4 of a 511-bit buffer is correct.";
+
+given (MD4t.new()) {
+  .push(Buf.new(97 xx 56),True);
+  is .Buf.values.fmt("%2.2x"), "70 48 9f a6 3a 69 a6 37 c0 9c 49 99 e9 94 87 7c", "MD4 Buf method works (and finalizes)";
+}
 
 class MD4dwim does Sum::MD4 does Sum::Marshal::Block[] { }
 my MD4dwim $dwim .= new();
@@ -207,7 +211,6 @@ is .size, 128, "MD2.size is correct";
 is .finalize(Buf.new()),
    0x8350e5a3e24c153df2275c9f80692773,
    "MD2 of an empty buffer is correct.";
-is .Buf.values, (0x83, 0x50, 0xe5, 0xa3, 0xe2, 0x4c, 0x15, 0x3d, 0xf2, 0x27, 0x5c, 0x9f, 0x80, 0x69, 0x27, 0x73), "MD2 Buf method works";
 }
 is MD2t.new().finalize(Buf.new(97)),
    0x32ec01ec4a6dac72c0ab96fb34c0b5d1,
@@ -221,6 +224,10 @@ is MD2t.new().finalize(Buf.new(97 xx 16)),
 is MD2t.new().finalize(Buf.new(97 xx 16), Buf.new(97)),
    0xdbf15a5fdfd6f7e9ece27d5e310c58ed,
    "MD2 of a 17-byte buffer is correct.";
+given (MD2t.new()) {
+  .push(Buf.new(97 xx 16), Buf.new(97));
+  is .Buf.values.fmt("%2.2x"), "db f1 5a 5f df d6 f7 e9 ec e2 7d 5e 31 0c 58 ed", "MD2 Buf method works (and finalizes)";
+}
 
 class MD2d does Sum::MD2 does Sum::Marshal::Block[:elems(16)] { };
 my MD2d $s3 .= new();

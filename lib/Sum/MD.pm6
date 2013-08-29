@@ -51,7 +51,7 @@ Sum::MD
 use Sum;
 use Sum::MDPad;
 
-role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320>) = "MD5" ] does Sum::MDPad[:lengthtype<uint64_le>] {
+role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320>) = "MD5" ] does Sum::MDPad[:lengthtype<uint64_le>] {
     has @!w is rw;     # "Parsed" message gets bound here.
     has @!s is rw;     # Current hash state.  H in specification.
 
@@ -72,16 +72,19 @@ role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-
 
     submethod BUILD {
         @!s = 0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476;
-        if $alg eqv "MD4ext" {
-            @!s.push(0x33221100,0x77665544,0xbbaa9988,0xffeeddcc);
-        }
-        if $alg eqv ("RIPEMD-160"|"RIPEMD-320") {
-            @!s.push(0xc3d2e1f0);
-        }
-	if $alg eqv ("RIPEMD-256"|"RIPEMD-320") {
-            @!s.push(@!s.map({
-                (0xf0f0f0f0 +& ($_ +< 4)) +|
-                (0x0f0f0f0f +& ($_ +> 4)) }));
+	given $alg {
+            when "MD4ext" {
+                @!s.push(0x33221100,0x77665544,0xbbaa9988,0xffeeddcc);
+            }
+            when "RIPEMD-160"|"RIPEMD-320" {
+                @!s.push(0xc3d2e1f0);
+		proceed;
+            }
+            when "RIPEMD-256"|"RIPEMD-320" {
+                @!s.push(@!s.map({
+                    (0xf0f0f0f0 +& ($_ +< 4)) +|
+                    (0x0f0f0f0f +& ($_ +> 4)) }));
+            }
         }
     }
 
@@ -397,10 +400,13 @@ role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-
         my @m = (:256[ $block[ $_+3 ... $_ ] ] for 0,4 ...^ 64);
 
 	@!w := @m;
-        self.md4_comp if $alg eqv ("MD4"|"MD4ext");
-        self.md5_comp if $alg eqv "MD5";
-        self.ripe4_comp if $alg eqv ("RIPEMD-128"|"RIPEMD-256");
-        self.ripe5_comp if $alg eqv ("RIPEMD-160"|"RIPEMD-320");
+	given $alg {
+            when "MD4"|"MD4ext" { self.md4_comp }
+            when "MD5" { self.md5_comp }
+            when "RIPEMD-128"|"RIPEMD-256" { self.ripe4_comp }
+            when "RIPEMD-160"|"RIPEMD-320" { self.ripe5_comp }
+	    die $alg;
+	}
     };
 
     method finalize(*@addends) {
@@ -415,11 +421,17 @@ role Sum::MD4_5 [ :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-
         :256[ 255 X+& (@!s[] X+> (0,8,16,24)) ]
     }
     method Numeric { self.finalize };
+    method bytes_internal { @!s[] X+> (0,8,16,24) };
     method buf8 {
         self.finalize;
-        buf8.new(@!s[] X+> (0,8,16,24));
+        buf8.new(self.bytes_internal);
+    }
+    method blob8 {
+        self.finalize;
+        blob8.new(self.bytes_internal);
     }
     method Buf { self.buf8 }
+    method Blob { self.blob8 }
 }
 
 =begin pod
@@ -543,7 +555,12 @@ role Sum::MD2 does Sum {
         self.finalize;
         buf8.new( @!X[^16] );
     }
+    method blob8 {
+        self.finalize;
+        blob8.new( @!X[^16] );
+    }
     method Buf { self.buf8 }
+    method Blob { self.blob8 }
 }
 
 1; # Avoid sink-punning of role
