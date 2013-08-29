@@ -155,8 +155,19 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
         [+|] (@!s[] Z+< (128,96...0));
     }
     method Numeric { self.finalize };
-    method buf8 { buf8.new(@!s[] X+> (24,16,8,0)); }
+    method bytes_internal {
+        @!s[] X+> (24,16,8,0);
+    }
+    method buf8 {
+        self.finalize;
+        buf8.new(self.bytes_internal)
+    }
+    method blob8 {
+        self.finalize;
+        blob8.new(self.bytes_internal)
+    }
     method Buf { self.buf8 }
+    method Blob { self.blob8 }
 }
 
 =begin pod
@@ -229,7 +240,17 @@ role Sum::SHA2common {
         self.Int_internal;
     }
     method Numeric { self.finalize };
+
+    method buf8 {
+        self.finalize;
+        buf8.new(self.bytes_internal)
+    }
+    method blob8 {
+        self.finalize;
+        blob8.new(self.bytes_internal)
+    }
     method Buf { self.buf8 }
+    method Blob { self.blob8 }
 }
 
 role Sum::SHAmix32 does Sum::SHA2common {
@@ -339,9 +360,8 @@ role Sum::SHA224 does Sum::SHAmix32 does Sum::MDPad {
     my @s_init = 0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
                  0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4;
     method init { @s_init }
-    method buf8 {
-        self.finalize;
-        buf8.new(@.s[0..6] X+> (24,16...0))
+    method bytes_internal {
+        @.s[0..6] X+> (24,16...0)
     }
     method Int_internal {
         # Doesn't work yet:
@@ -354,9 +374,8 @@ role Sum::SHA256 does Sum::SHAmix32 does Sum::MDPad {
     my @s_init = 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
                  0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19;
     method init { @s_init }
-    method buf8 {
-        self.finalize;
-        buf8.new(@.s[] X+> (24,16...0))
+    method bytes_internal {
+        @.s[] X+> (24,16...0)
     }
     method Int_internal {
         # Doesn't work yet:
@@ -373,9 +392,8 @@ role Sum::SHA384 does Sum::SHAmix64
                  0x67332667ffc00b31, 0x8eb44a8768581511,
                  0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4;
     method init { @s_init }
-    method buf8 {
-        self.finalize;
-        buf8.new(@.s[0..5] X+> (56,48...0))
+    method bytes_internal {
+        @.s[0..5] X+> (56,48...0)
     }
     method Int_internal {
         # Doesn't work yet:
@@ -392,9 +410,8 @@ role Sum::SHA512 does Sum::SHAmix64
                  0x510e527fade682d1, 0x9b05688c2b3e6c1f,
                  0x1f83d9abfb41bd6b, 0x5be0cd19137e2179;
     method init { @s_init }
-    method buf8 {
-        self.finalize;
-        buf8.new(@.s[] X+> (56,48...0))
+    method bytes_internal {
+        @.s[] X+> (56,48...0)
     }
     method Int_internal {
         # Doesn't work yet:

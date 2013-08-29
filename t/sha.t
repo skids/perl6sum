@@ -22,7 +22,6 @@ is .size, 160, "SHA1.size is correct";
 is .finalize(Buf.new()),
    0xda39a3ee5e6b4b0d3255bfef95601890afd80709,
    "SHA1 of an empty buffer is correct.";
-is .Buf.values, (0xda,0x39,0xa3,0xee,0x5e,0x6b,0x4b,0x0d,0x32,0x55,0xbf,0xef,0x95,0x60,0x18,0x90,0xaf,0xd8,0x07,0x09), "SHA1 Buf method works";
 }
 is SHA1t.new().finalize(Buf.new(97)),
    0x86f7e437faa5a7fce15d1ddcb9eaeaea377667b8,
@@ -49,11 +48,15 @@ is SHA1t.new().finalize(Buf.new(97 xx 55),True,False,True,False,True,False,False
    0xc581ddabbdfbc68448a04f9d3d17eccd9d48906e,
    "SHA1 of a 447-bit buffer is correct.";
 is SHA1t.new().finalize(Buf.new(97 xx 56),True),
-   0xa728aa56bfeb09752ee39baeec23e1c5e3718de5, #TODO
+   0xa728aa56bfeb09752ee39baeec23e1c5e3718de5,
    "SHA1 of a 449-bit buffer is correct.";
 is SHA1t.new().finalize(Buf.new(97 xx 63),True,False,True,False,True,False,False),
    0xa1c70b7a97d935e841a9e6280a608fca953c0c91,
    "SHA1 of a 511-bit buffer is correct.";
+given (SHA1t.new()) {
+  .push(Buf.new(97 xx 56),True);
+  is .Buf.values.fmt("%x"), "a7 28 aa 56 bf eb 9 75 2e e3 9b ae ec 23 e1 c5 e3 71 8d e5", "SHA1 Buf method works (and finalizes)";
+}
 
 class SHA0t does Sum::SHA1[:insecure_sha0_obselete] does Sum::Marshal::Raw { };
 is SHA0t.new().finalize(Buf.new(97 xx 55)),
@@ -69,7 +72,6 @@ given (SHA256t.new()) {
   is .finalize(Buf.new()),
      0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,
      "SHA-256 of an empty buffer is correct.";
-  is .Buf.values.fmt("%x"), "e3 b0 c4 42 98 fc 1c 14 9a fb f4 c8 99 6f b9 24 27 ae 41 e4 64 9b 93 4c a4 95 99 1b 78 52 b8 55", "SHA256 Buf method works";
 }
 is SHA256t.new().finalize(Buf.new(97)),
    0xca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb,
@@ -102,6 +104,10 @@ is SHA256t.new().finalize(Buf.new(97 xx 56),True),
 is SHA256t.new().finalize(Buf.new(97 xx 63),True,False,True,False,True,False,False),
    0x5ffdf348fdad74aca3196af07b43730adfe366c394913e8ebc4f987d4d757a36,
    "SHA-256 of a 511-bit buffer is correct.";
+given (SHA256t.new()) {
+  .push(Buf.new(97 xx 56),True);
+  is .Buf.values.fmt("%x"), "55 42 22 6c 1c 37 4f 9c 41 50 7b c3 27 30 2 84 a4 2a bd 72 6d 4a e6 a2 5b 35 77 77 90 3f b8 bb", "SHA256 Buf method works (and finalizes)";
+}
 
 class SHA224t does Sum::SHA2[ :columns(224) ] does Sum::Marshal::Raw { };
 my SHA224t $s3 .= new();
