@@ -209,10 +209,15 @@ role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
         [+^] $v0, $v1, $v2, $v3;
     }
     method Numeric () { self.finalize };
+    method bytes_internal { self.finalize X+> (56,48...0) }
     method buf8 () {
-        buf8.new(self.finalize X+> (56,48,40,32,24,16,8,0));
+        buf8.new(self.bytes_internal);
+    }
+    method blob8 () {
+        blob8.new(self.bytes_internal);
     }
     method Buf () { self.buf8 }
+    method Blob () { self.blob8 }
 }
 
 1; # Avoid sink-punning of last role

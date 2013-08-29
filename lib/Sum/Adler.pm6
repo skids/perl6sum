@@ -141,9 +141,23 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
         my $f = self.finalize;
         Buf.new( 1 X+& ($f X+> reverse(^($columnsA + $columnsB))) );
     }
+    method blob8 () {
+        my $f = self.finalize;
+        my $bytes = ($columnsA + $columnsB + 7) div 8;
+        blob8.new($f X+> (8 X* reverse(^$bytes)));
+    }
+    method blob1 () {
+        my $f = self.finalize;
+        Blob.new( 1 X+& ($f X+> reverse(^($columnsA + $columnsB))) );
+    }
     # Although these algorithms can produce results not evenly packable,
     # common cases are packable and users will expect byte results.
-    method Buf () { (($columnsA + $columnsB) % 8) ?? self.buf1 !! self.buf8 }
+    method Buf () {
+        (($columnsA + $columnsB) % 8) ?? self.buf1 !! self.buf8
+    }
+    method Blob () {
+        (($columnsA + $columnsB) % 8) ?? self.blob1 !! self.blob8
+    }
 
     method checkvals(*@addends) {
         self.finalize(@addends);
