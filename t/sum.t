@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 71;
+plan 74;
 
 use Sum;
 ok(1,'We use Sum and we are still alive');
@@ -218,7 +218,27 @@ $o2 .= new();
 $o2.push("4","3",8);
 is $o2.finalize, 0x43 + 8, "Normal addend before bitfields works";
 
+lives_ok {
+class Foo6
+     does Sum does Sum::Marshal::Block[ :BufT(blob16), :elems(2) ]
+{
+        has @.a is rw;
+        method size () { 64 }
+        method finalize (*@addends) {
+            self.push(@addends);
+	    self.add(|self.drain);
+            @.a.gist;
+        }
+        method Numeric () { 1; };
+        method add (*@addends) {
+	    @.a.push(@addends);
+        };
+} }, "Can make custom Sum::Marshal::Block subclass";
 
+my Foo6 $b16;
+lives_ok { $b16 .= new(); }, "Can instantiate custom Sum::Marshal::Block subclass";
+$b16.push(1, 2, buf16.new(3), False xx 17, 4, blob16.new(5));
+is $b16.finalize, [ blob16.new(1,2), blob16.new(3,0), blob16.new(2,2), True ].gist , "Sum::Marshal::Block can correctly produce blob16s";
 
 # Now grab the code in the synopsis from the POD and make sure it runs.
 # This is currently complete hackery but might improve when pod support does.

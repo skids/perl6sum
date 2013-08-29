@@ -504,15 +504,15 @@ role Sum::MD2 does Sum {
     }
     multi method add ($addend) {
         # TODO: Typed failure here?
-        die("Marshalling error.  Addends must be Buf with 0..16 bytes.");
+        die("Marshalling error.  Addends must be buffer with 0..16 bytes.");
     }
-    multi method add (Buf $block where { -1 < .elems < 16 }) {
+    multi method add (blob8 $block where { -1 < .elems < 16 }) {
         my int $empty = 16 - $block.elems;
         $!final = True;
         self.add(Buf.new($block.values, $empty xx $empty));
         self.add(Buf.new(@!C[]));
     }
-    multi method add (Buf $block where { .elems == 16 }) {
+    multi method add (blob8 $block where { .elems == 16 }) {
         @!X[16..^32] = $block.values;
         @!X[32..^48] = @!X[^16] Z+^ @!X[16..^32];
         for 15,^15 Z ^16 -> $last, $x {
@@ -534,7 +534,7 @@ role Sum::MD2 does Sum {
 
         self.add(|self.drain) if self.^can("drain");
 
-        self.add(Buf.new()) unless $!final;
+        self.add(blob8.new()) unless $!final;
 
         :256[ @!X[^16] ]
     }

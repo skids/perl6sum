@@ -655,7 +655,7 @@ role Sum::Marshal::Pack::Bits[:$width!, ::AT :$accept, ::CT :$coerce = (Int)]
 
 =begin pod
 
-=head2 role Sum::Marshal::Block [:$BufT = Buf, :$elems = 64, :$BitT = Bool]
+=head2 role Sum::Marshal::Block [:$BufT = blob8, :$elems = 64, :$BitT = Bool]
 
     The C<Sum::Marshal::Block> role is a base role used to interface with
     types of sum that divide their message into NIST-style blocks.
@@ -666,9 +666,9 @@ role Sum::Marshal::Pack::Bits[:$width!, ::AT :$accept, ::CT :$coerce = (Int)]
 
     Classes which wish to allow these roles to be mixed in should
     call the C<.drain> method during finalization, if it is present,
-    immediately after pushing any final addends.  After this method
-    has been called, any further attempts to provide addends will
-    result in an unthrown C<X::Sum::Final>.
+    immediately after pushing any final addends, and C<.add> the result.
+    After this method has been called, any further attempts to provide
+    addends will result in an unthrown C<X::Sum::Final>.
 
     This base role contains fallback marshalling for C<BitT> addends which
     will be treated as bits and packed, C<BufT> addends whose values
@@ -676,13 +676,9 @@ role Sum::Marshal::Pack::Bits[:$width!, ::AT :$accept, ::CT :$coerce = (Int)]
     and whose least significant bits will be packed as per the bit width
     of C<BufT>'s values.
 
-    Note: native typed buffers are not yet supported, but a punned C<Buf>
-    class will be treated as though it were a C<buf8> as per the spec,
-    which does adequately pretend to work.
-
 =end pod
 
-role Sum::Marshal::Block [::B :$BufT = Buf, :$elems = 64, ::b :$BitT = Bool]
+role Sum::Marshal::Block [::B :$BufT = blob8, :$elems = 64, ::b :$BitT = Bool]
     does Sum::Marshal::Cooked
 {
 # To deal with diamond inheritance these attributes must be emulated for now
@@ -713,56 +709,41 @@ role Sum::Marshal::Block [::B :$BufT = Buf, :$elems = 64, ::b :$BitT = Bool]
     my Int $bw = (given (B) {
                       # Maybe there will be an introspect for this...
                       when Buf { 8 }
+                      when buf8 { 8 }
+                      when blob8 { 8 }
+                      when buf16 { 16 }
+                      when blob16 { 16 }
+                      when buf32 { 32 }
+                      when blob32 { 32 }
+                      when buf64 { 64 }
+                      when blob64 { 64 }
                   });
 
     multi method marshal () { }
 
     # use multi/constrained method to workaround diamond problem
     multi method emit ($self where {True}: *@addends) {
-
         @.accum.push(|@addends);
 
         # Emit any completed blocks.
-        gather while (@.accum.elems > $elems) {
+        eager gather while (not @.accum.elems < $elems) {
             take B.new(@.accum.splice(0,$elems));
         }
     }
 
-    multi method marshal (b $addend) {
-
+    # Multidispatch seems to need a bit of a nudge, thus the ::?CLASS
+    multi method marshal (::?CLASS $self where { True }: b $addend) {
         return fail(X::Sum::Final.new()) if $.drained;
 
         @.bits.push($addend);
         return unless +@.bits == $bw;
-
         self.emit([+|] (+«@.bits.splice(0, $bw)) Z+< (reverse ^$bw));
     }
 
-    # Multidispatch seems to need a bit of a nudge, thus the ::?CLASS
-    multi method marshal (::?CLASS $self where { not +@.bits }: $addend) {
-
-        return fail(X::Sum::Final.new()) if $.drained;
-
-        self.emit($addend);
-
-    }
-
-    multi method marshal (::?CLASS $self where {  so +@.bits }: $addend) {
-
-        return fail(X::Sum::Final.new()) if $.drained;
-
-        @.bits.push(?«(1 X+& ($addend X+> reverse(^$bw))));
-
-        self.emit([+|] (@.bits.splice(0, $bw)) Z+< (reverse ^$bw));
-    }
-
-    multi method marshal (B $addend) {
-        # punt on this mess for now
-        self.marshal($addend.values);
-    }
-
     multi method marshal (::?CLASS $self where {not +@.bits}: B $addend) {
-        gather do {
+        return fail(X::Sum::Final.new()) if $.drained;
+
+        eager gather do {
              my $i = 0;
              while ($addend.elems - $i + +@.accum >= $elems) {
                  take B.new(|@.accum, $addend[$i..^($i + $elems - +@.accum)]);
@@ -773,12 +754,30 @@ role Sum::Marshal::Block [::B :$BufT = Buf, :$elems = 64, ::b :$BitT = Bool]
         }
     }
 
+    multi method marshal (::?CLASS $self where { so +@.bits }: B $addend) {
+        # punt on this mess for now
+        self.marshal($addend.values);
+    }
+
+    multi method marshal (::?CLASS $self where { not +@.bits }: $addend) {
+        return fail(X::Sum::Final.new()) if $.drained;
+
+        self.emit($addend);
+    }
+
+    multi method marshal (::?CLASS $self where {  so +@.bits }: $addend) {
+        return fail(X::Sum::Final.new()) if $.drained;
+
+        @.bits.push(?«(1 X+& ($addend X+> reverse(^$bw))));
+
+        self.emit([+|] (@.bits.splice(0, $bw)) Z+< (reverse ^$bw));
+    }
+
     # use multi/constrained method to workaround diamond problem
     multi method drain ($self where {True}:) {
         $.drained = True;
-        flat B.new(@.accum), ?<<@.bits
+        flat +@.accum ?? B.new(@.accum) !! (), ?«@.bits
     }
-
 }
 
 =begin pod
