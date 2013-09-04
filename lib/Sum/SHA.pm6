@@ -89,8 +89,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
 
     method size ( --> int) { 160 }
 
-    method comp {
-
+    method comp ( --> Nil) {
         my ($a, $b, $c, $d, $e) = @!s[];
 
         for ((0x5A827999,{ $b +& $c +| (+^$b) +& $d }).item xx 20,
@@ -98,22 +97,20 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
              (0x8F1BBCDC,{ $b +& $c +| $b +& $d +| $c +& $d }).item xx 20,
              (0xCA62C1D6,{ $b +^ $c +^ $d }).item xx 20).kv
             -> $i,($k,$f) {
-
             ($b,$c,$d,$e,$a) =
                 ($a, rol($b,30), $c, $d,
                  0xffffffff +& (rol($a,5) + $f() + $e + $k + @!w[$i]));
-
         }
 
         @!s[] = 0xffffffff X+& (@!s[] Z+ (0xffffffff X+& ($a,$b,$c,$d,$e)));
+	return; # This should not be needed per S06/Signatures
     }
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub rol ($v, int $count where 0..32) {
-        my $tmp = ($v +< $count) +& 0xffffffff;
-        $tmp +|= (($v +& 0xffffffff) +> (32 - $count));
-	$tmp;
+    my sub rol (uint32 $v, int $count where 0..32, --> uint32) {
+        my uint32 $tmp = ($v +< $count) +& 0xffffffff;
+        $tmp +| (($v +& 0xffffffff) +> (32 - $count));
     }
 
     multi method add (blob8 $block where { .elems == 64 }) {
@@ -255,15 +252,14 @@ role Sum::SHAmix32 does Sum::SHA2common {
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub infix:<ror> ($v, int $count where 0..32) {
-        my $tmp = ($v +& 0xffffffff) +> $count;
-        $tmp +|= ($v +< (32 - $count)) +& 0xffffffff;
-	$tmp;
+    my sub infix:<ror> (uint32 $v, int $count where 0..32, --> uint32) {
+        my uint32 $tmp = ($v +& 0xffffffff) +> $count;
+        $tmp +| ($v +< (32 - $count)) +& 0xffffffff;
     }
 
     method bsize { 512 };
 
-    method scratchpad ($block) {
+    method scratchpad ($block --> Nil) {
         my @m;
 
         # First 16 uint32's are a straight copy of the data.
@@ -278,9 +274,10 @@ role Sum::SHAmix32 does Sum::SHA2common {
                 ([+^] ((@m[*-2]  Xror (17,19)), @m[*-2]  +> 10))
                 )) for 16..^64;
 	@.w = @m;
+	return; # This should not be needed per S06/Signatures
     }
 
-    method comp {
+    method comp (--> Nil) {
         my ($a,$b,$c,$d,$e,$f,$g,$h) = @.s[];
         for ^64 -> $i {
             # We'll mask this below
@@ -299,6 +296,7 @@ role Sum::SHAmix32 does Sum::SHA2common {
         @.s[] = 0xffffffff
                 X+&
                 (@.s[] Z+ (0xffffffff X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
+	return; # This should not be needed per S06/Signatures
     }
 }
 role Sum::SHAmix64 does Sum::SHA2common {
@@ -306,15 +304,14 @@ role Sum::SHAmix64 does Sum::SHA2common {
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub infix:<ror> ($v, int $count where 0..64) {
-        my $tmp = ($v +& 0xffffffffffffffff) +> $count;
-        $tmp +|= ($v +< (64 - $count)) +& 0xffffffffffffffff;
-	$tmp;
+    my sub infix:<ror> ($v, int $count where 0..64, --> uint64) {
+        my uint64 $tmp = ($v +& 0xffffffffffffffff) +> $count;
+        $tmp +| ($v +< (64 - $count)) +& 0xffffffffffffffff;
     }
 
     method bsize { 1024 };
 
-    method scratchpad ($block) {
+    method scratchpad ($block --> Nil) {
         my @m;
 
         # First 16 uint64's are a straight copy of the data.
@@ -329,9 +326,10 @@ role Sum::SHAmix64 does Sum::SHA2common {
                 ([+^] ((@m[*-2]  Xror (19,61)),@m[*-2]  +> 6))
                 )) for 16..^80;
 	@.w = @m;
+	return; # This should not be needed per S06/Signatures
     }
 
-    method comp {
+    method comp (--> Nil) {
         my ($a,$b,$c,$d,$e,$f,$g,$h) = @.s[];
         for ^80 -> $i {
             # We'll mask this below
@@ -350,6 +348,7 @@ role Sum::SHAmix64 does Sum::SHA2common {
         @.s[] = 0xffffffffffffffff
                 X+&
                 (@.s[] Z+ (0xffffffffffffffff X+& ($a,$b,$c,$d,$e,$f,$g,$h)));
+	return; # This should not be needed per S06/Signatures
     }
 }
 
