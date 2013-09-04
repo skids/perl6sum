@@ -98,14 +98,14 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
     method md4_round1_step (uint32 $data, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b,
-             rol(($a + $data + (($b +& $c) +| ((+^$b) +& $d))), $shift));
+             rol(($a + $data + (($b +& $c) +| ((0xffffffff +^ $b) +& $d))), $shift));
 	return; # This should not be needed per S06/Signatures
     }
 
     method md4_ext_round1_step (uint32 $data, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[4,5,6,7];
         ($a,$d,$c,$b) = ($d, $c, $b,
-             rol(($a + $data + (($b +& $c) +| ((+^$b) +& $d))), $shift));
+             rol(($a + $data + (($b +& $c) +| ((0xffffffff +^ $b) +& $d))), $shift));
 	return; # This should not be needed per S06/Signatures
     }
 
@@ -143,7 +143,7 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
              $b + rol(($a + @t[$idx] + $data +
-                      (($b +& $c) +| (+^$b +& $d))), $shift)));
+                      (($b +& $c) +| ((0xffffffff +^ $b) +& $d))), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
 
@@ -151,7 +151,7 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
              $b + rol(($a + @t[$idx] + $data +
-                      (($b +& $d) +| (+^$d +& $c))), $shift)));
+                      (($b +& $d) +| ((0xffffffff +^ $d) +& $c))), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
 
@@ -165,7 +165,7 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
     method md5_round4_step (uint32 $data, int $idx, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
-          $b + rol(($a + $data + @t[$idx] + ($c +^ (+^$d +| $b))), $shift)));
+          $b + rol(($a + $data + @t[$idx] + ($c +^ ((0xffffffff +^ $d) +| $b))), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
 
@@ -188,7 +188,7 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
     	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
 	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
-             ($e + rol($a + $k + $data + (($b +& $c) +| (+^$b +& $d)),
+             ($e + rol($a + $k + $data + (($b +& $c) +| ((0xffffffff +^ $b) +& $d)),
                        $shift)));
 	return; # This should not be needed per S06/Signatures
     }
@@ -196,7 +196,7 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
     method ripe_f2_4 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[$lr X+ ^4];
         ($a,$d,$c,$b) = ($d, $c, $b,
-             rol($a + $k + $data + (($b +& $c) +| (+^$b +& $d)), $shift));
+             rol($a + $k + $data + (($b +& $c) +| ((0xffffffff +^ $b) +& $d)), $shift));
 	return; # This should not be needed per S06/Signatures
     }
 
@@ -204,14 +204,14 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
     	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
 	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
-             ($e + rol($a + $k + $data + ((+^$c +| $b) +^ $d), $shift)));
+             ($e + rol($a + $k + $data + (((0xffffffff +^ $c) +| $b) +^ $d), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
 
     method ripe_f3_4 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[$lr X+ ^4];
         ($a,$d,$c,$b) = ($d, $c, $b,
-             rol($a + $k + $data + ((+^$c +| $b) +^ $d), $shift));
+             rol($a + $k + $data + (((0xffffffff +^ $c) +| $b) +^ $d), $shift));
 	return; # This should not be needed per S06/Signatures
     }
 
@@ -219,7 +219,7 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
     	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
 	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
-             ($e + rol($a + $k + $data + (($b +& $d) +| (+^$d +& $c)),
+             ($e + rol($a + $k + $data + (($b +& $d) +| ((0xffffffff +^ $d) +& $c)),
                        $shift)));
 	return; # This should not be needed per S06/Signatures
     }
@@ -227,7 +227,7 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
     method ripe_f4_4 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[$lr X+ ^4];
         ($a,$d,$c,$b) = ($d, $c, $b,
-             rol($a + $k + $data + (($b +& $d) +| (+^$d +& $c)), $shift));
+             rol($a + $k + $data + (($b +& $d) +| ((0xffffffff +^ $d) +& $c)), $shift));
 	return; # This should not be needed per S06/Signatures
     }
 
@@ -235,7 +235,7 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
     	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
 	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
-             ($e + rol($a + $k + $data + ($b +^ (+^$d +| $c)), $shift)));
+             ($e + rol($a + $k + $data + ($b +^ ((0xffffffff +^ $d) +| $c)), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
 

@@ -92,7 +92,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
     method comp ( --> Nil) {
         my ($a, $b, $c, $d, $e) = @!s[];
 
-        for ((0x5A827999,{ $b +& $c +| (+^$b) +& $d }).item xx 20,
+        for ((0x5A827999,{ $b +& $c +| (0xffffffff +^ $b) +& $d }).item xx 20,
              (0x6ED9EBA1,{ $b +^ $c +^ $d }).item xx 20,
              (0x8F1BBCDC,{ $b +& $c +| $b +& $d +| $c +& $d }).item xx 20,
              (0xCA62C1D6,{ $b +^ $c +^ $d }).item xx 20).kv
@@ -101,11 +101,9 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
                 ($a, rol($b,30), $c, $d,
                  0xffffffff +& (rol($a,5) + $f() + $e + $k + @!w[$i]));
         }
-
         @!s[] = 0xffffffff X+& (@!s[] Z+ (0xffffffff X+& ($a,$b,$c,$d,$e)));
 	return; # This should not be needed per S06/Signatures
     }
-
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
     my sub rol (uint32 $v, int $count where 0..32, --> uint32) {
