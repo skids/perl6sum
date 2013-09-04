@@ -90,138 +90,156 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub rol ($v, int $count where 0..32) {
-        my $tmp = ($v +< $count) +& 0xffffffff;
-        $tmp +|= (($v +& 0xffffffff) +> (32 - $count));
-	$tmp;
+    my sub rol (uint32 $v, int $count where 0..32, --> uint32) {
+        my uint32 $tmp = ($v +< $count) +& 0xffffffff;
+        $tmp +| (($v +& 0xffffffff) +> (32 - $count));
     }
 
-    method md4_round1_step ($data, int $shift) {
+    method md4_round1_step (uint32 $data, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + (($b +& $c) +| ((+^$b) +& $d))), $shift));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method md4_ext_round1_step ($data, int $shift) {
+    method md4_ext_round1_step (uint32 $data, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[4,5,6,7];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + (($b +& $c) +| ((+^$b) +& $d))), $shift));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method md4_round2_step ($data, int $shift) {
+    method md4_round2_step (uint32 $data, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + 0x5a827999 +
                  ([+|] (($b,$b,$c) Z+& ($c,$d,$d)))), $shift));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method md4_ext_round2_step ($data, int $shift) {
+    method md4_ext_round2_step (uint32 $data, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[4,5,6,7];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + 0x50a28be6 +
                  ([+|] (($b,$b,$c) Z+& ($c,$d,$d)))), $shift));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method md4_round3_step ($data, int $shift) {
+    method md4_round3_step (uint32 $data, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + 0x6ed9eba1 + ([+^] $b, $c, $d)), $shift));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method md4_ext_round3_step ($data, int $shift) {
+    method md4_ext_round3_step (uint32 $data, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[4,5,6,7];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol(($a + $data + 0x5c4dd124 + ([+^] $b, $c, $d)), $shift));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method md5_round1_step ($data, $idx, $shift) {
+    method md5_round1_step (uint32 $data, $idx, $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
              $b + rol(($a + @t[$idx] + $data +
                       (($b +& $c) +| (+^$b +& $d))), $shift)));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method md5_round2_step ($data, int $idx, int $shift) {
+    method md5_round2_step (uint32 $data, int $idx, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
              $b + rol(($a + @t[$idx] + $data +
                       (($b +& $d) +| (+^$d +& $c))), $shift)));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method md5_round3_step ($data, int $idx, int $shift) {
+    method md5_round3_step (uint32 $data, int $idx, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
              $b + rol(($a + $data + @t[$idx] + ([+^] $b, $c, $d)), $shift)));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method md5_round4_step ($data, int $idx, int $shift) {
+    method md5_round4_step (uint32 $data, int $idx, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
           $b + rol(($a + $data + @t[$idx] + ($c +^ (+^$d +| $b))), $shift)));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method ripe_f1_5 (int $lr, $data, $k, int $shift) {
+    method ripe_f1_5 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
 	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
              ($e + rol($a + $k + $data + ([+^] $b, $c, $d), $shift)));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method ripe_f1_4 (int $lr, $data, $k, int $shift) {
+    method ripe_f1_4 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[$lr X+ ^4];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol($a + $k + $data + ([+^] $b, $c, $d), $shift));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method ripe_f2_5 (int $lr, $data, $k, int $shift) {
+    method ripe_f2_5 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
 	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
              ($e + rol($a + $k + $data + (($b +& $c) +| (+^$b +& $d)),
                        $shift)));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method ripe_f2_4 (int $lr, $data, $k, int $shift) {
+    method ripe_f2_4 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[$lr X+ ^4];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol($a + $k + $data + (($b +& $c) +| (+^$b +& $d)), $shift));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method ripe_f3_5 (int $lr, $data, $k, int $shift) {
+    method ripe_f3_5 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
 	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
              ($e + rol($a + $k + $data + ((+^$c +| $b) +^ $d), $shift)));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method ripe_f3_4 (int $lr, $data, $k, int $shift) {
+    method ripe_f3_4 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[$lr X+ ^4];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol($a + $k + $data + ((+^$c +| $b) +^ $d), $shift));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method ripe_f4_5 (int $lr, $data, $k, int $shift) {
+    method ripe_f4_5 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
 	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
              ($e + rol($a + $k + $data + (($b +& $d) +| (+^$d +& $c)),
                        $shift)));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method ripe_f4_4 (int $lr, $data, $k, int $shift) {
+    method ripe_f4_4 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[$lr X+ ^4];
         ($a,$d,$c,$b) = ($d, $c, $b,
              rol($a + $k + $data + (($b +& $d) +| (+^$d +& $c)), $shift));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method ripe_f5_5 (int $lr, $data, $k, int $shift) {
+    method ripe_f5_5 (int $lr, uint32 $data, uint32 $k, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw, $e is rw) :=
 	    @!s[$lr X+ ^5];
         ($a,$e,$d,$c,$b) = ($e, $d, rol($c,10), $b, 0xffffffff +&
              ($e + rol($a + $k + $data + ($b +^ (+^$d +| $c)), $shift)));
+	return; # This should not be needed per S06/Signatures
     }
 
-    method md4_comp {
+    method md4_comp (--> Nil) {
         my @s = @!s[];
         for (^16) Z (3,7,11,19) xx 4 {
             self.md4_round1_step(@!w[$^idx],$^shift);
@@ -238,12 +256,13 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
             self.md4_ext_round3_step(@!w[$^idx],$^shift)
                 if $alg eqv "MD4ext";
         }
-        @!s >>+=<< @s;
-        @!s >>+&=>> 0xffffffff; # Should go away with sized types
+        @!s »+=« @s;
+        @!s »+&=» 0xffffffff; # Should go away with sized types
         @!s[0,4] = @!s[4,0] if $alg eqv "MD4ext";
+	return; # This should not be needed per S06/Signatures
     }
 
-    method md5_comp {
+    method md5_comp (--> Nil) {
         my @s = @!s[];
         for (^16) Z (^16) Z (7,12,17,22) xx 4 {
             self.md5_round1_step(@!w[$^didx], $^idx, $^shift);
@@ -260,8 +279,9 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
             Z (48..^64) Z (6,10,15,21) xx 4 {
             self.md5_round4_step(@!w[$^didx], $^idx, $^shift);
         }
-        @!s >>+=<< @s;
-        @!s >>+&=>> 0xffffffff; # Should go away with sized types
+        @!s »+=« @s;
+        @!s »+&=» 0xffffffff; # Should go away with sized types
+	return; # This should not be needed per S06/Signatures
     }
 
     # RIPEMD constants
@@ -294,7 +314,7 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
         [ 15, 5, 8, 11, 14, 14, 6, 14, 6, 9, 12, 9, 12, 5, 15, 8 ],
         [ 8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11 ];
 
-    method ripe5_comp {
+    method ripe5_comp (--> Nil) {
 
         my @s = @!s[];
         @!s.push(@s) if $alg eqv "RIPEMD-160";
@@ -341,9 +361,10 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
             @!s = @!s Z+ @s;
         }
         @!s = 0xffffffff X+& @!s;
+	return; # This should not be needed per S06/Signatures
     }
 
-    method ripe4_comp {
+    method ripe4_comp (--> Nil) {
 
         my @s = @!s[];
         @!s.push(@s) if $alg eqv "RIPEMD-128";
@@ -383,6 +404,7 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
             @!s = @!s Z+ @s;
         }
         @!s = 0xffffffff X+& @!s;
+	return; # This should not be needed per S06/Signatures
     }
 
     multi method add (blob8 $block where { .elems == 64 }) {
@@ -467,16 +489,15 @@ role Sum::RIPEMD320 does Sum::MD4_5[ :alg<RIPEMD-320> ] { }
 
 =head2 role Sum::MD2 does Sum
 
-    The C<Sum::MD2> role is used to create a type of C<Sum>
-    that calculates an MD2 message digest.  These digests should only
-    be used for compatibility with legacy systems, as MD2 is not
-    considered a cryptographically secure algorithm.
+    The C<Sum::MD2> role is used to create a type of C<Sum> that calculates
+    an MD2 message digest.  These digests should only be used for
+    compatibility with legacy systems, as MD2 is not considered a
+    cryptographically secure algorithm.
 
-    The resulting C<Sum> expects 16-byte blocks as addends.  Currently
-    that means a punned C<Buf> with 16 elements.  Passing a shorter Buf
-    may be done once, before or during finalization.  Attempts to provide
-    more blocks after passing a short block will result in an
-    C<X::Sum::Final>.
+    The resulting C<Sum> expects 16-byte blocks (C<buf8> or C<blob8>) as
+    addends.  Passing a shorter block may be done once, before or during
+    finalization.  Attempts to provide more blocks after passing a short
+    block will result in an C<X::Sum::Final>.
 
     C<Sum::Marshal::Block> roles may be mixed in to allow for accumulation
     of smaller addends, to split large messages into blocks, or to allow
@@ -487,7 +508,7 @@ role Sum::RIPEMD320 does Sum::MD4_5[ :alg<RIPEMD-320> ] { }
 role Sum::MD2 does Sum {
 
     # S-Box. Spec claims this is a "nothing up my sleeve" value based on pi
-    my @S =
+    my Int @S =
         < 41  46  67 201 162 216 124   1  61  54  84 161 236 240   6  19
           98 167   5 243 192 199 115 140 152 147  43 217 188  76 130 202
           30 155  87  60 253 212 224  22 103  66 111  24 138  23 229  18
@@ -504,7 +525,7 @@ role Sum::MD2 does Sum {
          120 136 149 139 227  99 232 109 233 203 213 254  59   0  29  57
          242 239 183  14 102  88 208 228 166 119 114 248 235 117  75  10
           49  68  80 180 143 237 31   26 219 153 141  51 159  17 131  20
-        >>>.Int;
+        >».Int;
 
     has @!C is rw = 0 xx 16;   # The checksum, computed in parallel
     has @!X is rw = 0 xx 48;   # The digest state
