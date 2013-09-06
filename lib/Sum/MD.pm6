@@ -91,8 +91,7 @@ role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIP
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
     my sub rol (uint32 $v, int $count where 0..32, --> uint32) {
-        my uint32 $tmp = ($v +< $count) +& 0xffffffff;
-        $tmp +| (($v +& 0xffffffff) +> (32 - $count));
+        (($v +< $count) +& 0xffffffff) +| (($v +& 0xffffffff) +> (32 - $count));
     }
 
     method md4_round1_step (uint32 $data, int $shift --> Nil) {

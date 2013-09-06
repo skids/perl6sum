@@ -107,8 +107,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
     my sub rol (uint32 $v, int $count where 0..32, --> uint32) {
-        my uint32 $tmp = ($v +< $count) +& 0xffffffff;
-        $tmp +| (($v +& 0xffffffff) +> (32 - $count));
+        ($v +< $count) +& 0xffffffff +| (($v +& 0xffffffff) +> (32 - $count));
     }
 
     multi method add (blob8 $block where { .elems == 64 }) {
@@ -250,9 +249,8 @@ role Sum::SHAmix32 does Sum::SHA2common {
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub infix:<ror> (uint32 $v, int $count where 0..32, --> uint32) {
-        my uint32 $tmp = ($v +& 0xffffffff) +> $count;
-        $tmp +| ($v +< (32 - $count)) +& 0xffffffff;
+    my sub infix:<ror> ($v, int $count where 0..32, --> uint32) {
+        [+|] (0xffffffff +& $v) +> $count, 0xffffffff +& ($v +< (32 - $count));
     }
 
     method bsize { 512 };
@@ -303,8 +301,8 @@ role Sum::SHAmix64 does Sum::SHA2common {
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
     my sub infix:<ror> ($v, int $count where 0..64, --> uint64) {
-        my uint64 $tmp = ($v +& 0xffffffffffffffff) +> $count;
-        $tmp +| ($v +< (64 - $count)) +& 0xffffffffffffffff;
+       [+|] ($v +& 0xffffffffffffffff) +> $count,
+            ($v +< (64 - $count)) +& 0xffffffffffffffff;
     }
 
     method bsize { 1024 };
