@@ -50,8 +50,10 @@ Sum::MD
 
 use Sum;
 use Sum::MDPad;
-
-role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320>) = "MD5" ] does Sum::MDPad[:lengthtype<uint64_le>] {
+# The newline in the parameter list here should not need to be here.  Star 2013.11 regression.
+# Also this used to be just "where one <...>" but the braces seem to help the parser as well
+role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320> }
+                                                                                                              = "MD5" ] does Sum::MDPad[:lengthtype<uint64_le>] {
     has @!w;     # "Parsed" message gets bound here.
     has @!s;     # Current hash state.  H in specification.
 

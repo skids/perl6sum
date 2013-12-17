@@ -48,7 +48,11 @@ Sum::MDPad
 
 use Sum;
 
-role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where { $_ eqv one("uint64_be","uint64_le","uint128_be","uint128_le") } = "uint64_be", Bool :$overflow = True, :@firstpad = [True], :@lastpad ] does Sum {
+# The newlines in the parameter list here should not need to be here.  Star 2013.11 regression.
+# Also the eqv can be written "where one <...>" but the braces seem to help the parser as well
+role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
+                                                       = 512, :$lengthtype where { $_ eqv one("uint64_be","uint64_le","uint128_be","uint128_le") }
+                                                                                                                                                   = "uint64_be", Bool :$overflow = True, :@firstpad = [True], :@lastpad ] does Sum {
 
     my $bbytes = $blocksize/8;
     my @lenshifts = (
