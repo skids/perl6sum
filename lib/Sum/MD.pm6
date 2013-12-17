@@ -52,8 +52,8 @@ use Sum;
 use Sum::MDPad;
 
 role Sum::MD4_5 [ Str :$alg where (one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320>) = "MD5" ] does Sum::MDPad[:lengthtype<uint64_le>] {
-    has @!w is rw;     # "Parsed" message gets bound here.
-    has @!s is rw;     # Current hash state.  H in specification.
+    has @!w;     # "Parsed" message gets bound here.
+    has @!s;     # Current hash state.  H in specification.
 
     # MD5 table of constants (a.k.a. T[1..64] in RFC1321)
     my @t = (Int(4294967296 * .sin.abs) for 1..64);
@@ -526,9 +526,9 @@ role Sum::MD2 does Sum {
           49  68  80 180 143 237 31   26 219 153 141  51 159  17 131  20
         >».Int;
 
-    has @!C is rw = 0 xx 16;   # The checksum, computed in parallel
-    has @!X is rw = 0 xx 48;   # The digest state
-    has Bool $!final is rw = False; # whether pad/checksum is in state already
+    has @!C = 0 xx 16;   # The checksum, computed in parallel
+    has @!X = 0 xx 48;   # The digest state
+    has Bool $!final = False; # whether pad/checksum is in state already
 
     proto method add (|cap) {*}
     multi method add (*@addends) {

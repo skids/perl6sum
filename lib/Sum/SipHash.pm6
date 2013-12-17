@@ -67,14 +67,14 @@ role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
 
     my blob8 $keyfrob = "somepseudorandomlygeneratedbytes".encode("ascii");
 
-    has Int $!k0 is rw   = 0;
-    has Int $!k1 is rw   = 0;
-    has Int $!v0 is rw   = 0;
-    has Int $!v1 is rw   = 0;
-    has Int $!v2 is rw   = 0;
-    has Int $!v3 is rw   = 0;
-    has Int $!b is rw    = 0;
-    has Int $!left is rw = 0;
+    has Int $!k0   = 0;
+    has Int $!k1   = 0;
+    has Int $!v0   = 0;
+    has Int $!v1   = 0;
+    has Int $!v2   = 0;
+    has Int $!v3   = 0;
+    has Int $!b    = 0;
+    has Int $!left = 0;
 
 =begin pod
 

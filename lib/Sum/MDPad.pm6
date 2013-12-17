@@ -83,7 +83,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
 
 =end pod
 
-    has Int $!o is rw = 0;
+    has Int $!o = 0;
     method pos () { $!o };
 
 =begin pod
@@ -108,7 +108,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
 #    such a prefix should be made to require an additional role parameter,
 #    rather than having it happen automatically when lvalue access is used.
 
-    has Int $!expect is rw = 0;
+    has Int $!expect = 0;
     method elems () is rw {
         my $f := self;
         Proxy.new(
@@ -143,7 +143,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 } = 512, :$lengthtype where
 
 =end pod
 
-    has Bool $!ignore_block_inc is rw = False;
+    has Bool $!ignore_block_inc = False;
     has Bool $.final is rw = False;
     method pos_block_inc () {
         fail(X::Sum::Final.new()) if $.final;

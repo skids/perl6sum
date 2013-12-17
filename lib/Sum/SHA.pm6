@@ -83,8 +83,8 @@ use Sum::MDPad;
 role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
      does Sum::MDPad[ :lengthtype<uint64_be>, :!overflow ] {
 
-    has @!w is rw;     # "Parsed" message gets bound here.
-    has @!s is rw =    # Current hash state.  H in specification.
+    has @!w;     # "Parsed" message gets bound here.
+    has @!s =    # Current hash state.  H in specification.
         (0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0);
 
     method size ( --> int) { 160 }

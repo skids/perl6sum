@@ -87,12 +87,12 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
                      :$columnsA = 16, :$columnsB = $columnsA ]
      does Sum::Partial {
 
-    has Int $!A is rw = ( ($inivA.WHAT === Bool)
-                          ?? (-$inivA +& ((1 +< $columnsA)-1))
-                          !! $inivA );
-    has Int $!B is rw = ( ($inivB.WHAT === Bool)
-                          ?? (-$inivB +& ((1 +< $columnsB)-1))
-                          !! $inivB );
+    has Int $!A = ( ($inivA.WHAT === Bool)
+                     ?? (-$inivA +& ((1 +< $columnsA)-1))
+                     !! $inivA );
+    has Int $!B  = ( ($inivB.WHAT === Bool)
+                      ?? (-$inivB +& ((1 +< $columnsB)-1))
+                      !! $inivB );
 
     method size () { $columnsA + $columnsB }
 
