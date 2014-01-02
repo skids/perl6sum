@@ -112,7 +112,7 @@ given (r160t.new()) {
   is .finalize(Buf.new()),
      0x9c1185a5c5e9fc54612808977ee8f548b2258d31,
      "RIPEMD-160 of an empty buffer is correct.";
-  is .Buf.values.fmt("%x"), "9c 11 85 a5 c5 e9 fc 54 61 28 8 97 7e e8 f5 48 b2 25 8d 31", "MD5 Buf method works";
+  is .Buf.values.fmt("%x"), "9c 11 85 a5 c5 e9 fc 54 61 28 8 97 7e e8 f5 48 b2 25 8d 31", "RIPEMD-160 Buf method works";
 }
 # Since it uses the same buffering code as MD4 we don't need to test
 # different lengths thoroughly, but a few more test vectors would be good.
