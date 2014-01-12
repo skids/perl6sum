@@ -118,7 +118,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
         Proxy.new(
             FETCH => { $!expect ?? $!expect !! $!o },
             STORE => -> $self, $v {
-                if ($!o) {
+                if $!o {
                     Failure.new(X::AdHoc.new(:payload("Cannot presage length after providing addends.")))
                 }
                 else {
@@ -204,7 +204,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
             fail(X::Sum::Spill.new())
                 if $!o >= (1 +< (+@lenshifts * 8)) - $inc;
         }
-        if ($!expect) {
+        if $!expect {
             fail(X::Sum::Spill.new()) if $!o + $inc > $!expect;
             fail(X::Sum::Missing.new()) if $!expect < $!o + $inc;
         }

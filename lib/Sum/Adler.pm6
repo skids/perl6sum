@@ -123,7 +123,7 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
         $!B %= $modulusB;
 
 	my $res = ($!B +< $columnsA) +| $!A;
-        if ($finv) {
+        if $finv {
             return $res +^ ((1 +< ($columnsA + $columnsB)) - 1)
                 if $finv.WHAT === Bool;
             return $res +^ $finv;
@@ -161,7 +161,7 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
 
     method checkvals(*@addends) {
         self.finalize(@addends);
-        return fail(X::Sum::CheckVals.new()) if ($modulusB > $modulusA);
+        return fail(X::Sum::CheckVals.new()) if $modulusB > $modulusA;
 
         # TODO: in the case of Adler these are impossible because of the addend
         # size.  We are agnostic to that.  So the values we return may

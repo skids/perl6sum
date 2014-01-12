@@ -591,7 +591,7 @@ role Sum::Marshal::Pack::Bits[::AT :$accept = (Bool), ::CT :$coerce = (Bool)]
 
     multi method marshal (AT $addend) {
         $.bitpos--;
-        $.packed +|= 1 +< +$.bitpos if (CT($addend));
+        $.packed +|= 1 +< +$.bitpos if CT($addend);
         unless $.bitpos {
             my $packed = $.packed;
 	    $.packed = 0;
@@ -633,7 +633,7 @@ role Sum::Marshal::Pack::Bits[:$width!, ::AT :$accept, ::CT :$coerce = (Int)]
     multi method marshal (AT $addend) {
         my $a = CT($addend);
         my $extrapos = max(0, $width - $.bitpos);
-        if ($extrapos) {
+        if $extrapos {
             my $packed = $.packed +| ($a +> $extrapos);
             $.packed = $extrapos +& ((1 +< $extrapos) - 1);
             $.bitpos = $width - $extrapos;

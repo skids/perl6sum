@@ -123,12 +123,12 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
     method finalize(*@addends) {
         self.push(@addends);
         my $rev = $.rem;
-        if (+@footer) {
+        if +@footer {
             my $c = self.clone();
 	    $c.push(@footer);
 	    $rev = $c.rem;
         }
-        if ($reflect) {
+        if $reflect {
             my $rev2 = $rev +& 0; # Think types.
 	    for (1 X+< ^$columns) {
                 $rev2 +<= 1;
@@ -136,8 +136,8 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
 	    }
             $rev = $rev2;
         }
-        if ($finv) {
-           return $rev +^ $mask if ($finv.WHAT === Bool);
+        if $finv {
+           return $rev +^ $mask if $finv.WHAT === Bool;
            return $rev +^ +$finv;
         }
         return $rev;
