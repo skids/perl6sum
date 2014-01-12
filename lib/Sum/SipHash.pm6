@@ -94,16 +94,16 @@ role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
     The class-provided key will not be used at all if C<:key> is provided.
     As such, two instances of different C<Sum::SipHash> classes which
     differ only in the class's C<:defkey> will always generate the same
-    results if the instances use the same C<:key> argument.
+    results if the instances were constructed using the same C<:key> argument.
 
-    As such, explicitly specifying C<:key(0)> always uses the naked
-    well-known seed, which is more likely to have been analyzed by
-    potential adversaries.  Classes which do not provide a default key
-    (or which explicity set C<:defkey(0)>) will create instances that
-    use the naked seed if they do not specify C<:key>.
+    Explicitly specifying C<:key(0)> always uses the naked well-known seed,
+    which is more likely to have been analyzed by potential adversaries.
+    Classes which do not provide a default key (or which explicity set
+    C<:defkey(0)>) will create instances that use the naked well-known seed
+    if C<:key> is not provided to the constructor.
 
     The process of modifying the seed is resilient against accidentally
-    zeroing the seed, so any other value can be safely chosen.
+    zeroing the seed, so any value other than zero may be safely chosen.
 
 =end pod
 
@@ -208,15 +208,16 @@ role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
 
         [+^] $v0, $v1, $v2, $v3;
     }
+
     method Numeric () { self.finalize };
-    method bytes_internal { self.finalize X+> (56,48...0) }
-    method buf8 () {
-        buf8.new(self.bytes_internal);
-    }
-    method blob8 () {
-        blob8.new(self.bytes_internal);
-    }
+
+    # Should not need the $self: here.  RT#120919
+    method !dice ($self:) { $self.finalize X+> (56,48...0) }
+
+    method buf8 () { buf8.new(self!dice); }
     method Buf () { self.buf8 }
+
+    method blob8 () { blob8.new(self!dice); }
     method Blob () { self.blob8 }
 }
 
