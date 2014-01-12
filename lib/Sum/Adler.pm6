@@ -70,7 +70,7 @@ Sum::Adler
 
     All these sums keep no positional state, so C<.pos> and C<.elems>
     are not provided by the base role.  They also retain all state
-    after finalization, so C<Sum::Partial> may be mixed.
+    after finalization, and C<Sum::Partial> is premixed.
 
 =end pod
 
