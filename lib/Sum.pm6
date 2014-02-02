@@ -158,7 +158,8 @@ role Sum {
 
 =end pod
 
-    method finalize (*@addends) { ... }  # Provided by class or role
+    # The semicolon here seems to be needed for perl6-debug to parse
+    method finalize (*@addends) { ... };  # Provided by class or role
 
 =begin pod
 
