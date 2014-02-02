@@ -26,7 +26,7 @@ class sayer {
     method print (*@s) { $.accum ~= [~] @s }
 }
 my sayer $p .= new();
-#{ temp $*OUT = $p; eval $Sum::SipHash::Doc::synopsis; }
+#{ temp $*OUT = $p; EVAL $Sum::SipHash::Doc::synopsis; }
 #is $p.accum, $Sum::SipHash::Doc::synopsis.comb(/<.after \#\s> (<.ws> <.xdigit>+)+/).join("\n") ~ "\n", 'Code in manpage synopsis actually works';
 
 # These test vectors appear in Aumussen reference C implentation

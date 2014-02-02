@@ -72,6 +72,6 @@ class sayer {
     method print (*@s) { $.accum ~= [~] @s }
 }
 my sayer $p .= new();
-#{ temp $*OUT = $p; eval $Sum::Adler::Doc::synopsis; }
+#{ temp $*OUT = $p; EVAL $Sum::Adler::Doc::synopsis; }
 #is $p.accum, $Sum::Adler::Doc::synopsis.comb(/<.after \#\s> (<.ws> <.xdigit>+)+/).join("\n") ~ "\n", 'Code in manpage synopsis actually works';
 

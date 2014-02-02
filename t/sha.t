@@ -184,5 +184,5 @@ class sayer {
     method print (*@s) { $.accum ~= [~] @s }
 }
 my sayer $p .= new();
-#{ temp $*OUT = $p; eval $Sum::SHA::Doc::synopsis; }
+#{ temp $*OUT = $p; EVAL $Sum::SHA::Doc::synopsis; }
 #is $p.accum, $Sum::SHA::Doc::synopsis.comb(/<.after \#\s> (<.ws> <.xdigit>+)+/).join("\n") ~ "\n", 'Code in manpage synopsis actually works';

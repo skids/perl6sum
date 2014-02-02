@@ -13,16 +13,16 @@ lives_ok { X::Sum::Spill.new() }, 'X::Sum::Spill is available';
 lives_ok { X::Sum::Push::Usage.new() }, 'X::Sum::Push::Usage is available';
 lives_ok { X::Sum::Recourse.new() }, 'X::Sum::Recourse is available';
 lives_ok { X::Sum::Marshal.new(:addend(Str)) }, 'X::Sum::Marshal is available';
-lives_ok { eval 'class foo1 does Sum { method size { }; method finalize { }; method add { }; method push { }; }' }, 'Sum composes when interface is implemented';
-dies_ok { eval 'class fooX does Sum { }' }, 'Sum requires interface to compose';
-lives_ok { eval 'class foo2 does Sum does Sum::Marshal::Raw { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Raw composes and provides push';
-lives_ok { eval 'class foo3 does Sum does Sum::Marshal::Cooked { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Cooked composes and provides push';
-lives_ok { eval 'class foo4 does Sum does Sum::Marshal::Method[:atype(Str),:method<ords>] { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Method composes and provides push';
-lives_ok { eval 'class foo6 does Sum does Sum::Marshal::Pack[] { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Pack composes and provides push';
-lives_ok { eval 'class foo7 does Sum::Marshal::Pack[] does Sum::Marshal::Pack::Bits[ :accept(Int) ] { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Pack::Bits composes';
-lives_ok { eval 'class foo7a does Sum::Marshal::Pack[] does Sum::Marshal::Pack::Bits[ :width(4), :accept(Int) ] { method size { }; method finalize { }; method add { }; }' }, 'other Sum::Marshal::Pack::Bits composes';
+lives_ok { EVAL 'class foo1 does Sum { method size { }; method finalize { }; method add { }; method push { }; }' }, 'Sum composes when interface is implemented';
+dies_ok { EVAL 'class fooX does Sum { }' }, 'Sum requires interface to compose';
+lives_ok { EVAL 'class foo2 does Sum does Sum::Marshal::Raw { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Raw composes and provides push';
+lives_ok { EVAL 'class foo3 does Sum does Sum::Marshal::Cooked { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Cooked composes and provides push';
+lives_ok { EVAL 'class foo4 does Sum does Sum::Marshal::Method[:atype(Str),:method<ords>] { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Method composes and provides push';
+lives_ok { EVAL 'class foo6 does Sum does Sum::Marshal::Pack[] { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Pack composes and provides push';
+lives_ok { EVAL 'class foo7 does Sum::Marshal::Pack[] does Sum::Marshal::Pack::Bits[ :accept(Int) ] { method size { }; method finalize { }; method add { }; }' }, 'Sum::Marshal::Pack::Bits composes';
+lives_ok { EVAL 'class foo7a does Sum::Marshal::Pack[] does Sum::Marshal::Pack::Bits[ :width(4), :accept(Int) ] { method size { }; method finalize { }; method add { }; }' }, 'other Sum::Marshal::Pack::Bits composes';
 
-lives_ok { eval 'class fooC1 does Sum does Sum::Marshal::Method[:atype(Str),:method<ords>] does Sum::Marshal::Method[:atype(Buf),:method<values>] { method size { }; method finalize { }; method add { }; }' }, 'Two Sum::Marshal subroles can compose with same cronies';
+lives_ok { EVAL 'class fooC1 does Sum does Sum::Marshal::Method[:atype(Str),:method<ords>] does Sum::Marshal::Method[:atype(Buf),:method<values>] { method size { }; method finalize { }; method add { }; }' }, 'Two Sum::Marshal subroles can compose with same cronies';
 
 lives_ok {
 class Foo does Sum does Sum::Marshal::Cooked {
@@ -248,5 +248,5 @@ class sayer {
     method print (*@s) { $.accum ~= [~] @s }
 }
 my sayer $s .= new();
-#{ temp $*OUT = $s; eval $Sum::Doc::synopsis; }
+#{ temp $*OUT = $s; EVAL $Sum::Doc::synopsis; }
 #is $s.accum, $Sum::Doc::synopsis.comb(/<.after \#\s> (<.ws> \d+)+/).join("\n") ~ "\n", 'Code in manpage synopsis actually works';
