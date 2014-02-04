@@ -180,7 +180,7 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
 =begin pod
 
 =head2 role Sum::Adler32
-       does Sum::Fletcher[ :inivA(1), :modulusA(65521), :columnsA(16) ] { }
+       does Sum::Fletcher[ :inivA(1) :modulusA(65521) :columnsA(16) ] { }
 
     The C<Sum::Adler32> parametric role is used to create a type of C<Sum>
     that calculates an Adler32 checksum.
@@ -198,19 +198,19 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
 =end pod
 
 role Sum::Adler32
-     does Sum::Fletcher[ :inivA(1), :modulusA(65521), :columnsA(16) ] { }
+     does Sum::Fletcher[ :inivA(1) :modulusA(65521) :columnsA(16) ] { }
 
 =begin pod
 
 =head2 role Sum::Fletcher16
-     does Sum::Fletcher[ :modulusA(255), :columnsA(8) ]
+     does Sum::Fletcher[ :modulusA(255) :columnsA(8) ]
 
     This role calculates the Fletcher16 checksum and expects byte addends.
 
 =end pod
 
 role Sum::Fletcher16
-     does Sum::Fletcher[ :modulusA(255), :columnsA(8) ] { }
+     does Sum::Fletcher[ :modulusA(255) :columnsA(8) ] { }
 
 =begin pod
 
@@ -229,7 +229,7 @@ role Sum::Fletcher32
 =begin pod
 
 =head2 role Sum::Fletcher64
-     does Sum::Fletcher[ :modulusA(4294967295), :columnsA(32) ]
+     does Sum::Fletcher[ :modulusA(4294967295) :columnsA(32) ]
 
     This role calculates the Fletcher64 checksum and expects 32-bit addends.
     Mixing an appropriate C<Sum::Marshal> role may help deal with padding
@@ -238,7 +238,7 @@ role Sum::Fletcher32
 =end pod
 
 role Sum::Fletcher64
-     does Sum::Fletcher[ :modulusA(4294967295), :columnsA(32) ] { }
+     does Sum::Fletcher[ :modulusA(4294967295) :columnsA(32) ] { }
 
 1; # Avoid sink-punning of last role
 

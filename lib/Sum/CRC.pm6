@@ -183,7 +183,7 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
 =begin pod
 
 =head2 role Sum::CRC_3_ROHC
-       does Sum::CRC[ :reflect, :columns(3), :poly(0x3) ]
+       does Sum::CRC[ :reflect :columns(3) :poly(0x3) ]
 
     Implements a 3-bit CRC used in RFC 3095 header compression.
 
@@ -192,206 +192,203 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
 # Note that the reveng catalogue seems to have :iniv but the checksum
 # presented for the test vector there works for :!iniv
 role Sum::CRC_3_ROHC
-    does Sum::CRC[ :reflect, :columns(3), :poly(0x3) ] { }
+    does Sum::CRC[ :reflect :columns(3) :poly(0x3) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_4_ITU
-       does Sum::CRC[ :reflect, :columns(4), :poly(0x3) ]
+       does Sum::CRC[ :reflect :columns(4) :poly(0x3) ]
 
     Implements a 4-bit CRC used in ITU G.704
 
 =end pod
 
 role Sum::CRC_4_ITU
-    does Sum::CRC[ :reflect, :columns(4), :poly(0x3) ] { }
+    does Sum::CRC[ :reflect :columns(4) :poly(0x3) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_5_EPC
-       does Sum::CRC[ :iniv(9), :columns(5), :poly(0x9) ]
+       does Sum::CRC[ :iniv(9) :columns(5) :poly(0x9) ]
 
     Implements a 5-bit CRC used in RFID.
 
 =end pod
 
 role Sum::CRC_5_EPC
-    does Sum::CRC[ :iniv(9), :columns(5), :poly(0x9) ] { }
+    does Sum::CRC[ :iniv(9) :columns(5) :poly(0x9) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_5_ITU
-       does Sum::CRC[ :reflect, :columns(5), :poly(0x15) ]
+       does Sum::CRC[ :reflect :columns(5) :poly(0x15) ]
 
     Implements a 5-bit CRC used in ITU G.704
 
 =end pod
 
 role Sum::CRC_5_ITU
-    does Sum::CRC[ :reflect, :columns(5), :poly(0x15) ] { }
+    does Sum::CRC[ :reflect :columns(5) :poly(0x15) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_5_USB
-       does Sum::CRC[ :iniv, :finv, :columns(5), :poly(0x5),
-                      :residual(0x13) ]
+       does Sum::CRC[ :iniv :finv :columns(5) :poly(0x5) :residual(0x13) ]
 
     Implements a 5-bit CRC used in the USB protocol.
 
 =end pod
 
 role Sum::CRC_5_USB
-    does Sum::CRC[ :iniv, :finv, :columns(5), :poly(0x5),
-                   :residual(0x13) ] { }
+    does Sum::CRC[ :iniv :finv :columns(5) :poly(0x5) :residual(0x13) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_6_DARC
-       does Sum::CRC[ :reflect, :columns(6), :poly(0x19) ]
+       does Sum::CRC[ :reflect :columns(6) :poly(0x19) ]
 
     Implements a 6-bit CRC used in the DARC radio protocol.
 
 =end pod
 
 role Sum::CRC_6_DARC
-    does Sum::CRC[ :reflect, :columns(6), :poly(0x19) ] { }
+    does Sum::CRC[ :reflect :columns(6) :poly(0x19) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_6_ITU
-       does Sum::CRC[ :reflect, :columns(6), :poly(0x3) ]
+       does Sum::CRC[ :reflect :columns(6) :poly(0x3) ]
 
     Implements a 6-bit CRC used in ITU G.704
 
 =end pod
 
 role Sum::CRC_6_ITU
-    does Sum::CRC[ :reflect, :columns(6), :poly(0x3) ] { }
+    does Sum::CRC[ :reflect :columns(6) :poly(0x3) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_7_JEDEC
-       does Sum::CRC[ :columns(7), :poly(0x9) ]
+       does Sum::CRC[ :columns(7) :poly(0x9) ]
 
     Implements a 7-bit CRC used in JEDEC multimedia cards.
 
 =end pod
 
 role Sum::CRC_7_JEDEC
-    does Sum::CRC[ :columns(7), :poly(0x9) ] { }
+    does Sum::CRC[ :columns(7) :poly(0x9) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_7_ROHC
-       does Sum::CRC[ :reflect, :iniv, :columns(7), :poly(0x4f) ]
+       does Sum::CRC[ :reflect :iniv :columns(7) :poly(0x4f) ]
 
     Implements a 7-bit CRC used in RFC 3095 header compression.
 
 =end pod
 
 role Sum::CRC_7_ROHC
-    does Sum::CRC[ :reflect, :iniv, :columns(7), :poly(0x4f) ] { }
+    does Sum::CRC[ :reflect :iniv :columns(7) :poly(0x4f) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_8_CCITT
-       does Sum::CRC[ :columns(8), :poly(0x7) ] { }
+       does Sum::CRC[ :columns(8) :poly(0x7) ]
 
     Implements a standardized 8-bit CRC used e.g. in SmBus.
 
 =end pod
 
 role Sum::CRC_8_CCITT
-    does Sum::CRC[ :columns(8), :poly(0x7) ] { }
+    does Sum::CRC[ :columns(8) :poly(0x7) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_8_DARC
-    does Sum::CRC[ :reflect, :columns(8), :poly(0x39) ]
+    does Sum::CRC[ :reflect :columns(8) :poly(0x39) ]
 
     Implements an 8-bit CRC used in the DARC radio protocol.
 
 =end pod
 
 role Sum::CRC_8_DARC
-    does Sum::CRC[ :reflect, :columns(8), :poly(0x39) ] { }
+    does Sum::CRC[ :reflect :columns(8) :poly(0x39) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_8_EBU
-       does Sum::CRC[ :reflect, :iniv, :columns(8), :poly(0x1d) ] { }
+       does Sum::CRC[ :reflect :iniv :columns(8) :poly(0x1d) ]
 
     Implements an 8-bit CRC used in european digital audio
 
 =end pod
 role Sum::CRC_8_EBU
-    does Sum::CRC[ :reflect, :iniv, :columns(8), :poly(0x1d) ] { }
+    does Sum::CRC[ :reflect :iniv :columns(8) :poly(0x1d) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_8_I_CODE
-       does Sum::CRC[ :iniv(0xfd), :columns(8), :poly(0x1d) ] { }
+       does Sum::CRC[ :iniv(0xfd) :columns(8) :poly(0x1d) ]
 
     Implements an 8-bit CRC used in I-CODE labels.
 
 =end pod
 
 role Sum::CRC_8_I_CODE
-    does Sum::CRC[ :iniv(0xfd), :columns(8), :poly(0x1d) ] { }
+    does Sum::CRC[ :iniv(0xfd) :columns(8) :poly(0x1d) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_8_ITU
-       does Sum::CRC[ :finv(0x55), :columns(8), :poly(0x7), :residual(0xf9) ]
+       does Sum::CRC[ :finv(0x55) :columns(8) :poly(0x7) :residual(0xf9) ]
 
     Implements an 8-bit CRC used in ATM HEC codes.
 
 =end pod
 
 role Sum::CRC_8_ITU
-    does Sum::CRC[ :finv(0x55), :columns(8), :poly(0x7), :residual(0xf9) ] { }
+    does Sum::CRC[ :finv(0x55) :columns(8) :poly(0x7) :residual(0xf9) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_8_1_Wire
-       does Sum::CRC[ :reflect, :columns(8), :poly(0x31) ] { }
+       does Sum::CRC[ :reflect :columns(8) :poly(0x31) ]
 
     Implements an 8-bit CRC used in the 1-Wire bus standard.
 
 =end pod
 
 role Sum::CRC_8_1_Wire
-    does Sum::CRC[ :reflect, :columns(8), :poly(0x31) ] { }
+    does Sum::CRC[ :reflect :columns(8) :poly(0x31) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_8_ROHC
-    does Sum::CRC[ :reflect, :iniv, :columns(8), :poly(0x7) ]
+    does Sum::CRC[ :reflect :iniv :columns(8) :poly(0x7) ]
 
     Implements an 8-bit CRC used in RFC 3095 header compression.
 
 =end pod
 
 role Sum::CRC_8_ROHC
-    does Sum::CRC[ :reflect, :iniv, :columns(8), :poly(0x7) ] { }
+    does Sum::CRC[ :reflect :iniv :columns(8) :poly(0x7) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_8_WCDMA
-       does Sum::CRC[ :reflect, :columns(8), :poly(0x9b) ] { }
+       does Sum::CRC[ :reflect :columns(8) :poly(0x9b) ]
 
     Implements an 8-bit CRC used in WDCMA wireless protocol.
 
 =end pod
 
 role Sum::CRC_8_WCDMA
-    does Sum::CRC[ :reflect, :columns(8), :poly(0x9b) ] { }
+    does Sum::CRC[ :reflect :columns(8) :poly(0x9b) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_8_SAE_J1850
-       does Sum::CRC[ :iniv, :finv, :columns(8), :poly(0x1d),
-                      :residual(0x3b) ] { }
+       does Sum::CRC[ :iniv :finv :columns(8) :poly(0x1d) :residual(0x3b) ]
 
     Implements an 8-bit CRC used on the SAE J1850 automotive data bus.
 
@@ -399,21 +396,18 @@ role Sum::CRC_8_WCDMA
 # Note that the AUTOSAR document incorrectly says :iniv(0), :finv(0) but
 # then it goes on to give a test vector that is valid when :iniv, :finv
 role Sum::CRC_8_SAE_J1850
-    does Sum::CRC[ :iniv, :finv, :columns(8), :poly(0x1d),
-                   :residual(0x3b) ] { }
+    does Sum::CRC[ :iniv :finv :columns(8) :poly(0x1d) :residual(0x3b) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_8_AUTOSAR
-       does Sum::CRC[ :iniv, :finv, :columns(8), :poly(0x2f),
-                      :residual(0xbd) ]
+       does Sum::CRC[ :iniv :finv :columns(8) :poly(0x2f) :residual(0xbd) ]
 
     Implements an 8-bit CRC used in automotive applications.
 
 =end pod
 role Sum::CRC_8_AUTOSAR
-    does Sum::CRC[ :iniv, :finv, :columns(8), :poly(0x2f),
-                   :residual(0xbd) ] { }
+    does Sum::CRC[ :iniv :finv :columns(8) :poly(0x2f) :residual(0xbd) ] { }
 
 # Koopman suggestion.  Need to look for test vectors / 3rd party implementation
 #role Sum::CRC_8K
@@ -422,44 +416,44 @@ role Sum::CRC_8_AUTOSAR
 =begin pod
 
 =head2 role Sum::CRC_10_AAL
-    does Sum::CRC[ :columns(10), :poly(0x233) ]
+    does Sum::CRC[ :columns(10) :poly(0x233) ]
 
     Implements a 10-bit CRC used in ATM AAL 3/4.
 
 =end pod
 
 role Sum::CRC_10_AAL
-    does Sum::CRC[ :columns(10), :poly(0x233) ] { }
+    does Sum::CRC[ :columns(10) :poly(0x233) ] { }
 
 
 =begin pod
 
 =head2 role Sum::CRC_11_FlexRay
-    does Sum::CRC[ :iniv(0x1a), :columns(11), :poly(0x385) ]
+    does Sum::CRC[ :iniv(0x1a) :columns(11) :poly(0x385) ]
 
     Implements an 11-bit CRC used in FlexRay automotive systems.
 
 =end pod
 
 role Sum::CRC_11_FlexRay
-    does Sum::CRC[ :iniv(0x1a), :columns(11), :poly(0x385) ] { }
+    does Sum::CRC[ :iniv(0x1a) :columns(11) :poly(0x385) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_12_3GPP
-    does Sum::CRC[ :reflect, :columns(12), :poly(0x80f) ]
+    does Sum::CRC[ :reflect :columns(12) :poly(0x80f) ]
 
     Implements a 12-bit CRC used in 3G mobile systems.
 
 =end pod
 
 role Sum::CRC_12_3GPP
-    does Sum::CRC[ :reflect, :columns(12), :poly(0x80f) ] { }
+    does Sum::CRC[ :reflect :columns(12) :poly(0x80f) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_12_DECT
-    does Sum::CRC[ :columns(12), :poly(0x80f) ]
+    does Sum::CRC[ :columns(12) :poly(0x80f) ]
 
     Implements a 12-bit CRC used in Digital Enhanced Cordless
     Telecommunications.
@@ -467,49 +461,48 @@ role Sum::CRC_12_3GPP
 =end pod
 
 role Sum::CRC_12_DECT
-    does Sum::CRC[ :columns(12), :poly(0x80f) ] { }
+    does Sum::CRC[ :columns(12) :poly(0x80f) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_14_DARC
-    does Sum::CRC[ :reflect, :columns(14), :poly(0x805) ]
+    does Sum::CRC[ :reflect :columns(14) :poly(0x805) ]
 
     Implements a 14-bit CRC used in Digital Radio Communications.
 
 =end pod
 
 role Sum::CRC_14_DARC
-    does Sum::CRC[ :reflect, :columns(14), :poly(0x805) ] { }
+    does Sum::CRC[ :reflect :columns(14) :poly(0x805) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_15_CAN
-    does Sum::CRC[ :columns(15), :poly(0x4599) ]
+    does Sum::CRC[ :columns(15) :poly(0x4599) ]
 
     Implements a 15-bit CRC used in the Controller Area Network protocol.
 
 =end pod
 
 role Sum::CRC_15_CAN
-    does Sum::CRC[ :columns(15), :poly(0x4599) ] { }
+    does Sum::CRC[ :columns(15) :poly(0x4599) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_15_MPT1327
-       does Sum::CRC[ :finv(1), :columns(15), :poly(0x6815), :residual(0x6814)]
+       does Sum::CRC[ :finv(1) :columns(15) :poly(0x6815) :residual(0x6814)]
 
     Implements a 15-bit CRC used in MPT1327 mobile communications.
 
 =end pod
 
 role Sum::CRC_15_MPT1327
-    does Sum::CRC[ :finv(1), :columns(15), :poly(0x6815),
-                   :residual(0x6814) ] { }
+    does Sum::CRC[ :finv(1) :columns(15) :poly(0x6815) :residual(0x6814) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_ANSI
-       does Sum::CRC[ :columns(16), :poly(0x8005) ]
+       does Sum::CRC[ :columns(16) :poly(0x8005) ]
 
     Implements the ANSI 16-Bit CRC polynomial without any inversion or
     reflection.  Note this will be subject to problems with leading and
@@ -518,12 +511,12 @@ role Sum::CRC_15_MPT1327
 =end pod
 
 role Sum::CRC_16_ANSI
-    does Sum::CRC[ :columns(16), :poly(0x8005) ] { }
+    does Sum::CRC[ :columns(16) :poly(0x8005) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_LHA
-       does Sum::CRC[ :reflect, :columns(16), :poly(0x8005) ]
+       does Sum::CRC[ :reflect :columns(16) :poly(0x8005) ]
 
     Implements a 16-Bit CRC using the ANSI 16-bit polynomial with
     reflection of the result, as used by the lha data compression
@@ -534,12 +527,12 @@ role Sum::CRC_16_ANSI
 
 # python mod has 1..9 checksum as 0xbb3d
 role Sum::CRC_16_LHA
-    does Sum::CRC[ :reflect, :columns(16), :poly(0x8005) ] { }
+    does Sum::CRC[ :reflect :columns(16) :poly(0x8005) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_USB
-       does Sum::CRC[ :reflect, :iniv, :finv, :columns(16), :poly(0x8005),
+       does Sum::CRC[ :reflect :iniv :finv :columns(16) :poly(0x8005)
                       :residual(0x4ffe) ]
 
     Implements a 16-bit CRC used in the USB protocol.  The result
@@ -549,13 +542,13 @@ role Sum::CRC_16_LHA
 
 # Specs seem perhaps not to agree with :reflect, which is what some sources say
 role Sum::CRC_16_USB
-    does Sum::CRC[ :reflect, :iniv, :finv, :columns(16), :poly(0x8005),
+    does Sum::CRC[ :reflect :iniv :finv :columns(16) :poly(0x8005)
                    :residual(0x4ffe) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_USB_WIRE
-       does Sum::CRC[ :iniv, :finv, :columns(16), :poly(0x8005),
+       does Sum::CRC[ :iniv :finv :columns(16) :poly(0x8005)
                       :residual(0x7ff2) ]
 
     Implements a 16-bit CRC used in the USB protocol.  The result
@@ -565,13 +558,13 @@ role Sum::CRC_16_USB
 
 # Specs seem perhaps not to agree with :reflect, which is what some sources say
 role Sum::CRC_16_USB_WIRE
-    does Sum::CRC[ :iniv, :finv, :columns(16), :poly(0x8005),
+    does Sum::CRC[ :iniv :finv :columns(16) :poly(0x8005)
                    :residual(0x7ff2) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_1_Wire
-       does Sum::CRC[ :finv, :reflect, :columns(16), :poly(0x8005),
+       does Sum::CRC[ :finv :reflect :columns(16) :poly(0x8005)
                       :residual(0x8d1d) ]
 
     Implements an 16-bit CRC used on the 1-Wire bus standard.
@@ -579,37 +572,37 @@ role Sum::CRC_16_USB_WIRE
 =end pod
 
 role Sum::CRC_16_1_Wire
-    does Sum::CRC[ :finv, :reflect, :columns(16), :poly(0x8005),
+    does Sum::CRC[ :finv :reflect :columns(16) :poly(0x8005)
                    :residual(0x8d1d) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_Modbus
-    does Sum::CRC[ :iniv, :reflect, :columns(16), :poly(0x8005) ]
+    does Sum::CRC[ :iniv :reflect :columns(16) :poly(0x8005) ]
 
     Implements a 16-bit CRC used in the Modbus protocol.
 
 =end pod
 
 role Sum::CRC_16_Modbus
-    does Sum::CRC[ :iniv, :reflect, :columns(16), :poly(0x8005) ] { }
+    does Sum::CRC[ :iniv :reflect :columns(16) :poly(0x8005) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_DDS_110
-    does Sum::CRC[ :iniv(0x800d), :columns(16), :poly(0x8005) ]
+    does Sum::CRC[ :iniv(0x800d) :columns(16) :poly(0x8005) ]
 
     Implements a 16-bit CRC used in the ELV DDS-110 function generator.
 
 =end pod
 
 role Sum::CRC_16_DDS_110
-    does Sum::CRC[ :iniv(0x800d), :columns(16), :poly(0x8005) ] { }
+    does Sum::CRC[ :iniv(0x800d) :columns(16) :poly(0x8005) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_X25
-       does Sum::CRC[ :reflect, :iniv, :finv, :columns(16), :poly(0x1021),
+       does Sum::CRC[ :reflect :iniv :finv :columns(16) :poly(0x1021)
                       :residual(0xf47) ]
 
     Implements a 16-bit CRC used in X.25 and other ITU-T standards.
@@ -620,13 +613,13 @@ role Sum::CRC_16_DDS_110
 =end pod
 
 role Sum::CRC_16_X25
-    does Sum::CRC[ :reflect, :iniv, :finv, :columns(16), :poly(0x1021),
+    does Sum::CRC[ :reflect :iniv :finv :columns(16) :poly(0x1021)
                    :residual(0xf47) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_EPC
-       does Sum::CRC[ :iniv, :finv, :columns(16), :poly(0x1021),
+       does Sum::CRC[ :iniv :finv :columns(16) :poly(0x1021)
                       :residual(0xe2f0) ]
 
     Implements a 16-bit CRC used in RFID tags.  It is a modification
@@ -635,13 +628,13 @@ role Sum::CRC_16_X25
 =end pod
 
 role Sum::CRC_16_EPC
-    does Sum::CRC[ :iniv, :finv, :columns(16), :poly(0x1021),
+    does Sum::CRC[ :iniv :finv :columns(16) :poly(0x1021)
                    :residual(0xe2f0) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_CCITT_TRUE
-    does Sum::CRC[ :reflect, :columns(16), :poly(0x1021) ]
+    does Sum::CRC[ :reflect :columns(16) :poly(0x1021) ]
 
     Implements a commonly used 16-Bit CRC.  This is version of
     CRC which it is technically correct to call "CRC-16-CCITT",
@@ -653,12 +646,12 @@ role Sum::CRC_16_EPC
 =end pod
 
 role Sum::CRC_16_CCITT_TRUE
-    does Sum::CRC[ :reflect, :columns(16), :poly(0x1021) ] { }
+    does Sum::CRC[ :reflect :columns(16) :poly(0x1021) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_XModem
-       does Sum::CRC[ :columns(16), :poly(0x1021) ]
+       does Sum::CRC[ :columns(16) :poly(0x1021) ]
 
     Implements a 16-bit CRC as used in the XModem protocol.  Note this
     contains no inversions and as such does not protect against leading
@@ -668,12 +661,12 @@ role Sum::CRC_16_CCITT_TRUE
 =end pod
 
 role Sum::CRC_16_XModem
-    does Sum::CRC[ :columns(16), :poly(0x1021) ] { }
+    does Sum::CRC[ :columns(16) :poly(0x1021) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_MCRF
-       does Sum::CRC[ :reflect, :iniv, :columns(16), :poly(0x1021) ]
+       does Sum::CRC[ :reflect :iniv :columns(16) :poly(0x1021) ]
 
     Implements a 16-bit CRC used by some RFID chipsets.  Note that
     this algorithm does not protect against trailing zeros.
@@ -681,12 +674,12 @@ role Sum::CRC_16_XModem
 =end pod
 
 role Sum::CRC_16_MCRF
-    does Sum::CRC[ :reflect, :iniv, :columns(16), :poly(0x1021) ] { }
+    does Sum::CRC[ :reflect :iniv :columns(16) :poly(0x1021) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_CCITT_FALSE
-       does Sum::CRC[ :iniv, :columns(16), :poly(0x1021) ]
+       does Sum::CRC[ :iniv :columns(16) :poly(0x1021) ]
 
     Calculates a 16-bit checksum which is in use e.g. in floppy
     disks, but commonly mistaken for C<Sum::CRC_16_CCITT>, which
@@ -696,20 +689,20 @@ role Sum::CRC_16_MCRF
 =end pod
 
 role Sum::CRC_16_CCITT_FALSE
-    does Sum::CRC[ :iniv, :columns(16), :poly(0x1021) ] { }
+    does Sum::CRC[ :iniv :columns(16) :poly(0x1021) ] { }
 
 # Hold off on these for now.  After we can feed role params down, look at
 # how they are used.  The difference between the two may be better
 # handled at the instance level.
 #role Sum::CRC_16_DECT_R
-#    does Sum::CRC[ :finv(1), :columns(16), :poly(0x589), :residual(0x588) ]
+#    does Sum::CRC[ :finv(1) :columns(16) :poly(0x589) :residual(0x588) ]
 #
-#role Sum::CRC_16_DECT_X  does Sum::CRC[ :columns(16), :poly(0x589) ] { }
+#role Sum::CRC_16_DECT_X  does Sum::CRC[ :columns(16) :poly(0x589) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_DNP
-    does Sum::CRC[ :finv, :reflect, :columns(16), :poly(0x3d65),
+    does Sum::CRC[ :finv :reflect :columns(16) :poly(0x3d65)
                    :residual(0x993a) ]
 
     Implements a 16-bit CRC used in automation systems using
@@ -718,34 +711,32 @@ role Sum::CRC_16_CCITT_FALSE
 =end pod
 
 role Sum::CRC_16_DNP
-    does Sum::CRC[ :finv, :reflect, :columns(16), :poly(0x3d65),
+    does Sum::CRC[ :finv :reflect :columns(16) :poly(0x3d65)
                    :residual(0x993a) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_EN_13757
-       does Sum::CRC[ :finv, :columns(16), :poly(0x3d65),
-                      :residual(0x5c99) ]
+       does Sum::CRC[ :finv :columns(16) :poly(0x3d65) :residual(0x5c99) ]
 
     Implements a 16-bit CRC used in utilities metering.
 
 =end pod
 
 role Sum::CRC_16_EN_13757
-    does Sum::CRC[ :finv, :columns(16), :poly(0x3d65),
-                   :residual(0x5c99) ] { }
+    does Sum::CRC[ :finv :columns(16) :poly(0x3d65) :residual(0x5c99) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_16_T10_DIF
-       does Sum::CRC[ :columns(16), :poly(0x8bb7) ]
+       does Sum::CRC[ :columns(16) :poly(0x8bb7) ]
 
     Implements a 16-bit CRC used in SCSI.
 
 =end pod
 
 role Sum::CRC_16_T10_DIF
-    does Sum::CRC[ :columns(16), :poly(0x8bb7) ] { }
+    does Sum::CRC[ :columns(16) :poly(0x8bb7) ] { }
 
 =begin pod
 
@@ -757,12 +748,12 @@ role Sum::CRC_16_T10_DIF
 =end pod
 
 role Sum::CRC_16_Teledisk
-    does Sum::CRC[ :columns(16), :poly(0xa097) ] { }
+    does Sum::CRC[ :columns(16) :poly(0xa097) ] { }
 
 ## =begin pod
 ##
 ## =head2 role Sum::CRC_16_ARINC
-##       does Sum::CRC[ :columns(16), :poly(0xa02b) ] { }
+##       does Sum::CRC[ :columns(16) :poly(0xa02b) ] { }
 ##
 ##    Implements a 16-bit CRC used in avionics video applications.
 ##
@@ -770,38 +761,38 @@ role Sum::CRC_16_Teledisk
 
 # TODO: need to find 3rd party implementation or test vector
 #role Sum::CRC_16_ARINC
-#    does Sum::CRC[ :columns(16), :poly(0xa02b) ] { }
+#    does Sum::CRC[ :columns(16) :poly(0xa02b) ] { }
 
 #role Sum::CRC_24
-#    does Sum::CRC[ :columns(24), :poly(0x5d6dcb) ] { }
+#    does Sum::CRC[ :columns(24) :poly(0x5d6dcb) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_24_PGP
-       does Sum::CRC[ :iniv(0xb704ce), :columns(24), :poly(0x864cfb) ]
+       does Sum::CRC[ :iniv(0xb704ce) :columns(24) :poly(0x864cfb) ]
 
     Implements the CRC defined in PGP RFC 4880.
 
 =end pod
 
 role Sum::CRC_24_PGP
-    does Sum::CRC[ :iniv(0xb704ce), :columns(24), :poly(0x864cfb) ] { }
+    does Sum::CRC[ :iniv(0xb704ce) :columns(24) :poly(0x864cfb) ] { }
 
 # Hold off on these for now.  After we can feed role params down, look at
 # how they are used.  The difference between the two may be better
 # handled at the instance level.
 #role Sum::CRC_24_FLexray_A
-#    does Sum::CRC[ :iniv(0xfedcba), :columns(24), :poly(0x5d6dcb) ] { }
+#    does Sum::CRC[ :iniv(0xfedcba) :columns(24) :poly(0x5d6dcb) ] { }
 #role Sum::CRC_24_Flexray_B
-#    does Sum::CRC[ :iniv(0xabcdef), :columns(24), :poly(0x5d6dcb) ] { }
+#    does Sum::CRC[ :iniv(0xabcdef) :columns(24) :poly(0x5d6dcb) ] { }
 
 # cannot find spec for this
-#role Sum::CRC_30_CDMA does Sum::CRC[ :columns(30), :poly(0x2030b9c7) ] { }
+#role Sum::CRC_30_CDMA does Sum::CRC[ :columns(30) :poly(0x2030b9c7) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_32
-       does Sum::CRC[ :iniv, :finv, :reflect, :columns(32), :poly(0x4c11db7),
+       does Sum::CRC[ :iniv :finv :reflect :columns(32) :poly(0x4c11db7)
                       :residual(0x2144df1c) ]
 
     Implements one of the most prevalent 32-bit CRC sums, used in many
@@ -811,12 +802,12 @@ role Sum::CRC_24_PGP
 
 # note python module claims no iniv but has same 1..9 checksum 0xCBF43926
 role Sum::CRC_32
-    does Sum::CRC[ :iniv, :finv, :reflect, :columns(32), :poly(0x4c11db7),
+    does Sum::CRC[ :iniv :finv :reflect :columns(32) :poly(0x4c11db7)
                    :residual(0x2144df1c) ] { }
 
 =begin pod
 
-=head2 role Sum::CRC_32_IEEE does Sum::CRC_32 { }
+=head2 role Sum::CRC_32_IEEE does Sum::CRC_32
 
     This is just a more specific name for C<Sum::CRC_32>.
 
@@ -827,7 +818,7 @@ role Sum::CRC_32_IEEE does Sum::CRC_32 { }
 =begin pod
 
 =head2 role Sum::CRC_32C
-    does Sum::CRC[ :reflect, :iniv, :finv, :columns(32), :poly(0x1edc6f41),
+    does Sum::CRC[ :reflect :iniv :finv :columns(32) :poly(0x1edc6f41)
                    :residual(0x48674bc7) ]
 
     Implements a 32 bit CRC as used in iSCSI.
@@ -835,13 +826,13 @@ role Sum::CRC_32_IEEE does Sum::CRC_32 { }
 =end pod
 
 role Sum::CRC_32C
-    does Sum::CRC[ :reflect, :iniv, :finv, :columns(32), :poly(0x1edc6f41),
+    does Sum::CRC[ :reflect :iniv :finv :columns(32) :poly(0x1edc6f41)
                    :residual(0x48674bc7) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_32D
-    does Sum::CRC[ :reflect, :iniv, :finv, :columns(32), :poly(0xa833982b),
+    does Sum::CRC[ :reflect :iniv :finv :columns(32) :poly(0xa833982b)
                    :residual(0xbad8faae) ]
 
     Implements a 32 bit CRC used in Base91 ASCII armor.
@@ -849,13 +840,13 @@ role Sum::CRC_32C
 =end pod
 
 role Sum::CRC_32D
-    does Sum::CRC[ :reflect, :iniv, :finv, :columns(32), :poly(0xa833982b),
+    does Sum::CRC[ :reflect :iniv :finv :columns(32) :poly(0xa833982b)
                    :residual(0xbad8faae) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_32_BZ2
-    does Sum::CRC[ :iniv, :finv, :columns(32), :poly(0x04c11db7),
+    does Sum::CRC[ :iniv :finv :columns(32) :poly(0x04c11db7)
                    :residual(0x38fb2284) ]
 
     Implements a 32 bit CRC used e.g. in BZIP2, ATM-AAL5, and DECT.
@@ -863,13 +854,13 @@ role Sum::CRC_32D
 =end pod
 
 role Sum::CRC_32_BZ2
-     does Sum::CRC[ :iniv, :finv, :columns(32), :poly(0x04c11db7),
+     does Sum::CRC[ :iniv :finv :columns(32) :poly(0x04c11db7)
                     :residual(0x38fb2284) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_32_MPEG2
-    does Sum::CRC[ :iniv, :columns(32), :poly(0x04c11db7) ]
+    does Sum::CRC[ :iniv :columns(32) :poly(0x04c11db7) ]
 
     Implements a 32 bit CRC used in MPEG-2 streams.  Note that this
     CRC does not use a final inversion and is thus vulnerable to the
@@ -878,18 +869,18 @@ role Sum::CRC_32_BZ2
 =end pod
 
 role Sum::CRC_32_MPEG2
-     does Sum::CRC[ :iniv, :columns(32), :poly(0x04c11db7) ] { }
+     does Sum::CRC[ :iniv :columns(32) :poly(0x04c11db7) ] { }
 
 # CRC_32_POSIX aka cksum todo, needs to count elems and use a length tag
 
 # Koopman suggestion.  Need to look for test vectors / 3rd party implementation
 #role Sum::CRC_32K
-#    does Sum::CRC[ :columns(32), :poly(0x741b8cd7) ] { }
+#    does Sum::CRC[ :columns(32) :poly(0x741b8cd7) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_32Q
-       does Sum::CRC[ :columns(32), :poly(0x814141ab) ]
+       does Sum::CRC[ :columns(32) :poly(0x814141ab) ]
 
     Implements the CRC-32Q sum as used in some aviation systems.
     Note this CRC does not include inversions and as such is vulnerable
@@ -898,12 +889,12 @@ role Sum::CRC_32_MPEG2
 =end pod
 
 role Sum::CRC_32Q
-    does Sum::CRC[ :columns(32), :poly(0x814141ab) ] { }
+    does Sum::CRC[ :columns(32) :poly(0x814141ab) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_32_XFER
-    does Sum::CRC[ :columns(32), :poly(0xaf) ]
+    does Sum::CRC[ :columns(32) :poly(0xaf) ]
 
     Implements a CRC used by the XFER serial transfer protocol.
     Note this CRC does not include inversions and as such is vulnerable
@@ -912,12 +903,12 @@ role Sum::CRC_32Q
 =end pod
 
 role Sum::CRC_32_XFER
-    does Sum::CRC[ :columns(32), :poly(0xaf) ] { }
+    does Sum::CRC[ :columns(32) :poly(0xaf) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_40_GSM
-    does Sum::CRC[ :columns(40), :poly(0x4820009) ] { }
+    does Sum::CRC[ :columns(40) :poly(0x4820009) ]
 
     Implements the GSM FIRE code CRC.  Note this CRC does not include
     inversions and as such is vulnerable to the addition of leading
@@ -926,12 +917,12 @@ role Sum::CRC_32_XFER
 =end pod
 
 role Sum::CRC_40_GSM
-    does Sum::CRC[ :columns(40), :poly(0x4820009) ] { }
+    does Sum::CRC[ :columns(40) :poly(0x4820009) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_64_ISO
-    does Sum::CRC[ :reflect, :columns(64), :poly(0x1b) ]
+    does Sum::CRC[ :reflect :columns(64) :poly(0x1b) ]
 
     Implements the ISO 3309 64 bit CRC.  Note this CRC does not include
     inversions and as such is vulnerable to the addition of leading and
@@ -940,18 +931,18 @@ role Sum::CRC_40_GSM
 =end pod
 
 role Sum::CRC_64_ISO
-    does Sum::CRC[ :reflect, :columns(64), :poly(0x1b) ] { }
+    does Sum::CRC[ :reflect :columns(64) :poly(0x1b) ] { }
 
 # Need to look for test vectors / 3rd party implementation
 # Note: python module claims :!iniv, reveng says :iniv
 # 1..9 checksum 0x62EC59E3F1A4F00A
 #role Sum::CRC_64_WE
-#    does Sum::CRC[ :iniv, :finv, :columns(64), :poly(0x42f0e1eba9ea3693) ] { }
+#    does Sum::CRC[ :iniv :finv :columns(64) :poly(0x42f0e1eba9ea3693) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_64_DLT
-    does Sum::CRC[ :columns(64), :poly(0x42f0e1eba9ea3693) ]
+    does Sum::CRC[ :columns(64) :poly(0x42f0e1eba9ea3693) ]
 
     Implements a CRC using the ECMA-182 polynomial as used in DLT-1 tapes.
     Note this CRC does not include inversions and as such is vulnerable
@@ -960,13 +951,12 @@ role Sum::CRC_64_ISO
 =end pod
 
 role Sum::CRC_64_DLT
-    does Sum::CRC[ :columns(64), :poly(0x42f0e1eba9ea3693) ] { }
+    does Sum::CRC[ :columns(64) :poly(0x42f0e1eba9ea3693) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_64_XZ
-    does Sum::CRC[ :iniv, :finv, :reflect, :columns(64),
-                   :poly(0x42f0e1eba9ea3693),
+    does Sum::CRC[ :iniv :finv :reflect :columns(64) :poly(0x42f0e1eba9ea3693)
                    :residual(0xb66a73654282cac0) ]
 
     Implements a CRC using the ECMA/DLT polynomial as used in the C<.xz>
@@ -977,14 +967,13 @@ role Sum::CRC_64_DLT
 =end pod
 
 role Sum::CRC_64_XZ
-    does Sum::CRC[ :iniv, :finv, :reflect, :columns(64),
-                   :poly(0x42f0e1eba9ea3693),
+    does Sum::CRC[ :iniv :finv :reflect :columns(64) :poly(0x42f0e1eba9ea3693)
                    :residual(0xb66a73654282cac0) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_64_Jones
-    does Sum::CRC[ :reflect, :iniv, :columns(64), :poly(0xad93d23594c935a9) ]
+    does Sum::CRC[ :reflect :iniv :columns(64) :poly(0xad93d23594c935a9) ]
 
     Implements a CRC as proposed in
     http://www.cs.ucl.ac.uk/staff/d.jones/crcnote.pdf.  Note this
@@ -994,20 +983,19 @@ role Sum::CRC_64_XZ
 =end pod
 
 role Sum::CRC_64_Jones
-    does Sum::CRC[ :reflect, :iniv, :columns(64),
-                   :poly(0xad93d23594c935a9) ] { }
+    does Sum::CRC[ :reflect :iniv :columns(64) :poly(0xad93d23594c935a9) ] { }
 
 =begin pod
 
 =head2 role Sum::CRC_82_DARC
-    does Sum::CRC[ :reflect, :iniv, :columns(64), :poly(0xad93d23594c935a9) ]
+    does Sum::CRC[ :reflect :columns(82) :poly(0x0308c0111011401440411) ]
 
     Implements a CRC used in Digital Radio Communications (DARC).
 
 =end pod
 
 role Sum::CRC_82_DARC
-    does Sum::CRC[ :reflect, :columns(82), :poly(0x0308c0111011401440411) ] { }
+    does Sum::CRC[ :reflect :columns(82) :poly(0x0308c0111011401440411) ] { }
 
 1; # Avoid sink-punning of last role
 

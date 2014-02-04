@@ -81,7 +81,7 @@ use Sum;
 use Sum::MDPad;
 
 role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
-     does Sum::MDPad[ :lengthtype<uint64_be>, :!overflow ] {
+     does Sum::MDPad[ :lengthtype<uint64_be> :!overflow ] {
 
     has @!w;     # "Parsed" message gets bound here.
     has @!s =    # Current hash state.  H in specification.
@@ -377,7 +377,7 @@ role Sum::SHA256 does Sum::SHAmix32 does Sum::MDPad {
     method size { 256 }
 }
 role Sum::SHA384 does Sum::SHAmix64
-     does Sum::MDPad[:blocksize(1024), :lengthtype<uint128_be>] {
+     does Sum::MDPad[:blocksize(1024) :lengthtype<uint128_be>] {
 
     my @s_init = 0xcbbb9d5dc1059ed8, 0x629a292a367cd507,
                  0x9159015a3070dd17, 0x152fecd8f70e5939,
@@ -395,7 +395,7 @@ role Sum::SHA384 does Sum::SHAmix64
     method size { 384 }
 }
 role Sum::SHA512 does Sum::SHAmix64
-     does Sum::MDPad[:blocksize(1024), :lengthtype<uint128_be>] {
+     does Sum::MDPad[:blocksize(1024) :lengthtype<uint128_be>] {
 
     my @s_init = 0x6a09e667f3bcc908, 0xbb67ae8584caa73b,
                  0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,

@@ -288,8 +288,8 @@ is $pgp.finalize(0x31..0x39), 0x21cf02, "CRC_24_PGP gives expected value";
 is $pgp.buf8.gist, "Buf:0x<21 cf 02>", "buf8 works on 24 column CRC";
 ok $pgp.check(0x21,0xcf,0x02), "CRC_24_PGP self-verifies (0)";
 
-class CRC32 does Sum::CRC_32 does Sum::Marshal::Bits[ :bits(32), :reflect ]
-                does Sum::Marshal::Bits[ :accept(Str), :bits(8), :reflect ] {
+class CRC32 does Sum::CRC_32 does Sum::Marshal::Bits[ :bits(32) :reflect ]
+                does Sum::Marshal::Bits[ :accept(Str) :bits(8) :reflect ] {
 
     multi method marshal ( $addend ) is default { $addend }
     multi method marshal (*@addends) is default {

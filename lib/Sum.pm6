@@ -52,7 +52,7 @@ class X::Sum::Recourse is Exception {
 
     # Define a very simple Sum class that just adds normally
     class MySum does Sum::Partial
-                does Sum::Marshal::Method[:atype(Str), :method<ords>] {
+                does Sum::Marshal::Method[:atype(Str) :method<ords>] {
         has $.accum is rw = 0;
         method size { Inf }
         method finalize (*@addends) {
@@ -80,7 +80,7 @@ class X::Sum::Recourse is Exception {
     # Since it does Sum::Partial, one can generate partials as a List
     $s.partials(1,1,2,1).say;            # 16 17 19 20
 
-    # Since it does Sum::Marshal::Method[:atype(Str), :method<ords>]
+    # Since it does Sum::Marshal::Method[:atype(Str) :method<ords>]
     # Str addends are exploded into multiple character ordinals.
     'abc'.ords.say;                      # 97 98 99
     $s.partials(1,'abc',1).say;          # 21 118 216 315 316

@@ -8,7 +8,7 @@ plan 25;
 use Sum::Adler;
 ok(1,'We use Sum::Adler and we are still alive');
 
-class S does Sum::Adler32 does Sum::Marshal::Method[:atype(Str),:method<ords>] { }
+class S does Sum::Adler32 does Sum::Marshal::Method[:atype(Str) :method<ords>] { }
 my S $s .= new();
 my $h = $s.finalize("Please to checksum this text");
 is $h, 0x96250a8e, "Adler32 (Str.ords) computes expected value";
@@ -18,7 +18,7 @@ is $s.buf8.values, (0xa0, 0xe1, 0x0a, 0xbc), 'Adler32 buf8 coerce works';
 is $s.buf1.values, "1 0 1 0 0 0 0 0 1 1 1 0 0 0 0 1 0 0 0 0 1 0 1 0 1 0 1 1 1 1 0 0", 'Adler32 buf1 coerce works';
 is $s.Buf.values, (0xa0, 0xe1, 0x0a, 0xbc), 'Adler32 Buf yields buf8';
 
-class FLFoo does Sum::Fletcher[ :modulusA(17), :modulusB(13), :columnsA(8) ] does Sum::Marshal::Raw { }
+class FLFoo does Sum::Fletcher[ :modulusA(17) :modulusB(13) :columnsA(8) ] does Sum::Marshal::Raw { }
 my FLFoo $flfoo;
 is $flfoo.size ~ FLFoo.size, "1616", 'size method works';
 $flfoo .= new();
@@ -27,7 +27,7 @@ is ($flfoo.checkvals),(4,15), 'custom Fletcher check values are as expected';
 is $flfoo.finalize(4,15), 0, 'custom Fletcher over data and check values is zero';
 is ([+] (for ^221 { $flfoo .= new(); $flfoo.finalize(^250, $_); $flfoo.finalize($flfoo.checkvals)})), 0, 'custom Fletcher checkvals produce zero sum across values sweep.';
 
-class FLBar does Sum::Fletcher[ :modulusA(17), :modulusB(13), :columnsA(7) ] does Sum::Marshal::Raw { }
+class FLBar does Sum::Fletcher[ :modulusA(17) :modulusB(13) :columnsA(7) ] does Sum::Marshal::Raw { }
 my FLBar $flbar;
 $flbar .= new();
 $flbar.finalize(^10);
