@@ -320,38 +320,38 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
         my @s = @!s[];
         @!s.push(@s) if $alg eqv "RIPEMD-160";
 
-        for @lperms[0] Z @lshifts[0] {
+        for @lperms[0][] Z @lshifts[0][] {
             self.ripe_f1_5(0,@!w[$^didx],@kl[0],$^shift);
         }
-        for @rperms[0] Z @rshifts[0] {
+        for @rperms[0][] Z @rshifts[0][] {
             self.ripe_f5_5(5,@!w[$^didx],@kr[0],$^shift);
         }
         @!s[1,6] = @!s[6,1] if $alg eqv "RIPEMD-320";
-        for @lperms[1] Z @lshifts[1] {
+        for @lperms[1][] Z @lshifts[1][] {
             self.ripe_f2_5(0,@!w[$^didx],@kl[1],$^shift);
         }
-        for @rperms[1] Z @rshifts[1] {
+        for @rperms[1][] Z @rshifts[1][] {
             self.ripe_f4_5(5,@!w[$^didx],@kr[1],$^shift);
         }
         @!s[3,8] = @!s[8,3] if $alg eqv "RIPEMD-320";
-        for @lperms[2] Z @lshifts[2] {
+        for @lperms[2][] Z @lshifts[2][] {
             self.ripe_f3_5(0,@!w[$^didx],@kl[2],$^shift);
         }
-        for @rperms[2] Z @rshifts[2] {
+        for @rperms[2][] Z @rshifts[2][] {
             self.ripe_f3_5(5,@!w[$^didx],@kr[2],$^shift);
         }
         @!s[0,5] = @!s[5,0] if $alg eqv "RIPEMD-320";
-        for @lperms[3] Z @lshifts[3] {
+        for @lperms[3][] Z @lshifts[3][] {
             self.ripe_f4_5(0,@!w[$^didx],@kl[3],$^shift);
         }
-        for @rperms[3] Z @rshifts[3] {
+        for @rperms[3][] Z @rshifts[3][] {
             self.ripe_f2_5(5,@!w[$^didx],@kr[3],$^shift);
         }
         @!s[2,7] = @!s[7,2] if $alg eqv "RIPEMD-320";
-        for @lperms[4] Z @lshifts[4] {
+        for @lperms[4][] Z @lshifts[4][] {
             self.ripe_f5_5(0,@!w[$^didx],@kl[4],$^shift);
         }
-        for @rperms[4] Z @rshifts[4] {
+        for @rperms[4][] Z @rshifts[4][] {
             self.ripe_f1_5(5,@!w[$^didx],@kr[4],$^shift);
         }
         @!s[4,9] = @!s[9,4] if $alg eqv "RIPEMD-320";
@@ -370,31 +370,31 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
         my @s = @!s[];
         @!s.push(@s) if $alg eqv "RIPEMD-128";
 
-        for @lperms[0] Z @lshifts[0] {
+        for @lperms[0][] Z @lshifts[0][] {
             self.ripe_f1_4(0,@!w[$^didx],@kl[0],$^shift);
         }
-        for @rperms[0] Z @rshifts[0] {
+        for @rperms[0][] Z @rshifts[0][] {
             self.ripe_f4_4(4,@!w[$^didx],@kr[0],$^shift);
         }
         @!s[0,4] = @!s[4,0] if $alg eqv "RIPEMD-256";
-        for @lperms[1] Z @lshifts[1] {
+        for @lperms[1][] Z @lshifts[1][] {
             self.ripe_f2_4(0,@!w[$^didx],@kl[1],$^shift);
         }
-        for @rperms[1] Z @rshifts[1] {
+        for @rperms[1][] Z @rshifts[1][] {
             self.ripe_f3_4(4,@!w[$^didx],@kr[1],$^shift);
         }
         @!s[1,5] = @!s[5,1] if $alg eqv "RIPEMD-256";
-        for @lperms[2] Z @lshifts[2] {
+        for @lperms[2][] Z @lshifts[2][] {
             self.ripe_f3_4(0,@!w[$^didx],@kl[2],$^shift);
         }
-        for @rperms[2] Z @rshifts[2] {
+        for @rperms[2][] Z @rshifts[2][] {
             self.ripe_f2_4(4,@!w[$^didx],@kr[2],$^shift);
         }
         @!s[2,6] = @!s[6,2] if $alg eqv "RIPEMD-256";
-        for @lperms[3] Z @lshifts[3] {
+        for @lperms[3][] Z @lshifts[3][] {
             self.ripe_f4_4(0,@!w[$^didx],@kl[3],$^shift);
         }
-        for @rperms[3] Z @rshifts[3] {
+        for @rperms[3][] Z @rshifts[3][] {
             self.ripe_f1_4(4,@!w[$^didx],@kr[4],$^shift);
         }
         @!s[3,7] = @!s[7,3] if $alg eqv "RIPEMD-256";
