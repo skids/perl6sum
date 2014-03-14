@@ -1,11 +1,7 @@
-=begin pod
+=NAME Sum::MD - implementation of MD digest family for Sum::
 
-=head1 NAME
-
-Sum::MD
-
-=head1 SYNOPSIS
-
+=begin SYNOPSIS
+=begin code
     use Sum::MD;
 
     class myMD5 does Sum::MD5 does Sum::Marshal::Raw { }
@@ -15,8 +11,8 @@ Sum::MD
 
     # Usage is basically the same for MD4, MD4ext, RIPEMD128,
     # RIPEMD160, RIPEMD256 and RIPEMD320.
-
-=end pod
+=end code
+=end SYNOPSIS
 
 # This is a bit of a hack.  We want the test suite to be able to try to
 # run the code in the synopsis.  When pod is more functional maybe this
@@ -26,10 +22,7 @@ Sum::MD
 # Disabling this for now until .pir files properly serialize pod
 #$Sum::MD::Doc::synopsis = $=pod[0].content[3..4]>>.content.Str;
 
-=begin pod
-
-=head1 DESCRIPTION
-
+=begin DESCRIPTION
     Using C<Sum::MD> defines roles for generating types of C<Sum> that
     calculate the MD series of message digests (MD2, MD4, MD5) and
     close variants.  MD6 is not yet implemented.
@@ -45,8 +38,7 @@ Sum::MD
     use only.  When audits will be performed will depend on the maturation
     of individual Perl6 implementations, and should be considered
     on an implementation-by-implementation basis.
-
-=end pod
+=end DESCRIPTION
 
 use Sum;
 use Sum::MDPad;
@@ -585,25 +577,24 @@ role Sum::MD2 does Sum {
     method Blob { self.blob8 }
 }
 
+=AUTHOR Brian S. Julin
+
+=COPYRIGHT Copyright (c) 2012 Brian S. Julin. All rights reserved.
+
+=begin LICENSE
+This program is free software; you can redistribute it and/or modify
+it under the terms of the Perl Artistic License 2.0.
+=end LICENSE
+
+=begin REFERENCES
+
+=item "RFC 1319: The MD2 Message-Digest Algorithm" (Kaliski) L<http://www.rfc-editor.org/info/rfc1319>
+=item "RFC 1320: The MD4 Message-Digest Algorithm" (Rivest) L<http://www.rfc-editor.org/info/rfc1320>
+=item "RFC 1321: The MD5 Message-Digest Algorithm" (Rivest) L<http://www.rfc-editor.org/info/rfc1321>
+=item "RIPEMD-160: A Strengthened Version of RIPEMD" (Dobbertin, Bosselaers, Prenel) L<http://www.esat.kuleuven.be/~bosselae/ripemd160/pdf/AB-9601/AB-9601.pdf>
+
+=end REFERENCES
+
+=SEE-ALSO C<Sum::(pm3)> C<Sum::MDPad(pm3)>
+
 1; # Avoid sink-punning of role
-
-=begin pod
-
-=head1 AUTHOR
-
-    Written by Brian S. Julin
-
-=head1 COPYRIGHT
-
-    Copyright (c) 2012 Brian S. Julin. All rights reserved.  This program is
-    free software; you can redistribute it and/or modify it under the terms
-    of the Perl Artistic License 2.0.
-
-=head1 REFERENCES
-
-=head1 SEE ALSO
-
-    C<Sum::(pm3)>
-
-=end pod
-

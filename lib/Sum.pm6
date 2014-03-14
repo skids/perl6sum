@@ -40,14 +40,10 @@ class X::Sum::Recourse is Exception {
 
 # Take care editing the pod here.  See below, and the t/sum.t test file.
 
-=begin pod
+=NAME Sum:: - Perl6 base roles for checksums and digests
 
-=head1 NAME
-
-    Sum::
-
-=head1 SYNOPSIS
-
+=begin SYNOPSIS
+=begin code
     use Sum;
 
     # Define a very simple Sum class that just adds normally
@@ -84,8 +80,8 @@ class X::Sum::Recourse is Exception {
     # Str addends are exploded into multiple character ordinals.
     'abc'.ords.say;                      # 97 98 99
     $s.partials(1,'abc',1).say;          # 21 118 216 315 316
-
-=end pod
+=end code
+=end SYNOPSIS
 
 # This is a bit of a hack.  We want the test suite to be able to try to
 # run the code in the synopsis.  When pod is more functional maybe this
@@ -95,14 +91,12 @@ class X::Sum::Recourse is Exception {
 # Disabling this for now until .pir files properly serialize pod
 #$Sum::Doc::synopsis = $=pod[0].content[4..8]>>.content.Str;
 
-=begin pod
-
-=head1 DESCRIPTION
-
+=begin DESCRIPTION
     This set of modules defines roles and classes for calculating checksums,
     hash values, and other types of sums.
+=end DESCRIPTION
 
-=head1 ROLES AND METHODS
+=begin pod
 
 =head2 role Sum
 
@@ -835,5 +829,16 @@ role Sum::Marshal::IO {
         }
     }
 }
+
+=AUTHOR Brian S. Julin
+
+=COPYRIGHT Copyright (c) 2012 Brian S. Julin. All rights reserved.
+
+=begin LICENSE
+This program is free software; you can redistribute it and/or modify
+it under the terms of the Perl Artistic License 2.0.
+=end LICENSE
+
+=SEE-ALSO C<Sum::(pm3)>
 
 1; # Avoid sink-punning of last role

@@ -1,18 +1,14 @@
-=begin pod
+=NAME Sum::SipHash - SipHash role for Sum::
 
-=head1 NAME
-
-Sum::SipHash
-
-=head1 SYNOPSIS
-
+=begin SYNOPSIS
+=begin code
     use Sum::SipHash;
 
     class SipHash_2_4 does SipHash does Sum::Marshal::Raw { }
     my SipHash_2_4 $a .= new(:key(0x000102030405060708090a0b0c0d0e0f));
     $a.finalize(0..0xe).fmt('%x').say; # a129ca6149be45e5
-
-=end pod
+=end code
+=end SYNOPSIS
 
 # This is a bit of a hack.  We want the test suite to be able to try to
 # run the code in the synopsis.  When pod is more functional maybe this
@@ -22,16 +18,17 @@ Sum::SipHash
 # Disabling this for now until .pir files properly serialize pod
 #$Sum::SipHash::Doc::synopsis = $=pod[0].content[4].content.Str;
 
-=begin pod
 
-=head1 DESCRIPTION
-
+=begin DESCRIPTION
     C<Sum::SipHash> defines a parameterized role for generating types
     of C<Sum> that calculate variants of SipHash.  SipHash is a hash
     code which was developed to be efficient enough for general use,
     including use in live data structures, while remaining resistant
     to denial-of-service attacks that rely on finding hash collisions.
     It is not intended for use in strong cryptography.
+=end DESCRIPTION
+
+=begin pod
 
 =head1 ROLES
 
@@ -223,25 +220,18 @@ role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
 
 1; # Avoid sink-punning of last role
 
-=begin pod
+=AUTHOR Brian S. Julin
 
-=head1 AUTHOR
+=COPYRIGHT Copyright (c) 2012 Brian S. Julin. All rights reserved.
 
-    Written by Brian S. Julin
+=begin LICENSE
+This program is free software; you can redistribute it and/or modify
+it under the terms of the Perl Artistic License 2.0.
+=end LICENSE
 
-=head1 COPYRIGHT
-
-    Copyright (c) 2012 Brian S. Julin. All rights reserved.  This program is
-    free software; you can redistribute it and/or modify it under the terms
-    of the Perl Artistic License 2.0.
-
-=head1 REFERENCES
-
-    "SipHash: a fast short-input PRF" Aumasson/Bernstein NAGRA document
+=begin REFERENCES
+=item "SipHash: a fast short-input PRF" Aumasson/Bernstein NAGRA document
     ID b9a943a805fbfc6fde808af9fc0ecdfa
+=end REFERENCES
 
-=head1 SEE ALSO
-
-    C<Sum::(pm3)>
-
-=end pod
+=SEE-ALSO C<Sum::(pm3)>

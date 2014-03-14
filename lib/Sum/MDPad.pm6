@@ -1,21 +1,15 @@
 
-=begin pod
+=NAME Sum::MDPad - Merkle-Damgård padding for Sum:: roles
 
-=head1 NAME
-
-Sum::MDPad
-
-=head1 SYNOPSIS
-
+=begin SYNOPSIS
+=begin code
     use Sum::MDPad;
 
     role mySum does Sum::MDPad[:blocksize(1024)] does Sum::Marshal::Raw {...}
+=end code
+=end SYNOPSIS
 
-=head1 DESCRIPTION
-
-    Support code for common Merkle-Damgård-compliant padding schemes
-
-=end pod
+=DESCRIPTION Support code for common Merkle-Damgård-compliant padding schemes
 
 =begin pod
 
@@ -233,23 +227,14 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
 
 1; # Avoid sink-punning of last role
 
-=begin pod
+=AUTHOR Brian S. Julin
 
-=head1 AUTHOR
+=COPYRIGHT Copyright (c) 2012 Brian S. Julin. All rights reserved.
 
-    Written by Brian S. Julin
+=begin LICENSE
+This program is free software; you can redistribute it and/or modify
+it under the terms of the Perl Artistic License 2.0.
+=end LICENSE
 
-=head1 COPYRIGHT
-
-    Copyright (c) 2012 Brian S. Julin. All rights reserved.  This program is
-    free software; you can redistribute it and/or modify it under the terms
-    of the Perl Artistic License 2.0.
-
-=head1 REFERENCES
-
-=head1 SEE ALSO
-
-    C<Sum::(pm3)>
-
-=end pod
+=SEE-ALSO C<Sum::(pm3)>
 

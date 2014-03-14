@@ -1,11 +1,7 @@
-=begin pod
+=NAME Sum::SHA - SHA checksum family roles for Sum::
 
-=head1 NAME
-
-Sum::SHA
-
-=head1 SYNOPSIS
-
+=begin SYNOPSIS
+=begin code
     use Sum::SHA;
 
     class mySHA1 does Sum::SHA1 does Sum::Marshal::Raw { }
@@ -25,9 +21,8 @@ Sum::SHA
     my mySHA0 $c .= new();
     $c.finalize("123456789".encode('ascii')).say;
        # 1371362676478658660830737973868471486175721482632
-
-
-=end pod
+=end code
+=end SYNOPSIS
 
 # This is a bit of a hack.  We want the test suite to be able to try to
 # run the code in the synopsis.  When pod is more functional maybe this
@@ -37,10 +32,7 @@ Sum::SHA
 # Disabling this for now until .pir files properly serialize pod
 #$Sum::SHA::Doc::synopsis = $=pod[0].content[3..6]>>.content.Str;
 
-=begin pod
-
-=head1 DESCRIPTION
-
+=begin DESCRIPTION
     Using C<Sum::SHA> defines roles for generating types of C<Sum> that
     implement the widely used SHA1 and SHA2 cryptographic hash function
     families.  It is also possible to calculate legacy SHA0 checksums,
@@ -54,8 +46,7 @@ Sum::SHA
     use only.  When audits will be performed will depend on the maturation
     of individual Perl6 implementations, and should be considered
     on an implementation-by-implementation basis.
-
-=end pod
+=end DESCRIPTION
 
 =begin pod
 
@@ -418,24 +409,19 @@ role Sum::SHA2[ :$columns where 256 ] does Sum::SHA256 { }
 role Sum::SHA2[ :$columns where 384 ] does Sum::SHA384 { }
 role Sum::SHA2[ :$columns where 512 ] does Sum::SHA512 { }
 
+=AUTHOR Brian S. Julin
+
+=COPYRIGHT Copyright (c) 2012 Brian S. Julin. All rights reserved.
+
+=begin LICENSE
+This program is free software; you can redistribute it and/or modify
+it under the terms of the Perl Artistic License 2.0.
+=end LICENSE
+
+=begin REFERENCES
+=item "RFC 6234: US Secure Hash Algorithms (SHA and SHA-based HMAC and HKDF)" (Eastlake, Huawei, Hansen) L<https://tools.ietf.org/html/rfc6234>
+=end REFERENCES
+
+=SEE-ALSO C<Sum::(pm3)>
+
 1; # Avoid sink-punning of last role
-
-=begin pod
-
-=head1 AUTHOR
-
-    Written by Brian S. Julin
-
-=head1 COPYRIGHT
-
-    Copyright (c) 2012 Brian S. Julin. All rights reserved.  This program is
-    free software; you can redistribute it and/or modify it under the terms
-    of the Perl Artistic License 2.0.
-
-=head1 REFERENCES
-
-=head1 SEE ALSO
-
-    C<Sum::(pm3)>
-
-=end pod

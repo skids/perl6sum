@@ -1,20 +1,9 @@
 
 use Sum;
 
-=begin pod
+=NAME Sum::CRC - Cyclic Redundancy Checksum roles for Sum::
 
-=head1 NAME
-
-Sum::CRC
-
-=head1 SYNOPSIS
-
-=end pod
-
-=begin pod
-
-=head1 DESCRIPTION
-
+=begin DESCRIPTION
     The C<Sum::CRC> module provides roles for generating types of C<Sum>
     that calculate a cyclic redundancy checksum.  Many subroles are provided
     for convenient access to well-standardized CRC parameter sets.
@@ -24,6 +13,9 @@ Sum::CRC
     implementations may be composed instead (when they are eventually
     implemented.)  In some cases, forcing the use of optimizations may
     require providing additional parameters.
+=end DESCRIPTION
+
+=begin pod
 
 =head1 ROLES
 
@@ -997,34 +989,23 @@ role Sum::CRC_64_Jones
 role Sum::CRC_82_DARC
     does Sum::CRC[ :reflect :columns(82) :poly(0x0308c0111011401440411) ] { }
 
+=AUTHOR Brian S. Julin
+
+=COPYRIGHT Copyright (c) 2012 Brian S. Julin. All rights reserved.
+
+=begin LICENSE
+This program is free software; you can redistribute it and/or modify
+it under the terms of the Perl Artistic License 2.0.
+=end LICENSE
+
+=begin REFERENCES
+=item L<http://reveng.sourceforge.net/crc-catalogue>
+=item Python CRC modules L<http://crcmod.sourceforge.net/crcmod.predefined.html>
+=item L<http://www.ece.cmu.edu/~koopman/roses/dsn04/koopman04_crc_poly_embedded.pdf>
+=item "SAE Standard J1850 Class B Data Communication Network Interface" 2/15/94
+=item "Specification of CRC Routines" V3.3.0 R3.2 Rev 2 AUTOSAR document ID 016
+=end REFERENCES
+
+=SEE-ALSO C<Sum::(pm3)>
+
 1; # Avoid sink-punning of last role
-
-=begin pod
-
-=head1 AUTHOR
-
-    Written by Brian S. Julin
-
-=head1 COPYRIGHT
-
-    Copyright (c) 2012 Brian S. Julin. All rights reserved.  This program is
-    free software; you can redistribute it and/or modify it under the terms
-    of the Perl Artistic License 2.0.
-
-=head1 REFERENCES
-
-    http://reveng.sourceforge.net/crc-catalogue
-
-    http://crcmod.sourceforge.net/crcmod.predefined.html Python crc modules
-
-    http://www.ece.cmu.edu/~koopman/roses/dsn04/koopman04_crc_poly_embedded.pdf
-
-    "SAE Standard J1850 Class B Data Communication Network Interface" 2/15/94
-
-    "Specification of CRC Routines" V3.3.0 R3.2 Rev 2 AUTOSAR document ID 016
-
-=head1 SEE ALSO
-
-    C<Sum::(pm3)>
-
-=end pod

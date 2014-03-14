@@ -1,18 +1,17 @@
-=begin pod
 
-=head1 NAME
+use Sum;
 
-Sum::Adler
+=NAME Sum::Adler - Fletcher and Adler roles for Sum::
 
-=head1 SYNOPSIS
-
+=begin SYNOPSIS
+=begin code
     use Sum::Adler;
 
     class AdlerSum does Sum::Adler32 does Sum::Marshal::Raw { }
     my AdlerSum $a .= new();
     $a.finalize(0..255).fmt('%x').say; # adf67f81
-
-=end pod
+=end code
+=end SYNOPSIS
 
 # This is a bit of a hack.  We want the test suite to be able to try to
 # run the code in the synopsis.  When pod is more functional maybe this
@@ -22,15 +21,15 @@ Sum::Adler
 # Disabling this for now until .pir files properly serialize pod
 #$Sum::Adler::Doc::synopsis = $=pod[0].content[4].content.Str;
 
-=begin pod
-
-=head1 DESCRIPTION
-
+=begin DESCRIPTION
     Using C<Sum::Adler> defines roles for generating types of C<Sum>
     that calculate variations of the Fletcher and Adler checksums.
 
     These are rather old algorithms which have fallen out of general
     use.  However, they persist in several network protocols.
+=end DESCRIPTION
+
+=begin pod
 
 =head1 ROLES
 
@@ -73,8 +72,6 @@ Sum::Adler
     after finalization, and C<Sum::Partial> is premixed.
 
 =end pod
-
-use Sum;
 
 class X::Sum::CheckVals is Exception {
     method message {
@@ -240,8 +237,6 @@ role Sum::Fletcher32
 role Sum::Fletcher64
      does Sum::Fletcher[ :modulusA(4294967295) :columnsA(32) ] { }
 
-1; # Avoid sink-punning of last role
-
 =begin pod
 
 =head1 METHODS
@@ -265,23 +260,22 @@ role Sum::Fletcher64
     always contain the check values needed to produce a zero checksum.
     This condition is neither currently detected nor warned about.
 
-=head1 AUTHOR
-
-    Written by Brian S. Julin
-
-=head1 COPYRIGHT
-
-    Copyright (c) 2012 Brian S. Julin. All rights reserved.  This program is
-    free software; you can redistribute it and/or modify it under the terms
-    of the Perl Artistic License 2.0.
-
-=head1 REFERENCES
-
-    RFC905 Annex B, RFC2960
-
-=head1 SEE ALSO
-
-    C<Sum::(pm3)>
-
 =end pod
 
+=AUTHOR Brian S. Julin
+
+=COPYRIGHT Copyright (c) 2012 Brian S. Julin. All rights reserved.
+
+=begin LICENSE
+This program is free software; you can redistribute it and/or modify
+it under the terms of the Perl Artistic License 2.0.
+=end LICENSE
+
+=begin REFERENCES
+=item RFC 905 Annex B L<https://tools.ietf.org/html/rfc905>
+=item RFC 2960 L<https://www.rfc-editor.org/info/rfc2960>
+=end REFERENCES
+
+=SEE-ALSO C<Sum::(pm3)>
+
+1; # Avoid sink-punning of last role
