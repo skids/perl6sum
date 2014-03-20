@@ -403,7 +403,7 @@ role Sum::CRC_8_AUTOSAR
 
 # Koopman suggestion.  Need to look for test vectors / 3rd party implementation
 #role Sum::CRC_8K
-#    does Sum::CRC[ :columns(8), :poly(0xd5) ] { }
+#    does Sum::CRC[ :columns(8) :poly(0xd5) ] { }
 
 =begin pod
 
@@ -733,7 +733,7 @@ role Sum::CRC_16_T10_DIF
 =begin pod
 
 =head2 role Sum::CRC_16_Teledisk
-    does Sum::CRC[ :columns(16), :poly(0xa097) ]
+    does Sum::CRC[ :columns(16) :poly(0xa097) ]
 
     Implements a 16-bit CRC used by Teledisk, DECNET, and other arcana.
 

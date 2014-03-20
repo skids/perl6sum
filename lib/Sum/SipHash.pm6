@@ -48,7 +48,7 @@
     strength of the hash: increasing either parameter yields more
     resistance to collision analysis, but will increase the computational
     cost.  By default, the role calculates SipHash-2-4, which is the
-    standard's notation for C<:c(2), :d(4)>.  This is the suggested
+    standard's notation for C<:c(2) :d(4)>.  This is the suggested
     variant for general use.  When extra collision resistance is desired,
     the specification suggests using the "conservative" SipHash-4-8.
 

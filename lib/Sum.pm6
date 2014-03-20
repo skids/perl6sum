@@ -185,7 +185,7 @@ role Sum {
 
     # Soften the exception for missing .elems method
     method elems () {
-        fail(X::Method::NotFound.new(:method<elems>,:typename(self.^name)))
+        fail(X::Method::NotFound.new(:method<elems> :typename(self.^name)))
     }
 
 =begin pod
@@ -211,7 +211,7 @@ role Sum {
 
     # Soften the exception for missing .pos
     method pos () {
-        fail(X::Method::NotFound.new(:method<pos>,:typename(self.^name)))
+        fail(X::Method::NotFound.new(:method<pos> :typename(self.^name)))
     }
 
 =begin pod
