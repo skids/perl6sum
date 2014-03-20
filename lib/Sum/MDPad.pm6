@@ -46,18 +46,29 @@ use Sum;
 # Also the eqv can be written "where one <...>" but the braces seem to help the parser as well
 role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
                                                        = 512, :$lengthtype where { $_ eqv one("uint64_be","uint64_le","uint128_be","uint128_le") }
-                                                                                                                                                   = "uint64_be", Bool :$overflow = True, :@firstpad = [True], :@lastpad ] does Sum {
-
+                                                                                                                                                   = "uint64_be", Bool :$overflow = True, :@firstpad = (True,), :@lastpad ] does Sum {
+# above is workaround for RT119267, should be this:
+#                                                                    = "uint64_be", Bool :$overflow = True, :@firstpad = [True], :@lastpad ] does Sum {
     my $bbytes = $blocksize/8;
-    my @lenshifts = (
-        given $lengthtype {
-            when "uint64_le" { (0,8...^64) }
-            when "uint128_le" { (0,8...^128) }
-            when "uint64_be" { (56,48...0) }
-            when "uint128_be" { (120,112...0) }
-            # TODO: other widths of counter, as needed
-        }
-    );
+    my $lenshifts;
+
+    given $lengthtype {
+        when "uint64_le" { $lenshifts := (0, 8, 16, 24, 32, 40, 48, 56) }
+        when "uint128_le" { $lenshifts := (0,8...^128) }
+        when "uint64_be" { $lenshifts := (56,48...0) }
+        when "uint128_be" { $lenshifts := (120,112...0) }
+        # TODO: other widths of counter, as needed
+    }
+# above is workaround for RT119267, should be this:
+#    my @lenshifts = (
+#        given $lengthtype {
+#            when "uint64_le" { (0,8...^64) }
+#            when "uint128_le" { (0,8...^128) }
+#            when "uint64_be" { (56,48...0) }
+#            when "uint128_be" { (120,112...0) }
+#            # TODO: other widths of counter, as needed
+#        }
+#    );
 
 =begin pod
 
@@ -148,7 +159,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
         return if $!ignore_block_inc;
         unless ($overflow) {
             fail(X::Sum::Spill.new())
-                if $!o >= (1 +< (+@lenshifts * 8)) - $blocksize;
+                if $!o >= (1 +< ($lenshifts.elems * 8)) - $blocksize;
         }
         fail(X::Sum::Spill.new()) if $!expect and $!o + $blocksize > $!expect;
         $!o += $blocksize;
@@ -196,7 +207,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
         my int $inc = $block.elems * 8 + $bits;
         unless ($overflow) {
             fail(X::Sum::Spill.new())
-                if $!o >= (1 +< (+@lenshifts * 8)) - $inc;
+                if $!o >= (1 +< ($lenshifts.elems * 8)) - $inc;
         }
         if $!expect {
             fail(X::Sum::Spill.new()) if $!o + $inc > $!expect;
@@ -209,7 +220,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
 
         @bcat.push(@firstpad);
 
-        my $padbits = ($bbytes * 16 - $block.elems * 8 - +@lenshifts * 8
+        my $padbits = ($bbytes * 16 - $block.elems * 8 - $lenshifts.elems * 8
                        - +@bcat - +@lastpad);
         $padbits -= $bbytes * 8 if $padbits >= $bbytes * 8;
 
@@ -217,7 +228,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
         @bcat.push(@lastpad);
         my @bytes = (gather while +@bcat { take :2[@bcat.splice(0,8)] });
 
-        my @vals = ($block[], @bytes, (255 X+& ($!o X+> (flat @lenshifts))));
+        my @vals = ($block[], @bytes, (255 X+& ($!o X+> (flat $lenshifts[ ]))));
         self.add(buf8.new(@vals[^$bbytes]));
         self.add(buf8.new(@vals[$bbytes .. *-1])) if +@vals > $bbytes;
 

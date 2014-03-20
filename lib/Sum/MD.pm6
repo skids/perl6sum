@@ -42,6 +42,7 @@
 
 use Sum;
 use Sum::MDPad;
+
 # The newline in the parameter list here should not need to be here.  Star 2013.11 regression.
 # Also this used to be just "where one <...>" but the braces seem to help the parser as well
 role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD-160 RIPEMD-256 RIPEMD-320> }
@@ -50,7 +51,9 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
     has @!s;     # Current hash state.  H in specification.
 
     # MD5 table of constants (a.k.a. T[1..64] in RFC1321)
-    my @t = (Int(4294967296 * .sin.abs) for 1..64);
+    my $t := (3614090360,3905402710,606105819,3250441966,4118548399,1200080426,2821735955,4249261313,1770035416,2336552879,4294925233,2304563134,1804603682,4254626195,2792965006,1236535329,4129170786,3225465664,643717713,3921069994,3593408605,38016083,3634488961,3889429448,568446438,3275163606,4107603335,1163531501,2850285829,4243563512,1735328473,2368359562,4294588738,2272392833,1839030562,4259657740,2763975236,1272893353,4139469664,3200236656,681279174,3936430074,3572445317,76029189,3654602809,3873151461,530742520,3299628645,4096336452,1126891415,2878612391,4237533241,1700485571,2399980690,4293915773,2240044497,1873313359,4264355552,2734768916,1309151649,4149444226,3174756917,718787259,3951481745);
+# above is workaround for RT119267, should be this:
+#    my @t = (Int(4294967296 * .sin.abs) for 1..64);
 
     method size ( --> int) {
         given $alg {
@@ -135,7 +138,7 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
     method md5_round1_step (uint32 $data, $idx, $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
-             $b + rol(($a + @t[$idx] + $data +
+             $b + rol(($a + $t[$idx] + $data +
                       (($b +& $c) +| ((0xffffffff +^ $b) +& $d))), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
@@ -143,7 +146,7 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
     method md5_round2_step (uint32 $data, int $idx, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
-             $b + rol(($a + @t[$idx] + $data +
+             $b + rol(($a + $t[$idx] + $data +
                       (($b +& $d) +| ((0xffffffff +^ $d) +& $c))), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
@@ -151,14 +154,14 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
     method md5_round3_step (uint32 $data, int $idx, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
-             $b + rol(($a + $data + @t[$idx] + ([+^] $b, $c, $d)), $shift)));
+             $b + rol(($a + $data + $t[$idx] + ([+^] $b, $c, $d)), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
 
     method md5_round4_step (uint32 $data, int $idx, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
-          $b + rol(($a + $data + @t[$idx] + ($c +^ ((0xffffffff +^ $d) +| $b))), $shift)));
+             $b + rol(($a + $data + $t[$idx] + ($c +^ ((0xffffffff +^ $d) +| $b))), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
 
@@ -413,7 +416,6 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
         # When endianness matches and with native types,
         # this would boil down to a simple memcpy.
         my @m = (:256[ $block[ $_+3 ... $_ ] ] for 0,4 ...^ 64);
-
 	@!w := @m;
 	given $alg {
             when "MD4"|"MD4ext" { self.md4_comp }
