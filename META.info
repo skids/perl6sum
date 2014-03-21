@@ -13,5 +13,9 @@
         "Sum::SipHash" : "lib/Sum/SipHash.pm6",
         "Sum::Adler" : "lib/Sum/Adler.pm6",
         "Sum::CRC" : "lib/Sum/CRC.pm6"
+        "Sum::Digest::MD5" : "lib/Sum/Digest/MD5.pm6"
+    }
+    "emulates" : {
+        "Sum::Digest::MD5" : "Digest::MD5:auth<skids>"
     }
 }
