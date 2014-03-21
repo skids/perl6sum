@@ -51,9 +51,11 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
     has @!s;     # Current hash state.  H in specification.
 
     # MD5 table of constants (a.k.a. T[1..64] in RFC1321)
-    my $t := (3614090360,3905402710,606105819,3250441966,4118548399,1200080426,2821735955,4249261313,1770035416,2336552879,4294925233,2304563134,1804603682,4254626195,2792965006,1236535329,4129170786,3225465664,643717713,3921069994,3593408605,38016083,3634488961,3889429448,568446438,3275163606,4107603335,1163531501,2850285829,4243563512,1735328473,2368359562,4294588738,2272392833,1839030562,4259657740,2763975236,1272893353,4139469664,3200236656,681279174,3936430074,3572445317,76029189,3654602809,3873151461,530742520,3299628645,4096336452,1126891415,2878612391,4237533241,1700485571,2399980690,4293915773,2240044497,1873313359,4264355552,2734768916,1309151649,4149444226,3174756917,718787259,3951481745);
-# above is workaround for RT119267, should be this:
+    my @t := (3614090360.28283e0, 3905402710.55326e0, 606105819.428386e0, 3250441966.87875e0, 4118548399.0187e0, 1200080426.75993e0, 2821735955.40747e0, 4249261313.27533e0, 1770035416.1904e0, 2336552879.60343e0, 4294925233.45556e0, 2304563134.73116e0, 1804603682.02765e0, 4254626195.88651e0, 2792965006.46129e0, 1236535329.48639e0, 4129170786.07912e0, 3225465664.59743e0, 643717713.918115e0, 3921069994.91368e0, 3593408605.52636e0, 38016083.9290656e0, 3634488961.14026e0, 3889429448.7837e0, 568446438.2383e0, 3275163606.09833e0, 4107603335.17898e0, 1163531501.0794e0, 2850285829.21215e0, 4243563512.89261e0, 1735328473.01541e0, 2368359562.07488e0, 4294588738.04324e0, 2272392833.76534e0, 1839030562.19995e0, 4259657740.40256e0, 2763975236.4972e0, 1272893353.11881e0, 4139469664.12584e0, 3200236656.078e0, 681279174.920465e0, 3936430074.37694e0, 3572445317.22865e0, 76029189.4039927e0, 3654602809.92517e0, 3873151461.06551e0, 530742520.855331e0, 3299628645.38471e0, 4096336452.07518e0, 1126891415.95116e0, 2878612391.07233e0, 4237533241.14511e0, 1700485571.69487e0, 2399980690.18064e0, 4293915773.58208e0, 2240044497.15931e0, 1873313359.45725e0, 4264355552.616e0, 2734768916.78281e0, 1309151649.10747e0, 4149444226.2705e0, 3174756917.94291e0, 718787259.599733e0, 3951481745.52366e0);
+# above is workaround for RT119267, and a peculiar bug on top of that which
+# only seems to happen to the numbers 76029189 and 38016083, It should be this:
 #    my @t = (Int(4294967296 * .sin.abs) for 1..64);
+# ...and Int() casts in below code should be removed
 
     method size ( --> int) {
         given $alg {
@@ -138,7 +140,7 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
     method md5_round1_step (uint32 $data, $idx, $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
-             $b + rol(($a + $t[$idx] + $data +
+             $b + rol(($a + Int(@t[$idx]) + $data +
                       (($b +& $c) +| ((0xffffffff +^ $b) +& $d))), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
@@ -146,7 +148,7 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
     method md5_round2_step (uint32 $data, int $idx, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
-             $b + rol(($a + $t[$idx] + $data +
+             $b + rol(($a + Int(@t[$idx]) + $data +
                       (($b +& $d) +| ((0xffffffff +^ $d) +& $c))), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
@@ -154,14 +156,14 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
     method md5_round3_step (uint32 $data, int $idx, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
-             $b + rol(($a + $data + $t[$idx] + ([+^] $b, $c, $d)), $shift)));
+             $b + rol(($a + $data + Int(@t[$idx]) + ([+^] $b, $c, $d)), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
 
     method md5_round4_step (uint32 $data, int $idx, int $shift --> Nil) {
     	my ($a is rw, $b is rw, $c is rw, $d is rw) := @!s[0,1,2,3];
         ($a,$d,$c,$b) = ($d, $c, $b, 0xffffffff +& (
-             $b + rol(($a + $data + $t[$idx] + ($c +^ ((0xffffffff +^ $d) +| $b))), $shift)));
+             $b + rol(($a + $data + Int(@t[$idx]) + ($c +^ ((0xffffffff +^ $d) +| $b))), $shift)));
 	return; # This should not be needed per S06/Signatures
     }
 
