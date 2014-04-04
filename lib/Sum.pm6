@@ -751,7 +751,7 @@ role Sum::Marshal::Block [::B :$BufT = blob8, :$elems = 64, ::b :$BitT = Bool]
 
     multi method marshal (::?CLASS $self where { so +@.bits }: B $addend) {
         # punt on this mess for now
-        self.marshal($addend.values);
+        self.marshal(|$addend.values);
     }
 
     multi method marshal (::?CLASS $self where { not +@.bits }: $addend) {
