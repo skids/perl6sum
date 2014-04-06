@@ -489,7 +489,7 @@ role Sum::Marshal::Bits [ ::AT :$accept = (Int), ::CT :$coerce = (Int),
      does Sum::Marshal::Cooked {
 
     multi method marshal (AT $addend) {
-        ?«($reflect ?? (1 X+& (CT($addend) X+> [^$bits]))
+        ?«($reflect ?? (1 X+& (CT($addend) X+> (^$bits)))
                     !! (1 X+& (CT($addend) X+> ($bits-1...0))));
     }
 
