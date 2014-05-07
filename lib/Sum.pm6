@@ -333,13 +333,32 @@ role Sum::Partial does Sum {
     # Sum::Partial can still be done, but serves only to ensure that the
     # role is listed for introspective purposes.
 
+
     method partials (*@addends --> List) {
-        flat self.marshal(|@addends).map: {
-            last($^addend) if $addend ~~ Failure;
-            given self.add($addend) {
-                when Failure { last $_ };
-            }
-            self.finalize;
+        # rakudo-m does not implement the "last" with a value conjectural
+        # form from S04.  Neither does it provide &?BLOCK from which to
+        # launch the method form .last($value).
+#        flat self.marshal(|@addends).map: {
+#            last($^addend) if $addend ~~ Failure;
+#            given self.add($addend) {
+#                when Failure { last($_) };
+#            }
+#            self.finalize;
+#        }
+	# ...so this is just slapped together until then.
+	eager self.marshal(|@addends).map: {
+	        my $addend := $_;
+		state $done = 0;
+		last if $done;
+	        if $addend ~~ Failure {
+		    $done = 1;
+                } else {
+		    given self.add($addend) {
+		        when Failure { $addend := $_; $done = 1;};
+                        default { $addend := self.finalize; };
+                    }
+		}
+                $addend;
         }
     }
 }
@@ -524,31 +543,40 @@ role Sum::Marshal::Bits [ ::AT :$accept = (Int), ::CT :$coerce = (Int),
 
 =end pod
 
+# These attributes must be mixed in at runtime for now until role
+# composition handles diamond cronies correctly.
+
+role Sum::Marshal::Pack::CronyWorkaround[ :$width ] {
+    has $.bitpos_crony is rw = $width;
+    has $.packed_crony is rw = 0;
+    has $.width_crony is rw = $width;
+    has $.violation_crony is rw = False;
+}
+
 role Sum::Marshal::Pack [ :$width = 8 ]
     does Sum::Marshal::Cooked {
 
-# To deal with diamond inheritance these attributes must be emulated for now
-#    has $.bitpos is rw = $width;
-#    has $.packed is rw = 0;
-#    has $.width = $width;
-#    has $.violation is rw = False;
-# Note this will leak like a sieve as the entries never get cleared
-    my %attrs;
-    multi method bitpos ($self where {True}:) is rw {
-        %attrs{$self}<bitpos> //= $width;
-        %attrs{$self}<bitpos>;
+    method crony_workaround($self is rw:) {
+        unless $self ~~ Sum::Marshal::Pack::CronyWorkaround {
+	    $self does Sum::Marshal::Pack::CronyWorkaround[ :$width ];
+	}
     }
-    multi method packed ($self where {True}:) is rw {
-        %attrs{$self}<packed> //= 0;
-        %attrs{$self}<packed>;
+
+    multi method bitpos ($self is rw where {True}:) is rw {
+        $self.crony_workaround;
+	$self.bitpos_crony;
     }
-    multi method width ($self where {True}:) is rw {
-        %attrs{$self}<width> //= $width;
-        %attrs{$self}<width>;
+    multi method packed ($self is rw where {True}:) is rw {
+        $self.crony_workaround;
+	$self.packed_crony;
     }
-    multi method violation ($self where {True}:) is rw {
-        %attrs{$self}<violation> //= False;
-        %attrs{$self}<violation>;
+    multi method width ($self is rw where {True}:) is rw {
+        $self.crony_workaround;
+	$self.width_crony;
+    }
+    multi method violation ($self is rw where {True}:) is rw {
+        $self.crony_workaround;
+	$self.violation_crony;
     }
 
     # use multi/constrained method to workaround diamond problem
@@ -673,26 +701,34 @@ role Sum::Marshal::Pack::Bits[:$width!, ::AT :$accept, ::CT :$coerce = (Int)]
 
 =end pod
 
+# These attributes must be mixed in at runtime for now until role
+# composition handles diamond cronies correctly.
+role Sum::Marshal::Block::CronyWorkaround {
+    has @.accum_crony is rw;
+    has @.bits_crony is rw;
+    has Bool $.drained_crony is rw = False;
+}
+
 role Sum::Marshal::Block [::B :$BufT = blob8, :$elems = 64, ::b :$BitT = Bool]
     does Sum::Marshal::Cooked
 {
-# To deal with diamond inheritance these attributes must be emulated for now
-#    has @.accum is rw;
-#    has @.bits is rw;
-#    has Bool $.drained is rw = False;
-# Note this will leak like a sieve as the entries never get cleared
-    my %attrs;
-    multi method accum ($self where {True}:) is rw {
-        %attrs{$self}<accum> //= [];
-        %attrs{$self}<accum>;
+    method crony_workaround($self is rw:) {
+        unless $self ~~ Sum::Marshal::Block::CronyWorkaround {
+	    $self does Sum::Marshal::Block::CronyWorkaround;
+	}
     }
-    multi method bits ($self where {True}:) is rw {
-        %attrs{$self}<bits> //= [];
-        %attrs{$self}<bits>;
+
+    multi method accum ($self is rw where {True}:) is rw {
+        $self.crony_workaround;
+	$self.accum_crony;
     }
-    multi method drained ($self where {True}:) is rw {
-        %attrs{$self}<drained> //= False;
-        %attrs{$self}<drained>;
+    multi method bits ($self is rw where {True}:) is rw {
+        $self.crony_workaround;
+	$self.bits_crony;
+    }
+    multi method drained ($self is rw where {True}:) is rw {
+        $self.crony_workaround;
+	$self.drained_crony;
     }
 
     # Allow subroles to use our parameters.
@@ -763,9 +799,19 @@ role Sum::Marshal::Block [::B :$BufT = blob8, :$elems = 64, ::b :$BitT = Bool]
     multi method marshal (::?CLASS $self where {  so +@.bits }: $addend) {
         return fail(X::Sum::Final.new()) if $.drained;
 
-        @.bits.push(?«(1 X+& ($addend X+> reverse(^$bw))));
+	# rakudo-m chokes on this
+        # @.bits.push(?«(1 X+& ($addend X+> (reverse(^$bw)))));
+	# ...so this is slapped together for now.  Or until better builtins.
+	for reverse(^$bw) {
+	    if ($addend +> $_) +& 1 {
+	        @.bits.push(Bool::True);
+            }
+            else {
+	        @.bits.push(Bool::False);
+	    }
+        }
 
-        self.emit([+|] (@.bits.splice(0, $bw)) Z+< (reverse ^$bw));
+        self.emit([+|] ((+«@.bits.splice(0, $bw)) Z+< reverse(^$bw)));
     }
 
     # use multi/constrained method to workaround diamond problem

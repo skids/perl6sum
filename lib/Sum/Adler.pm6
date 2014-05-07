@@ -79,19 +79,34 @@ class X::Sum::CheckVals is Exception {
     }
 }
 
-role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
+role Sum::Fletcher [ :$modulusA = Any, :$modulusB = Any,
                      :$inivA = 0, :$inivB = 0, :$finv = False,
-                     :$columnsA = 16, :$columnsB = $columnsA ]
+                     :$columnsA = Any, :$columnsB = Any ]
      does Sum::Partial {
 
+# rakudo-m has some problems with default values.  After Adler32
+# composes this role, subsequent classes that use it get cached values somehow.
+#                     :$columnsA = 16, :$columnsB = $columnsA
+#                     :$modulusA = 65535, :$modulusB = $modulusA,
+
+     my $cA = $columnsA;
+     $cA //= 16;
+     my $cB = $columnsB;
+     $cB //= $cA;
+
+     my $mA = $modulusA;
+     $mA //= 65535;
+     my $mB = $modulusB;
+     $mB //= $mA;
+
     has Int $!A = ( ($inivA.WHAT === Bool)
-                     ?? (-$inivA +& ((1 +< $columnsA)-1))
+                     ?? (-$inivA +& ((1 +< $cA)-1))
                      !! $inivA );
     has Int $!B  = ( ($inivB.WHAT === Bool)
-                      ?? (-$inivB +& ((1 +< $columnsB)-1))
+                      ?? (-$inivB +& ((1 +< $cB)-1))
                       !! $inivB );
 
-    method size () { $columnsA + $columnsB }
+    method size () { $cA + $cB }
 
     method add (*@addends) {
         # TODO: when native type support improves, use effecient
@@ -105,9 +120,9 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
 
         for (@addends) -> $a {
             $!A += $a;
-            $!A %= $modulusA;
+            $!A %= $mA;
             $!B += $!A;
-            $!B %= $modulusB;
+            $!B %= $mB;
         }
         return;
     };
@@ -116,12 +131,12 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
         self.push(@addends);
 
         # If/when we stop doing a modulus every round we'll need to do this.
-        $!A %= $modulusA;
-        $!B %= $modulusB;
+        $!A %= $mA;
+        $!B %= $mB;
 
-	my $res = ($!B +< $columnsA) +| $!A;
+	my $res = ($!B +< $cA) +| $!A;
         if $finv {
-            return $res +^ ((1 +< ($columnsA + $columnsB)) - 1)
+            return $res +^ ((1 +< ($cA + $cB)) - 1)
                 if $finv.WHAT === Bool;
             return $res +^ $finv;
 	}
@@ -131,44 +146,44 @@ role Sum::Fletcher [ :$modulusA = 65535, :$modulusB = $modulusA,
 
     method buf8 () {
         my $f = self.finalize;
-        my $bytes = ($columnsA + $columnsB + 7) div 8;
+        my $bytes = ($cA + $cB + 7) div 8;
         buf8.new($f X+> (8 X* reverse(^$bytes)));
     }
     method buf1 () {
         my $f = self.finalize;
-        Buf.new( 1 X+& ($f X+> reverse(^($columnsA + $columnsB))) );
+        Buf.new( 1 X+& ($f X+> reverse(^($cA + $cB))) );
     }
     method blob8 () {
         my $f = self.finalize;
-        my $bytes = ($columnsA + $columnsB + 7) div 8;
+        my $bytes = ($cA + $cB + 7) div 8;
         blob8.new($f X+> (8 X* reverse(^$bytes)));
     }
     method blob1 () {
         my $f = self.finalize;
-        Blob.new( 1 X+& ($f X+> reverse(^($columnsA + $columnsB))) );
+        Blob.new( 1 X+& ($f X+> reverse(^($cA + $cB))) );
     }
     # Although these algorithms can produce results not evenly packable,
     # common cases are packable and users will expect byte results.
     method Buf () {
-        (($columnsA + $columnsB) % 8) ?? self.buf1 !! self.buf8
+        (($cA + $cB) % 8) ?? self.buf1 !! self.buf8
     }
     method Blob () {
-        (($columnsA + $columnsB) % 8) ?? self.blob1 !! self.blob8
+        (($cA + $cB) % 8) ?? self.blob1 !! self.blob8
     }
 
     method checkvals(*@addends) {
         self.finalize(@addends);
-        return fail(X::Sum::CheckVals.new()) if $modulusB > $modulusA;
+        return fail(X::Sum::CheckVals.new()) if $mB > $mA;
 
         # TODO: in the case of Adler these are impossible because of the addend
         # size.  We are agnostic to that.  So the values we return may
         # end up being larger than bytes.  We should probably warn instead.
 
-        my $wantCB = $modulusB - $!B;
-        my $msv = $modulusA + $wantCB - $!A;
-        $msv -= $modulusA if $msv > $modulusA;
+        my $wantCB = $mB - $!B;
+        my $msv = $mA + $wantCB - $!A;
+        $msv -= $mA if $msv > $mA;
 
-        ($msv, $modulusA - $wantCB)
+        ($msv, $mA - $wantCB)
     }
 
 }
