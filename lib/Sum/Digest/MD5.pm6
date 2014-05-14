@@ -57,6 +57,8 @@ class Digest::MD5:auth<skids>:ver<0.05> {
 
 }
 
+1;
+
 =AUTHOR Brian S. Julin
 
 =begin COPYRIGHT
