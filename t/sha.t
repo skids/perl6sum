@@ -8,11 +8,6 @@ plan 52;
 use Sum::SHA;
 ok 1,'We use Sum::SHA and we are still alive';
 
-# fmt('%x') seems to have its limitations at present.
-sub hexify ($i is copy) {
-    join('',reverse (gather while $i { take ($i +& 0xffffffffffffffff).fmt('%x'); $i +>= 64; }));
-}
-
 class SHA1t does Sum::SHA1 does Sum::Marshal::Raw { };
 my SHA1t $s .= new();
 ok $s.WHAT === SHA1t, 'We create a SHA1 class and object';

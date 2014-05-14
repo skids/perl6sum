@@ -9,11 +9,6 @@ use Sum;
 use Sum::MD;
 ok 1,'We use Sum::MD and we are still alive';
 
-# fmt('%x') seems to have its limitations at present.
-sub hexify ($i is copy) {
-    join('',reverse (gather while $i { take ($i +& 0xffffffffffffffff).fmt('%x'); $i +>= 64; }));
-}
-
 class MD4t does Sum::MD4 does Sum::Marshal::Raw { };
 my MD4t $s .= new();
 ok $s.WHAT === MD4t, 'We create a MD4 class and object';
@@ -75,7 +70,7 @@ is $dwim.finalize(Buf.new((0x30..0x39) xx 100)), 0x895ffd5f1acfe6f760c777e788360
 class MD4ext does Sum::MD4ext[] does Sum::Marshal::Raw { };
 is MD4ext.size, 256, "extended MD4 .size is correct.  And a class method.";
 todo "Need extended MD4 test vector", 1;
-is hexify(MD4ext.new().finalize(Buf.new(97 xx 55))),
+is MD4ext.new().finalize(Buf.new(97 xx 55)),
    0x0,
    "Extended MD4 works.";
 
