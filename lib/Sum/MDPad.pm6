@@ -15,7 +15,7 @@
 
 =head1 ROLES
 
-=head2 role Sum::MDPad [ :$blocksize, :$lengthtype, :$overflow, :@firstpad, :@lastpad ]
+=head2 role Sum::MDPad [ :$blocksize :$lengthtype :$overflow :@firstpad :@lastpad :justify ]
             does Sum {
 
     The C<Sum::MDPad> parametric role defines an interface and shared
@@ -38,6 +38,29 @@
     and behavior of the length counter and are described with the relevant
     methods below.
 
+    The C<:justify> parameter is mainly for use with obselete algorithms.
+    If set to True, before appending the bits in :firstpad the used bits
+    within the last used byte of the sum are shifted left to occupy the least
+    significant bit position, and the remaining most significant bit
+    positions, in ascending order of significance, are filled with the
+    bits from :firstpad.  The only current use cases for this so far
+    are when :firstpad contains a single True bit so the behavior when
+    that is not the case is undefinied.
+
+    The thinking behind the padding scheme that uses C<:justify> is that
+    bits of the message are shifted bitwise, most-significant-bit-first,
+    into the least significant side of each byte of the buffer in turn.
+    When there are 8 bits worth of data remaining in the message this is
+    the same as just setting that buffer byte to the corresponding message
+    byte.  When there are less, this leaves the message data right-justified
+    in the buffer byte.  This somewhat makes sense, but then an
+    incongruity is introduced because the padding is not similarly shifted
+    into the buffer byte; instead it is placed in the next unused bits.
+
+    Values other than True may eventually be added to the :justify parameter
+    to allow computations of old checksums where the checksums were generated
+    by libraries which had misinterpreted this padding scheme.
+
 =end pod
 
 use Sum;
@@ -46,9 +69,9 @@ use Sum;
 # Also the eqv can be written "where one <...>" but the braces seem to help the parser as well
 role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
                                                        = 512, :$lengthtype where { $_ eqv one("uint64_be","uint64_le","uint128_be","uint128_le") }
-                                                                                                                                                   = "uint64_be", Bool :$overflow = True, :@firstpad = (True,), :@lastpad ] does Sum {
+                                                                                                                                                   = "uint64_be", Bool :$overflow = True, :@firstpad = (True,), :@lastpad, Bool :$justify = False ] does Sum {
 # above is workaround for RT119267, should be this:
-#                                                                    = "uint64_be", Bool :$overflow = True, :@firstpad = [True], :@lastpad ] does Sum {
+#                                                                    = "uint64_be", Bool :$overflow = True, :@firstpad = [True], :@lastpad, Bool :$justify = False ] does Sum {
     my $bbytes = $blocksize/8;
     my $lenshifts;
 
@@ -218,10 +241,28 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
         # We took care of the length increment already.
         $!ignore_block_inc = True;
 
-        @bcat.push(@firstpad);
+	if (!$justify) {
+            @bcat.push(@firstpad);
+	}
+	else {
+	    my @pad = @firstpad;
+	    @bcat.splice(* div 8 * 8, 0,
+                (False xx (8 - @bcat % 8 - @pad)),
+# This should just be:
+#	         @pad.splice(0, min(8 - @bcat % 8, *-0)).reverse
+#... but it complains about "Code object coerced to string"
+	         @pad.splice(0, min(8 - @bcat % 8, +@pad)).reverse
+            );
+	    # Rest of this block is conjectural
+	    while (+@pad > 8) {
+	        @bcat.push(reverse(@pad.splice(0,8)));
+	    }
+	    @bcat.push(False xx (8 - @pad), @pad.reverse) if @pad;
+	}
+
 
         my $padbits = ($bbytes * 16 - $block.elems * 8 - $lenshifts.elems * 8
-                       - +@bcat - +@lastpad);
+                       - @bcat - @lastpad);
         $padbits -= $bbytes * 8 if $padbits >= $bbytes * 8;
 
         @bcat.push(False xx $padbits);
