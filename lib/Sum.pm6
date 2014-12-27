@@ -441,7 +441,7 @@ role Sum::Marshal::Cooked {
     }
 
     # multi/constrained candidate to temporarily workaround diamond problem
-    multi method push ($self where {True}: *@addends --> Failure) {
+    multi method push ($self: :$diamond? where {True}, *@addends --> Failure) {
         sink self.marshal(|@addends).map: {
             return $^addend if $addend ~~ Failure;
             given self.add($addend) {
@@ -562,25 +562,25 @@ role Sum::Marshal::Pack [ :$width = 8 ]
 	}
     }
 
-    multi method bitpos ($self is rw where {True}:) is rw {
+    multi method bitpos ($self is rw: :$diamond? where {True}) is rw {
         $self.crony_workaround;
 	$self.bitpos_crony;
     }
-    multi method packed ($self is rw where {True}:) is rw {
+    multi method packed ($self is rw: :$diamond? where {True}) is rw {
         $self.crony_workaround;
 	$self.packed_crony;
     }
-    multi method width ($self is rw where {True}:) is rw {
+    multi method width ($self is rw: :$diamond? where {True}) is rw {
         $self.crony_workaround;
 	$self.width_crony;
     }
-    multi method violation ($self is rw where {True}:) is rw {
+    multi method violation ($self is rw: :$diamond? where {True}) is rw {
         $self.crony_workaround;
 	$self.violation_crony;
     }
 
     # use multi/constrained method to workaround diamond problem
-    multi method whole ($self where {True}:) {
+    multi method whole ($self: :$diamond? where {True}) {
         $.bitpos == $width and not $.violation
             ?? True
             !! Failure.new(X::Sum::Missing.new());
@@ -718,24 +718,24 @@ role Sum::Marshal::Block [::B :$BufT = blob8, :$elems = 64, ::b :$BitT = Bool]
 	}
     }
 
-    multi method accum ($self is rw where {True}:) is rw {
+    multi method accum ($self is rw: :$diamond? where {True}) is rw {
         $self.crony_workaround;
 	$self.accum_crony;
     }
-    multi method bits ($self is rw where {True}:) is rw {
+    multi method bits ($self is rw: :$diamond? where {True}) is rw {
         $self.crony_workaround;
 	$self.bits_crony;
     }
-    multi method drained ($self is rw where {True}:) is rw {
+    multi method drained ($self is rw: :$diamond? where {True}) is rw {
         $self.crony_workaround;
 	$self.drained_crony;
     }
 
     # Allow subroles to use our parameters.
     # use multi/constrained method to workaround diamond problem
-    multi method B_elems ($self where {True}:) { $elems }
-    multi method B ($self where {True}:) { B }
-    multi method b ($self where {True}:) { b }
+    multi method B_elems ($self: :$diamond? where {True}) { $elems }
+    multi method B ($self: :$diamond? where {True}) { B }
+    multi method b ($self: :$diamond? where {True}) { b }
 
     my Int $bw = (given (B) {
                       # Maybe there will be an introspect for this...
@@ -753,7 +753,7 @@ role Sum::Marshal::Block [::B :$BufT = blob8, :$elems = 64, ::b :$BitT = Bool]
     multi method marshal () { }
 
     # use multi/constrained method to workaround diamond problem
-    multi method emit ($self where {True}: *@addends) {
+    multi method emit ($self: :$diamond? where {True}, *@addends) {
         @.accum.push(|@addends);
 
         # Emit any completed blocks.
@@ -763,7 +763,7 @@ role Sum::Marshal::Block [::B :$BufT = blob8, :$elems = 64, ::b :$BitT = Bool]
     }
 
     # Multidispatch seems to need a bit of a nudge, thus the ::?CLASS
-    multi method marshal (::?CLASS $self where { True }: b $addend) {
+    multi method marshal (::?CLASS $self: b $addend where { True }) {
         return fail(X::Sum::Final.new()) if $.drained;
 
         @.bits.push($addend);
@@ -771,7 +771,7 @@ role Sum::Marshal::Block [::B :$BufT = blob8, :$elems = 64, ::b :$BitT = Bool]
         self.emit([+|] (+«@.bits.splice(0, $bw)) Z+< (reverse ^$bw));
     }
 
-    multi method marshal (::?CLASS $self where {not +@.bits}: B $addend) {
+    multi method marshal (::?CLASS $self: B $addend where {not +$self.bits}) {
         return fail(X::Sum::Final.new()) if $.drained;
 
         eager gather do {
@@ -785,18 +785,18 @@ role Sum::Marshal::Block [::B :$BufT = blob8, :$elems = 64, ::b :$BitT = Bool]
         }
     }
 
-    multi method marshal (::?CLASS $self where { so +@.bits }: B $addend) {
+    multi method marshal (::?CLASS $self: B $addend where { so +$self.bits }) {
         # punt on this mess for now
         self.marshal(|$addend.values);
     }
 
-    multi method marshal (::?CLASS $self where { not +@.bits }: $addend) {
+    multi method marshal (::?CLASS $self: $addend where { not +$self.bits }) {
         return fail(X::Sum::Final.new()) if $.drained;
 
         self.emit($addend);
     }
 
-    multi method marshal (::?CLASS $self where {  so +@.bits }: $addend) {
+    multi method marshal (::?CLASS $self: $addend where {  so +$self.bits }) {
         return fail(X::Sum::Final.new()) if $.drained;
 
 	# rakudo-m chokes on this
@@ -815,7 +815,7 @@ role Sum::Marshal::Block [::B :$BufT = blob8, :$elems = 64, ::b :$BitT = Bool]
     }
 
     # use multi/constrained method to workaround diamond problem
-    multi method drain ($self where {True}:) {
+    multi method drain ($self: :$diamond? where {True}) {
         $.drained = True;
         flat +@.accum ?? B.new(@.accum) !! (), ?«@.bits
     }
@@ -843,8 +843,7 @@ role Sum::Marshal::IO {
 
     # ^can("drain") is a poorman proxy for figuring out
     # if a Sum::Marshal::Block[...] is mixed in with us.
-    multi method marshal (::?CLASS $self where { so $_.^can("drain") }:
-                          IO $addend) {
+    multi method marshal (::?CLASS $self: IO $addend where { so $self.^can("drain") }) {
 
         gather while not $addend.eof {
             given $addend.read($.B_elems - +@.accum) {
