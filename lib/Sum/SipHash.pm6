@@ -110,8 +110,8 @@ role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
         $key = Int($key);
 
         # The K constants must be a little-endian encoding of the key.
-        $!k1 = :256[ 255 X+& ($key X+> 0,8...^64)    ];
-        $!k0 = :256[ 255 X+& ($key X+> 64,72...^128) ];
+        $!k1 = :256[ 255 X+& ($key X+> (0,8...^64))    ];
+        $!k0 = :256[ 255 X+& ($key X+> (64,72...^128)) ];
 
         # The internal key also uses a little-endian representation.
         $!v0 = $!k0 +^ :256[$keyfrob[^8]];
