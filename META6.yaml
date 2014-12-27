@@ -19,4 +19,4 @@ provides:
   Sum::SipHash: lib/Sum/SipHash.pm6
 support:
   source: git://github.com/skids/perl6sum.git
-version: v0.0.2
+version: v0.0.3

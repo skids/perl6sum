@@ -1,6 +1,6 @@
 {
     "name" : "Sum",
-    "version" : "v0.0.2",
+    "version" : "v0.0.3",
     "description" : "Perl6 modules for computing hashes and checksums.",
     "author" : "Brian S. Julin",
     "depends" : [ ],
