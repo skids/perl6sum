@@ -97,7 +97,9 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
     }
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-    my sub rol (uint32 $v, int $count where 0..32, --> uint32) {
+# rakudo-p in star 2014.8 cannot handle these sized types when running from PIR
+#    my sub rol (uint32 $v, int $count where 0..32, --> uint32) {
+    my sub rol ($v, $count where 0..32) {
         ($v +< $count) +& 0xffffffff +| (($v +& 0xffffffff) +> (32 - $count));
     }
 
@@ -119,7 +121,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
         @m.push(rol(([+^] @m[* «-« (3,8,14,16)]),+!$insecure_sha0_obselete))
             for 16..^80;
 
-	@!w := @m;
+        @!w := @m;
         self.comp;
     };
 
