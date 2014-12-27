@@ -83,7 +83,7 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
     method comp ( --> Nil) {
         my ($a, $b, $c, $d, $e) = @!s[];
 
-        for ((0x5A827999,{ $b +& $c +| (0xffffffff +^ $b) +& $d }).item xx 20,
+        for ((0x5A827999,{ $b +& $c +| +^$b +& $d }).item xx 20,
              (0x6ED9EBA1,{ $b +^ $c +^ $d }).item xx 20,
              (0x8F1BBCDC,{ $b +& $c +| $b +& $d +| $c +& $d }).item xx 20,
              (0xCA62C1D6,{ $b +^ $c +^ $d }).item xx 20).kv
