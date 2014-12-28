@@ -123,32 +123,38 @@ role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
 #    has Int $.size = 64; should work, but doesn't during multirole mixin
     method size ( --> int ) { 64 };
 
-    my sub rol (Int $v is rw, int $count) {
+    my sub rol (Int $v is rw, int $count --> Nil) {
         my $tmp = (($v +& (0xffffffffffffffff +> $count)) +< $count);
-        $tmp +|= ($v +> (64 - $count));
+        $tmp +|= (($v +& 0xffffffffffffffff) +> (64 - $count));
 	$v = $tmp;
+	return;
     }
 
     my sub SipRound (Int $v0 is rw, Int $v1 is rw,
-                     Int $v2 is rw, Int $v3 is rw) {
-        $v0 += $v1; $v0 +&= 0xffffffffffffffff;
-        $v2 += $v3; $v2 +&= 0xffffffffffffffff;
+                     Int $v2 is rw, Int $v3 is rw --> Nil) {
+        $v0 += $v1;    $v2 += $v3;
         rol($v1, 13);  rol($v3, 16);
-        $v1 +^= $v0; $v3 +^= $v2;
+        $v1 +^= $v0;   $v3 +^= $v2;
         rol($v0, 32);
 
-        $v2 += $v1; $v2 +&= 0xffffffffffffffff;
-        $v0 += $v3; $v0 +&= 0xffffffffffffffff;
+        $v2 += $v1;    $v0 += $v3;
         rol($v1, 17);  rol($v3, 21);
-        $v1 +^= $v2; $v3 +^= $v0;
+        $v1 +^= $v2;   $v3 +^= $v0;
         rol($v2, 32);
+
+	# These should not be needed with proper uint64 support
+	$v0 +&= 0xffffffffffffffff;
+	$v1 +&= 0xffffffffffffffff;
+	$v3 +&= 0xffffffffffffffff;
+	return;
     }
 
     my sub compression (Int $w, Int $v0 is rw, Int $v1 is rw,
-                                Int $v2 is rw, Int $v3 is rw) {
+                                Int $v2 is rw, Int $v3 is rw --> Nil) {
         $v3 +^= $w;
         SipRound($v0, $v1, $v2, $v3) for ^$c;
         $v0 +^= $w;
+	return;
     }
 
 =begin pod
