@@ -113,7 +113,7 @@ class X::Sum::Recourse is Exception {
 
 =end pod
 
-role Sum:auth<skids>:ver<0.0.2> {
+role Sum:auth<skids>:ver<0.0.4> {
 
 =begin pod
 =head3 method finalize (*@addends)
