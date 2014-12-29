@@ -3,12 +3,12 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 70;
+plan 70 + ?($*VM.name ne "parrot");
 
 use Sum::SipHash;
 ok(1,'We use Sum::SipHash and we are still alive');
 
-class S does SipHash does Sum::Marshal::Method[:atype(Str) :method<ords>] { }
+class S does Sum::SipHash does Sum::Marshal::Method[:atype(Str) :method<ords>] { }
 my S $s .= new(:key(0x000102030405060708090a0b0c0d0e0f));
 is $s.size, 64, "SipHash.size works";
 my $h = $s.finalize("Please to checksum this text");
@@ -26,8 +26,11 @@ class sayer {
     method print (*@s) { $.accum ~= [~] @s }
 }
 my sayer $p .= new();
-#{ temp $*OUT = $p; EVAL $Sum::SipHash::Doc::synopsis; }
-#is $p.accum, $Sum::SipHash::Doc::synopsis.comb(/<.after \#\s> (<.ws> <.xdigit>+)+/).join("\n") ~ "\n", 'Code in manpage synopsis actually works';
+# Rakudo-p currently does not serialize $=pod in PIR compunits so skip this.
+if ($*VM.name ne 'parrot') {
+{ temp $*OUT = $p; EVAL $Sum::SipHash::Doc::synopsis; }
+is $p.accum, $Sum::SipHash::Doc::synopsis.comb(/<.after \x23\s> (<.ws> <.xdigit>+)+/).join("\n") ~ "\n", 'Code in manpage synopsis actually works';
+}
 
 # These test vectors appear in Aumussen reference C implentation
 

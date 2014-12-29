@@ -4,20 +4,15 @@
 =begin code
     use Sum::SipHash;
 
-    class SipHash_2_4 does SipHash does Sum::Marshal::Raw { }
+    class SipHash_2_4 does Sum::SipHash does Sum::Marshal::Raw { }
     my SipHash_2_4 $a .= new(:key(0x000102030405060708090a0b0c0d0e0f));
     $a.finalize(0..0xe).fmt('%x').say; # a129ca6149be45e5
 =end code
 =end SYNOPSIS
 
-# This is a bit of a hack.  We want the test suite to be able to try to
-# run the code in the synopsis.  When pod is more functional maybe this
-# will become more maintainable.  In the meantime, if you edit anything
-# above, take care to adjust the sections here.
-
-# Disabling this for now until .pir files properly serialize pod
-#$Sum::SipHash::Doc::synopsis = $=pod[0].content[4].content.Str;
-
+# TODO: figure out how to attach this to a WHY which is accessible
+# (or figure out how to get to another module's $=pod)
+$Sum::SipHash::Doc::synopsis = $=pod[1].contents[0].contents.Str;
 
 =begin DESCRIPTION
     C<Sum::SipHash> defines a parameterized role for generating types
@@ -60,7 +55,7 @@
 
 use Sum;
 
-role SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
+role Sum::SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Partial {
 
     my blob8 $keyfrob = "somepseudorandomlygeneratedbytes".encode("ascii");
 
