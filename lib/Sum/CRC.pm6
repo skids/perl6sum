@@ -615,7 +615,7 @@ role Sum::CRC_16_X25
                       :residual(0xe2f0) ]
 
     Implements a 16-bit CRC used in RFID tags.  It is a modification
-    of C<Sum::CRC_8_X25> which does not require bit reflection.
+    of C<Sum::CRC_16_X25> which does not require bit reflection.
 
 =end pod
 
