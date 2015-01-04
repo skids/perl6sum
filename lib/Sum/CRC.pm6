@@ -370,7 +370,7 @@ role Sum::CRC_8_ROHC
 =head2 role Sum::CRC_8_WCDMA
        does Sum::CRC[ :reflect :columns(8) :poly(0x9b) ]
 
-    Implements an 8-bit CRC used in WDCMA wireless protocol.
+    Implements an 8-bit CRC used in WCDMA wireless protocol.
 
 =end pod
 
