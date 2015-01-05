@@ -884,6 +884,6 @@ This program is free software; you can redistribute it and/or modify
 it under the terms of the Perl Artistic License 2.0.
 =end LICENSE
 
-=SEE-ALSO C<Sum::(pm3)>
+=SEE-ALSO C<Sum::DWIM::(pm3)> C<Sum::Raw::(pm3)>
 
 1; # Avoid sink-punning of last role

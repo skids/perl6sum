@@ -3,7 +3,7 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 74;
+plan 76;
 
 use Sum;
 ok(1,'We use Sum and we are still alive');
@@ -239,6 +239,25 @@ my Foo6 $b16;
 lives_ok { $b16 .= new(); }, "Can instantiate custom Sum::Marshal::Block subclass";
 $b16.push(1, 2, buf16.new(3), False xx 17, 4, blob16.new(5));
 is $b16.finalize, [ blob16.new(1,2), blob16.new(3,0), blob16.new(2,2), True ].gist , "Sum::Marshal::Block can correctly produce blob16s";
+
+class Foo7 does Sum::Marshal::IO does Sum::Marshal::Cooked
+{
+        has $.a is rw = "";
+        method size () { 64 }
+        method finalize (*@addends) {
+            self.push(@addends);
+            $.a;
+        }
+        method Numeric () { 1; };
+        method add (*@addends) {
+	    $.a = join(",", ($.a, @addends).grep(/./));
+        };
+}
+
+my Foo7 $tf;
+lives_ok { $tf .= new(); }, "Can instantiate custom Sum::Marshal::IO subclass";
+$tf.push(open("./t/testfile.txt"));
+is $tf.finalize, open("./t/testfile.txt").read(5000).values.join(','), "Sum::Marshal::IO works";
 
 # Now grab the code in the synopsis from the POD and make sure it runs.
 # This is currently complete hackery but might improve when pod support does.
