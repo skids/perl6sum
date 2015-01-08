@@ -3,18 +3,20 @@ BEGIN { @*INC.unshift: './lib'; }
 
 use Test;
 
-plan 128;
+plan 130;
 
 use Sum::CRC;
 ok(1,'We use Sum::CRC and we are still alive');
 
 my ($i, $s);
 
-class ROHC does Sum::CRC_3_ROHC does Sum::Marshal::Bits { :reflect }
+class ROHC does Sum::CRC_3_ROHC does Sum::Marshal::Bits[:reflect] { }
 my ROHC $rohc .= new();
 is ROHC.size, 3, "CRC .size method works.  And is a class method";
 is $rohc.finalize(0x31..0x39), 0x6, "CRC_3_ROHC gives expected results";
 ok $rohc.check(False,True,True), "CRC_3_ROHC self-verifies (0)";
+is ROHC.new.finalize(3,1,4,1,5,9,2,6,4), 7, "CRC_3_ROHC additional vector 1";
+is ROHC.new.finalize(1,6,1,8,0,3,3,9,8,8), 2, "CRC_3_ROHC additional vector 2";
 
 class CRC4ITU does Sum::CRC_4_ITU does Sum::Marshal::Bits { :reflect }
 my CRC4ITU $itu4 .= new();

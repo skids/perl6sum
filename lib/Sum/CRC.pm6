@@ -175,16 +175,14 @@ role Sum::CRC [ :@header?, :@footer?, :$residual = 0,
 =begin pod
 
 =head2 role Sum::CRC_3_ROHC
-       does Sum::CRC[ :reflect :columns(3) :poly(0x3) ]
+       does Sum::CRC[ :iniv :reflect :columns(3) :poly(0x3) ]
 
     Implements a 3-bit CRC used in RFC 3095 header compression.
 
 =end pod
 
-# Note that the reveng catalogue seems to have :iniv but the checksum
-# presented for the test vector there works for :!iniv
 role Sum::CRC_3_ROHC
-    does Sum::CRC[ :reflect :columns(3) :poly(0x3) ] { }
+    does Sum::CRC[ :iniv :reflect :columns(3) :poly(0x3) ] { }
 
 =begin pod
 
