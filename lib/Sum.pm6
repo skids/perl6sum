@@ -737,18 +737,8 @@ role Sum::Marshal::Block [::B :$BufT = blob8, :$elems = 64, ::b :$BitT = Bool]
     multi method B ($self: :$diamond? where {True}) { B }
     multi method b ($self: :$diamond? where {True}) { b }
 
-    my Int $bw = (given (B) {
-                      # Maybe there will be an introspect for this...
-                      when Buf { 8 }
-                      when buf8 { 8 }
-                      when blob8 { 8 }
-                      when buf16 { 16 }
-                      when blob16 { 16 }
-                      when buf32 { 32 }
-                      when blob32 { 32 }
-                      when buf64 { 64 }
-                      when blob64 { 64 }
-                  });
+    my Int $bw = B.of.^nativesize;
+    $bw ||= X::AdHoc::new(message => "dont know nativesize of " ~ B.of.gist );
 
     multi method marshal () { }
 
