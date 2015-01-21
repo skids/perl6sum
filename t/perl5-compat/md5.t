@@ -1,5 +1,5 @@
 use v6;
-BEGIN { @*INC.unshift: './lib'; }
+use lib './lib';
 
 #
 # Test compability with Perl5 Digest::MD5
