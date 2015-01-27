@@ -219,8 +219,6 @@ role Sum::SipHash [ Int :$c = 2, Int :$d = 4, Int :$defkey = 0 ] does Sum::Parti
     method Blob () { self.blob8 }
 }
 
-1; # Avoid sink-punning of last role
-
 =AUTHOR Brian S. Julin
 
 =COPYRIGHT Copyright (c) 2012 Brian S. Julin. All rights reserved.

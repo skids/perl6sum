@@ -1006,4 +1006,3 @@ it under the terms of the Perl Artistic License 2.0.
 
 =SEE-ALSO C<Sum::(pm3)>
 
-1; # Avoid sink-punning of last role

@@ -876,4 +876,3 @@ it under the terms of the Perl Artistic License 2.0.
 
 =SEE-ALSO C<Sum::DWIM::(pm3)> C<Sum::Raw::(pm3)>
 
-1; # Avoid sink-punning of last role

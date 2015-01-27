@@ -79,4 +79,4 @@ role Sum::Digest::Marshal [ :$encoding where "utf8", :$blocksize = 64 ] {
   }
 }
 
-1;
+

@@ -277,8 +277,6 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
     }
 }
 
-1; # Avoid sink-punning of last role
-
 =AUTHOR Brian S. Julin
 
 =COPYRIGHT Copyright (c) 2012 Brian S. Julin. All rights reserved.
