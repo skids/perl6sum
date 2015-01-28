@@ -100,7 +100,7 @@ class X::Sum::Recourse is Exception {
 
 =head2 role Sum
 
-    The C<Sum> roll defines the core interface required for classes
+    The C<Sum> role defines the core interface required for classes
     implementing various checksums and hashes.  It is generally not
     used directly, as it is pre-mixed into many other base roles in
     the C<Sum::> namespace.
@@ -152,8 +152,7 @@ role Sum:auth<skids>:ver<0.0.4> {
 
 =end pod
 
-    # The semicolon here seems to be needed for perl6-debug to parse
-    method finalize (*@addends) { ... };  # Provided by class or role
+    method finalize (*@addends) { ... }  # Provided by class or role
 
 =begin pod
 
@@ -231,9 +230,9 @@ role Sum:auth<skids>:ver<0.0.4> {
 
     The values are "added" to the internal state of the C<Sum> according
     to the particular algorithm and the original values will be forgotten
-    and may thus be destroyed or altered after the call returns.  A
-    finalization step is usualy not performed until requested, but might be,
-    depending on the type of C<Sum>.
+    so the caller may safely destroy or alter them after the call returns.
+    A finalization step is usualy not performed until requested, but might
+    be, depending on the type of C<Sum>.
 
     The C<@addends> list may be eagerly evaluated, or not, depending on
     the exact type of C<Sum>.  Some types of C<Sum> only allow calling this
@@ -273,7 +272,7 @@ role Sum:auth<skids>:ver<0.0.4> {
 
 =head3 method size ()
 
-    The C<:size> method returns the number of significant bits
+    The C<.size> method returns the number of significant bits
     in the result.  It may be invoked on an instance or as a
     class method.  Note that in the case of a result obtained
     from the C<.buf1> coercion method, one may also just call
