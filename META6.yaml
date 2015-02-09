@@ -20,4 +20,4 @@ provides:
   Sum::Tiger: lib/Sum/Tiger.pm6
 support:
   source: git://github.com/skids/perl6sum.git
-version: v0.0.4
+version: v0.1.0
