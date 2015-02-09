@@ -9,7 +9,7 @@ use Test;
 
 my $testvecs = 16; # useful values are 1..512
 
-my $ntests = 83 + $testvecs * 7;
+my $ntests = 85 + $testvecs * 7;
 $ntests -= max(40, ($testvecs - 439) * 4) if $testvecs > 439;
 plan $ntests;
 
