@@ -285,7 +285,7 @@ $swab_4byte_digests = $digest.values eqv Array.new(0x9d,0x01,0x1c,0x07);
     On the bright side, you can pass any size C<buf8> without
     the need for a marshalling role.
 
-    The methods C<.pos>, C<.elems>, and C<.size> all work as
+    The methods C<.pos> and C<.elems> both work as
     described in the C<Sum::> base role.  The units of these
     mehod are bits, not bytes, even for algorithms that do not
     have bitwise resolution, because there is no way to figure
