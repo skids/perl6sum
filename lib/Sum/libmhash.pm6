@@ -135,7 +135,7 @@ for 0..$count -> $b {
 my sub algo-by-name ($name) {
     my @ids = %Algos.keys.grep: { %Algos{$_}.name eq $name };
     return Failure.new(X::libmhash::NotFound.new(
-                       :feild<name> :$name))
+                       :field<name> :$name))
         if @ids.elems != 1;
     +@ids[0];
 }

@@ -182,7 +182,7 @@ for 1,2,4,8 ...^ 1 +< $count -> $b {
 my sub algo-by-name ($name) {
     my @ids = %Algos.keys.grep: { %Algos{$_}.name eq $name };
     return Failure.new(X::librhash::NotFound.new(
-                       :feild<name> :$name))
+                       :field<name> :$name))
         if @ids.elems != 1;
     +@ids[0];
 }
@@ -190,7 +190,7 @@ my sub algo-by-name ($name) {
 my sub algo-by-magnet-name ($name) {
     my @ids = %Algos.keys.grep: { %Algos{$_}.magnet-name eq $name };
     return Failure.new(X::librhash::NotFound.new(
-                       :feild<MAGNET> :$name))
+                       :field<MAGNET> :$name))
         if @ids.elems != 1;
     +@ids[0];
 }
