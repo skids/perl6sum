@@ -358,7 +358,7 @@ class Instance is repr('CPointer') {
 
       method clone() {
           # Surprised core does not have this, so leaving as AdHoc.
-          Failure.new(X::AdHoc.new(:message("Cannot be cloned.")))
+          Failure.new(X::AdHoc.new(:payload("Cannot be cloned.")))
       }
 
 }
@@ -437,7 +437,7 @@ class Sum {
 
     method clone() {
         # Surprised core does not have this, so leaving as AdHoc.
-        Failure.new(X::AdHoc.new(:message("Cannot be cloned.")))
+        Failure.new(X::AdHoc.new(:payload("Cannot be cloned.")))
     }
 
     submethod DESTROY() {
@@ -446,7 +446,7 @@ class Sum {
         }
     }
 
-    method size() { (0 + self.algo.digest_size) * 8 };
+    method size() { +self.algo.digest_size };
 
     method elems { self.pos };
 

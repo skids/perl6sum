@@ -336,7 +336,7 @@ class Sum {
         }
     }
 
-    method size() { (0 + self.block_size) * 8 };
+    method size() { +self.block_size };
 
     method elems { self.pos };
 
