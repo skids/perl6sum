@@ -9,23 +9,32 @@ use Test;
 
 my $testvecs = 16; # useful values are 1..512
 
-my $ntests = 61 + $testvecs * 6;
+my $ntests = 83 + $testvecs * 7;
 $ntests -= max(40, ($testvecs - 439) * 4) if $testvecs > 439;
 plan $ntests;
 
 use Sum::Tiger;
 ok 1,'We use Sum::Tiger and we are still alive';
 
-class T1 does Sum::Tiger1 does Sum::Marshal::Raw { };
+class T1 does Sum::Tiger1[:recourse<Perl6>] does Sum::Marshal::Raw { };
 my T1 $s .= new();
 ok $s.WHAT === T1, 'We create a Sum::Tiger1 class and object';
 
-given (T1.new()) {
-is .size, 192, "Tiger1.size is correct";
+class T1r does Sum::Tiger1[:recourse<librhash>] does Sum::Marshal::Raw { };
+my T1r $sr .= new();
+ok $sr.WHAT === T1r, 'We create a librhash-backed Sum::Tiger1 class and object';
+throws_like {$sr.push(False)}, X::Sum::Marshal, :message => "Marshalling error.  Cannot handle addend of type Bool via recourse libmhash.";
+
+class T1u does Sum::Tiger1 does Sum::Marshal::Raw { };
+is T1u.recourse, "librhash", "librhash picked by default for Tiger1";
+
+for T1.new(), T1r.new() {
+my $recstr = "(:recourse<{$_.recourse}>)";
+is .size, 192, "Tiger1.size is correct $recstr";
 is .finalize(Buf.new()),
    0x3293ac630c13f0245f92bbb1766e16167a4e58492dde73f3,
-   "Tiger1 Set 1 vector #0 (empty buffer)";
-is .Buf.values, (0x32, 0x93, 0xac, 0x63, 0x0c, 0x13, 0xf0, 0x24, 0x5f, 0x92, 0xbb, 0xb1, 0x76, 0x6e, 0x16, 0x16, 0x7a, 0x4e, 0x58, 0x49, 0x2d, 0xde, 0x73, 0xf3), "Tiger1 Buf method works";
+   "Tiger1 Set 1 vector #0 (empty buffer) $recstr";
+is .Buf.values, (0x32, 0x93, 0xac, 0x63, 0x0c, 0x13, 0xf0, 0x24, 0x5f, 0x92, 0xbb, 0xb1, 0x76, 0x6e, 0x16, 0x16, 0x7a, 0x4e, 0x58, 0x49, 0x2d, 0xde, 0x73, 0xf3), "Tiger1 Buf method works $recstr";
 }
 
 my @t1set1 = (
@@ -49,7 +58,10 @@ my @t1set1 = (
 for @t1set1.kv -> $vnum, $test {
     my T1 $t1 .= new();
     $t1.push(.encode('ascii')) for $test.key.list;
-    is $t1.finalize, $test.value, "Tiger1 Set 1 vector #{$vnum + 1}";
+    is $t1.finalize, $test.value, "Tiger1 Set 1 vector #{$vnum + 1} (:recourse<Perl6>)";
+    my T1r $t1r .= new();
+    $t1r.push(.encode('ascii')) for $test.key.list;
+    is $t1.finalize, $test.value, "Tiger1 Set 1 vector #{$vnum + 1} (:recourse<librhash>";
 }
 
 my @t1set2 = «
@@ -1610,7 +1622,8 @@ my $msg = 1 +< 511;
 my $vnum = 0;
 while ($msg) {
     next if $vnum > $testvecs - 1 and not 439 < $vnum < 450;
-    is T1.new.finalize(Buf.new(255 X+& ($msg X+> (504,496...0)))), ("0x" ~ @t1set3[$vnum]).Int, "Tiger1 Set 3, vector #$vnum";
+    is T1.new.finalize(Buf.new(255 X+& ($msg X+> (504,496...0)))), ("0x" ~ @t1set3[$vnum]).Int, "Tiger1 Set 3, vector #$vnum (:recourse<Perl6>)";
+    is T1r.new.finalize(Buf.new(255 X+& ($msg X+> (504,496...0)))), ("0x" ~ @t1set3[$vnum]).Int, "Tiger1 Set 3, vector #$vnum (:recourse<librhash>)";
     NEXT {
         $vnum++;
         $msg +>= 1;
@@ -1626,13 +1639,16 @@ while ($msg) {
 #                          hash=CDDDCACFEA7B70B485655BA3DC3F60DEE4F6B8F861069E33
 #         iterated 100000 times=35C4F594F7E827FFC68BFECEBEDA314EDC6FE917BDF00B66
 
-class T2 does Sum::Tiger2 does Sum::Marshal::Raw { };
+class T2 does Sum::Tiger2[ :recourse<Perl6> ] does Sum::Marshal::Raw { };
 my T2 $s2 .= new();
 ok $s2.WHAT === T2, 'We create a Sum::Tiger2 class and object';
 
+class T2u does Sum::Tiger2 does Sum::Marshal::Raw { };
+is T2u.recourse, "Perl6", "Tiger2 class without :recourse role param";
+
 given (T2.new()) {
 is .size, 192, "Tiger2.size is correct";
-is .finalize(Buf.new()),
+is .finalize(blob8.new()),
    0x4441be75f6018773c206c22745374b924aa8313fef919f41,
    "Tiger2 Set 1 vector #0 (empty buffer)";
 is .Buf.values, (0x44, 0x41, 0xbe, 0x75, 0xf6, 0x01, 0x87, 0x73, 0xc2, 0x06, 0xc2, 0x27, 0x45, 0x37, 0x4b, 0x92, 0x4a, 0xa8, 0x31, 0x3f, 0xef, 0x91, 0x9f, 0x41), "Tiger2 Buf method works";

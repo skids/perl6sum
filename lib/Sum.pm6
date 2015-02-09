@@ -27,8 +27,10 @@ class X::Sum::Spill is Exception {
 
 class X::Sum::Marshal is Exception {
     has $.addend;
+    has $.recourse = "";
     method message {
-        "Marshalling error.  Cannot handle addend of type $.addend."
+        my $recourse = " via recourse {$.recourse}";
+        "Marshalling error.  Cannot handle addend of type $.addend$recourse."
     }
 }
 
@@ -292,6 +294,25 @@ role Sum:auth<skids>:ver<0.0.4> {
     method clear (|parms) {
         die(".clear called and we don't know what it does yet.")
     }
+
+=head3 method recourse ()
+
+    Many C<Sum> roles will offer a C<:recourse> role parameter
+    which may contain a list of different implementations to
+    choose from.  The resulting subclass will choose from that
+    list one implementation to instantiate.  The C<.recourse>
+    method returns the name of the chosen implementation.
+
+    Common implementations are "libmhash", "librhash",
+    and "libcrypto", which will attempt to use implementations
+    from the C libraries of the same name, and "Perl6"
+    which will use an implementation of the algorithm written
+    entirely in Perl 6.
+
+=end pod
+
+    method recourse () { "Perl6" }
+
 }
 
 =begin pod

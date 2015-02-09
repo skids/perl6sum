@@ -450,7 +450,7 @@ class Sum {
 
     method elems { self.pos };
 
-    multi method add (buf8 $addends) {
+    multi method add (blob8 $addends) {
         return Failure.new(X::Sum::Final.new()) unless defined $!inst;
 	return unless $addends.elems;
         self.inst.add($addends, $addends.elems);

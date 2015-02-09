@@ -465,10 +465,40 @@ role Sum::Tiger {
     method Blob { self.blob8 }
 }
 
-role Sum::Tiger1 does Sum::Tiger
-     does Sum::MDPad[ :lengthtype<uint64_le> :justify ] { }
+# rhash's idea of "Tiger" is Tiger1.  mhash's is just plain broken AFAICS.
+role Sum::Tiger1[ :$recourse where { .grep("librhash") } = <librhash Perl6> ] does Sum {
+    use Sum::librhash;
+    has $.impl handles<Numeric Buf>;
 
-role Sum::Tiger2 does Sum::Tiger does Sum::MDPad[:lengthtype<uint64_le>] { }
+    method size { $.impl.size * 8 }
+    method buf8 { self.Buf }
+    method recourse { "librhash" }
+
+    # Really we should be able to "handles" these above
+    method finalize(|c) { $.impl.finalize(|c) }
+    method pos(|c) { $.impl.pos(|c) }
+    method elems(|c) { $.impl.elems(|c) }
+
+    proto method add ($) { * }
+    multi method add (blob8 $a) { $.impl.add($a) }
+    # Special error to clue users that librhash cannot do individual bits
+    multi method add (Bool $b) {
+	Failure.new(X::Sum::Marshal.new(:recourse<librhash> :addend<Bool>));
+    }
+
+    submethod BUILD () {
+        $!impl = Sum::librhash::Sum.new("TIGER");
+    }
+}
+
+role Sum::Tiger1[ :$recourse where { .grep("Perl6") } ] does Sum::Tiger does Sum::MDPad[ :lengthtype<uint64_le> :justify ] {
+    method recourse { "Perl6" }
+}
+
+# We have no working C drivers for Tiger2.
+role Sum::Tiger2[ :$recourse where { .grep("Perl6") } = <Perl6> ] does Sum::Tiger does Sum::MDPad[:lengthtype<uint64_le>] {
+    method recourse { "Perl6" }
+}
 
 =begin NOTES
 
