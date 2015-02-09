@@ -1,4 +1,3 @@
-BEGIN { "1..1\nok 1 - foo".say; exit(0) }; # Deactivate this test file for now
 
 use v6;
 use lib	'./lib';
