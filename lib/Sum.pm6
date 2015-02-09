@@ -295,6 +295,8 @@ role Sum:auth<skids>:ver<0.1.0> {
         die(".clear called and we don't know what it does yet.")
     }
 
+=begin pod
+
 =head3 method recourse ()
 
     Many C<Sum> roles will offer a C<:recourse> role parameter
