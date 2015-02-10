@@ -4,15 +4,14 @@ module X::libcrypto {
     has $.field;
     has $.name;
     method message {
-        "No unique algorithm by $.field of $.name found in libcrypto"
+      "No unique algorithm by $.field of $.name found in libcrypto."
     }
   }
 
-  # TODO: when we use this, see if we can get an error code out of nativeland
   our class NativeError is Exception {
     has $.code = "undetermined";
     method message {
-        "Error while talking to libcrypto: $.code"
+      "Error while talking to libcrypto: $.code"
     }
   }
 
@@ -81,7 +80,7 @@ use Sum;
 
 use NativeCall;
 
-my sub add_digests is native('libcrypto')
+my  sub add_digests is native('libcrypto')
     is symbol('OpenSSL_add_all_digests') { * };
 
 once add_digests();
@@ -115,10 +114,10 @@ once add_digests();
 =end pod
 
 class Algo {
-      has Int $.nid;
-      has Str $.name;
-      has Int $.size;
-      has Int $.block_size;
+    has Int $.nid;
+    has Str $.name;
+    has Int $.size;
+    has Int $.block_size;
 }
 
 our %Algos;
@@ -176,102 +175,100 @@ for <sha sha1 sha224 sha256 sha384 sha512
 =end pod
 
 class Instance is repr('CPointer') {
-      my %allocated = ();
+    my %allocated = ();
 
-      my sub create() returns Instance
-          is native('libcrypto')
-          is symbol('EVP_MD_CTX_create') { * };
-      my sub init(Instance, OpaquePointer, OpaquePointer) returns int
-          is native('libcrypto')
-          is symbol('EVP_DigestInit_ex') { * };
-      my sub destroy(Instance)
-          is native('libcrypto')
-          is symbol('EVP_MD_CTX_destroy') { * };
-      my sub update(Instance, blob8 $data, int $len) returns int
-          is native('libcrypto')
-          is symbol('EVP_DigestUpdate') { * };
-      my sub final(Instance, buf8 $data, OpaquePointer $size) returns int
-          is native('libcrypto')
-          is symbol('EVP_DigestFinal_ex') { * };
-      my sub copy(Instance $out, Instance $in) returns int
-          is native('libcrypto')
-          is symbol('EVP_MD_CTX_copy_ex') { * };
-      my sub algo(Instance) returns OpaquePointer
-          is native('libcrypto')
-          is symbol('EVP_MD_CTX_md') { * };
+    my  sub create() returns Instance
+        is native('libcrypto')
+        is symbol('EVP_MD_CTX_create') { * };
+    my  sub init(Instance, OpaquePointer, OpaquePointer) returns int
+        is native('libcrypto')
+        is symbol('EVP_DigestInit_ex') { * };
+    my  sub destroy(Instance)
+        is native('libcrypto')
+        is symbol('EVP_MD_CTX_destroy') { * };
+    my  sub update(Instance, blob8 $data, int $len) returns int
+        is native('libcrypto')
+        is symbol('EVP_DigestUpdate') { * };
+    my  sub final(Instance, buf8 $data, OpaquePointer $size) returns int
+        is native('libcrypto')
+        is symbol('EVP_DigestFinal_ex') { * };
+    my  sub copy(Instance $out, Instance $in) returns int
+        is native('libcrypto')
+        is symbol('EVP_MD_CTX_copy_ex') { * };
+    my  sub algo(Instance) returns OpaquePointer
+        is native('libcrypto')
+        is symbol('EVP_MD_CTX_md') { * };
 
-      multi method new (Str $name) {
-          my $alg := get_digestbyname($name);
-          return Failure.new(X::libcrypto::NotFound.new(
-	                     :field<name> :$name))
+    multi method new (Str $name) {
+        my $alg := get_digestbyname($name);
+        return Failure.new(X::libcrypto::NotFound.new(:field<name> :$name))
               unless $alg.defined;
-    	  unless %Algos{$name}:exists {
-              %Algos{$name} =
-	          Algo.new(:$name :nid(nid($alg)) :size(size($alg))
-                           :block_size(block_size($alg)));
-          }
-	  my $obj := create();
-          return Failure.new(X::libcrypto::NativeError.new(:code<NULL>))
-              unless $obj.defined;
-	  my $rcode := init($obj, $alg, OpaquePointer);
-          return Failure.new(X::libcrypto::NativeError.new(:code<$rcode>))
-              if $rcode != 1;
-	  %allocated{~$obj.WHICH} = True;
-	  $obj;
-      }
+        unless %Algos{$name}:exists {
+            %Algos{$name} = Algo.new(:$name :nid(nid($alg)) :size(size($alg))
+                                     :block_size(block_size($alg)));
+        }
+        my $obj := create();
+        return Failure.new(X::libcrypto::NativeError.new(:code<NULL>))
+            unless $obj.defined;
+        my $rcode := init($obj, $alg, OpaquePointer);
+        return Failure.new(X::libcrypto::NativeError.new(:code<$rcode>))
+            if $rcode != 1;
+        %allocated{~$obj.WHICH} = True;
+        $obj;
+    }
 
     method add(blob8 $data, Int $len = $data.elems)
     {
         return Failure.new(X::Sum::Final.new())
             unless %allocated{~self.WHICH}:exists;
         unless -1 < $len <= $data.elems {
-	    return Failure.new(X::OutOfRange.new(:what<index> :got($len)
+            return Failure.new(X::OutOfRange.new(:what<index> :got($len)
                                                  :range(0..$data.elems)));
-	}
+        }
 
-	# In case $data.elems > C MAXINT.
-	my int $ilen = $len;
+        # In case $data.elems > C MAXINT.
+        my int $ilen = $len;
         unless $ilen == $len {
-	    return Failure.new(
+            return Failure.new(
                 X::AdHoc.new(:payload("int wrap in NativeCall length arg.")));
-	}
+        }
 
         # TODO check RC
         update(self, $data, $ilen);
     }
 
-      method finalize() {
-          return Failure.new(X::Sum::Final.new())
-              unless %allocated{~self.WHICH}:delete;
-          my $size = size(algo(self));
-	  my $res := buf8.new(0 xx ^$size);
-          my $rcode := final(self, $res, OpaquePointer); # TODO size
-          return Failure.new(X::libcrypto::NativeError.new(:code<$rcode>))
-              if $rcode != 1;
-	  destroy(self);
-#	  return Failure.new(X::AdHoc(:payload("Alloc size != used size")))
-#	      if $size != $res.elems;
-	  $res;
-      }
+    method finalize() {
+        return Failure.new(X::Sum::Final.new())
+            unless %allocated{~self.WHICH}:delete;
+        my $size = size(algo(self));
+        my $res := buf8.new(0 xx ^$size);
+        my $rcode := final(self, $res, OpaquePointer); # TODO size
+        return Failure.new(X::libcrypto::NativeError.new(:code<$rcode>))
+            if $rcode != 1;
+        destroy(self);
+#       return Failure.new(X::AdHoc(:payload("Alloc size != used size")))
+#       if $size != $res.elems;
+        $res;
+    }
 
-      method DESTROY() {
-          if %allocated{~self.WHICH}:delete {
-              destroy(self);
-          }
-      }
+    method DESTROY() {
+        if %allocated{~self.WHICH}:delete {
+            destroy(self);
+        }
+    }
 
-      method clone() {
-          return Failure.new(X::Sum::Final.new())
-              unless %allocated{~self.WHICH}:exists;
-	  my $obj := create();
-          return Failure.new(X::libcrypto::NativeError.new(:code<NULL>))
-              unless $obj.defined;
-          my $rcode = copy($obj, self);
-          return Failure.new(X::libcrypto::NativeError.new(:code<$rcode>))
-              if $rcode != 1;
-	  %allocated{~$obj.WHICH} = True;
-	  $obj;
-      }
+    method clone() {
+        return Failure.new(X::Sum::Final.new())
+            unless %allocated{~self.WHICH}:exists;
+        my $obj := create();
+        return Failure.new(X::libcrypto::NativeError.new(:code<NULL>))
+            unless $obj.defined;
+        my $rcode = copy($obj, self);
+        return Failure.new(X::libcrypto::NativeError.new(:code<$rcode>))
+            if $rcode != 1;
+        %allocated{~$obj.WHICH} = True;
+        $obj;
+    }
 }
 
 # Do some runtime validation in case libcrypto has been changed since install
@@ -334,14 +331,14 @@ class Sum {
 
     multi method new (Str $name) {
         my $inst = Instance.new($name);
-	return $inst unless $inst.defined;
+        return $inst unless $inst.defined;
         self.bless(*, :$inst, :algo(%Algos{$name}));
     }
 
     method clone() {
         my $inst = $!inst.clone;
-	return $inst
-	    unless $inst.defined;
+        return $inst
+            unless $inst.defined;
         self.bless(*, :$!pos, :$!res, :$!algo, :$inst);
     }
 
@@ -352,9 +349,9 @@ class Sum {
     multi method add (buf8 $addends) {
         return Failure.new(X::Sum::Final.new())
             unless defined $!inst;
-	return unless $addends.elems;
+        return unless $addends.elems;
         self.inst.add($addends, $addends.elems);
-	$!pos += $addends.elems * 8;
+        $!pos += $addends.elems * 8;
     }
 
     method finalize(*@addends) {
@@ -375,12 +372,12 @@ class Sum {
 
     method push (*@addends --> Failure) {
         for (@addends) {
-	    my $res = self.add($_);
-	    return $res if $res ~~ Failure;
-	}
+            my $res = self.add($_);
+            return $res if $res ~~ Failure;
+        }
         my $res = Failure.new(X::Sum::Push::Usage.new());
-	$res.defined;
-	$res;
+        $res.defined;
+        $res;
     };
 
     multi method marshal (*@addends) { for @addends { $_ } };
