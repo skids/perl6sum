@@ -31,23 +31,24 @@ use Sum;
     use Sum::libcrypto;
 
     # Rawest interface, works directly with NativeCall objects:
-    say "Largest libcrypto algo ID is $Sum::libcrypto::count";
-    say "ID\tNAME\tBLOCK SIZE\tRESULT SIZE";
+    say "NAME\tNID\tBLOCK SIZE\tRESULT SIZE";
     for %Sum::libcrypto::Algos.pairs.sort -> $p ( :$key, :value($v) ) {
-        say "{$v.id}\t{$v.name}\t{$v.block_size}\t{$v.size}";
+        say "{$v.name}\t{$v.nid}\t{$v.block_size}\t{$v.size}";
     }
 
-    my $md5 := Sum::libcrypto::Instance.new("MD5");
+    my $md5 := Sum::libcrypto::Instance.new("md5");
     $md5.add(buf8.new(0x30..0x39));
     :256[$md5.finalize().values].base(16).say;
+    ### 781E5E245D69B566979B86E28D23F2C7
 
     # Slightly less raw interface:
-    my $sha1 = Sum::libcrypto::Sum.new("SHA1");
+    my $sha1 = Sum::libcrypto::Sum.new("sha1");
     $sha1.push(buf8.new(0x30..0x35));
-    $sha1.pos.say;
+    $sha1.pos.say;  # 48
     $sha1.finalize(buf8.new(0x36..0x39)).base(16).say;
-    $sha1.size.say;
-    $sha1.Buf.say;
+    ### 87ACEC17CD9DCD20A716CC2CF67417B71C8A7016
+    $sha1.size.say; # 384
+    $sha1.Buf.say;  # 20
 
 =end code
 =end SYNOPSIS
@@ -68,8 +69,8 @@ use Sum;
     The libcrypto API is such that any algorithms added at a later date
     to libcrypto should be available without any changes necessary in
     this module; however it does not look to offer an enumerable catalogue,
-    so any additions will not appear in C<%Sum::libcrypto::Algos> and must
-    be explicitly requested by name.
+    so any additions will not appear in C<%Sum::libcrypto::Algos> before
+    they are explicitly requested by name.
 
     For portable checksums and digests, algorithm-specific
     C<Sum::> modules may utilize C<libcrypto> as a C<:recourse>
@@ -90,22 +91,26 @@ once add_digests();
 =head2 class Sum::libcrypto::Algo
 
     This class presents the contents of the table of algorithms
-    presented by C<libcrypto>.  The C<.name> attribute contains
-    the name of the algorithm as presented by C<libcrypto>.
+    in C<libcrypto>.  The C<.name> attribute contains the name
+    of the algorithm as presented by C<libcrypto>.
+
     The C<.size> contains the final digest's size in bytes.
+
     The C<.block_size> contains an internal block size of the
     algorithm, for example, the size of a NIST block and the
-    size to which Merkle-Damgård padding must pad the last block.
+    size to which Merkle-Damgård padding must pad the
+    last block, in bytes.
 
     Some algorithms presented by C<libcrypto> are automatically
     encapsulated into objects of this class, and then the variable
     C<%Sum::libcrypto::Algos> is built, indexing the objects by C<.name>.
     Because there seems to be no way to enumerate the table of
     algorithms, only agorithms from a hard-coded list will appear
-    in C<%Sum::libcrypto::Algos>.  Algorithms present in C<libcrypto>
-    which are not in the hard-coded list may still be used if
-    requested by their correct name.  If the name is found, the
-    corresponding entry in C<%Sum::libcrypto::Algos> will be added.
+    in C<%Sum::libcrypto::Algos> at first.  Algorithms present
+    in C<libcrypto> which are not in the hard-coded list may still
+    be used if requested by the name C<libcrypto> has assigned them.
+    If the name is found, the corresponding entry in
+    C<%Sum::libcrypto::Algos> will be added.
 
 =end pod
 
@@ -132,6 +137,7 @@ our sub get_digestbyname(Str) returns OpaquePointer is native('libcrypto')
 
 for <sha sha1 sha224 sha256 sha384 sha512
      md4 md5 dss1 ripemd160 md2 mdc2> -> $name {
+
     my $a := get_digestbyname($name);
     next unless $a.defined;
     %Algos{$name} = Algo.new(:$name :nid(nid($a)) :size(size($a))
@@ -146,13 +152,13 @@ for <sha sha1 sha224 sha256 sha384 sha512
     state other than the raw C<libcrypto> object representing
     an ongoing summation.
 
-    The C<.add> method takes a single C<buf8> of any size.  Unlike
-    the normal C<Sum::> role only C<.add> may be used to update
-    the sum, C<.finalize> takes no optional data and will only
-    produce results the first time it is called.  There is no
-    C<.push> method.
+    The C<.add> method takes a single C<blob8> or C<buf8> of any
+    size.  Unlike the normal C<Sum::> role only C<.add> may be
+    used to update the sum, C<.finalize> takes no optional data
+    and will only produce results the first time it is called.
+    There is no C<.push> method.
 
-    The C<.new> contructor may takes the C<.name> of a
+    The C<.new> contructor takes the C<.name> of a
     C<Sum::libcrypto::Algo> to choose the algorithm, as a positional
     argument.
 
@@ -163,7 +169,7 @@ for <sha sha1 sha224 sha256 sha384 sha512
     will be freed when C<.finalize> is called, or if the object
     is abandoned; the class has some sentry hackery to ensure it
     is freed during garbage collection.  Since crypto resources
-    may consume crypto hardware, it is recommended to always
+    may occupy crypto hardware, it is recommended to always
     finalize these objects even if you have no use for the
     results.
 
@@ -181,7 +187,7 @@ class Instance is repr('CPointer') {
       my sub destroy(Instance)
           is native('libcrypto')
           is symbol('EVP_MD_CTX_destroy') { * };
-      my sub update(Instance, buf8 $data, int $len) returns int
+      my sub update(Instance, blob8 $data, int $len) returns int
           is native('libcrypto')
           is symbol('EVP_DigestUpdate') { * };
       my sub final(Instance, buf8 $data, OpaquePointer $size) returns int
@@ -214,13 +220,25 @@ class Instance is repr('CPointer') {
 	  $obj;
       }
 
-      method add($data, $len = $data.elems)
-      {
-          return Failure.new(X::Sum::Final.new())
-              unless %allocated{~self.WHICH}:exists;
-          # TODO check RC
-          update(self, $data, +$len);
-      }
+    method add(blob8 $data, Int $len = $data.elems)
+    {
+        return Failure.new(X::Sum::Final.new())
+            unless %allocated{~self.WHICH}:exists;
+        unless -1 < $len <= $data.elems {
+	    return Failure.new(X::OutOfRange.new(:what<index> :got($len)
+                                                 :range(0..$data.elems)));
+	}
+
+	# In case $data.elems > C MAXINT.
+	my int $ilen = $len;
+        unless $ilen == $len {
+	    return Failure.new(
+                X::AdHoc.new(:payload("int wrap in NativeCall length arg.")));
+	}
+
+        # TODO check RC
+        update(self, $data, $ilen);
+    }
 
       method finalize() {
           return Failure.new(X::Sum::Final.new())
@@ -266,7 +284,7 @@ my $message := Buf.new(0x30..0x37);
 $md5.add($message);
 my $digest := $md5.finalize();
 
-fail("crypto functional sanity test failed") unless
+fail("Runtime validation: crypto functional sanity test failed") unless
     $digest eqv buf8.new(0x2e,0x9e,0xc3,0x17,0xe1,0x97,0x81,0x93,
                          0x58,0xfb,0xc4,0x3a,0xfc,0xa7,0xd8,0x37);
 
@@ -288,22 +306,28 @@ fail("crypto functional sanity test failed") unless
 
     The methods C<.pos>, C<.elems>, and C<.size> all work as
     described in the C<Sum::> base role.  The units of these
-    mehod are bits, not bytes, even for algorithms that do not
+    method are bits, not bytes, even for algorithms that do not
     have bitwise resolution, because there is no way to figure
     out which ones do or do not from the C<libcrypto> API.
 
-    The C<.new> contructor may take either the C<.id> or the
-    C<.name> of a C<Sum::libcrypto::Algo> to choose the algorithm,
-    as a positional argument.
+    The C<.new> contructor takes the C<.name> of a
+    C<Sum::libcrypto::Algo> to choose the algorithm, as a
+    positional argument.
 
-    Note that the C<.clone> C<Mu> method is fully functional on
-    this class via the C<libcrypto> C<cp> API function.
+    The C<.clone> C<Mu> method is fully functional on this
+    class.
+
+    The class will proactively free all resources when
+    the sum is finalized.  As crypto calculations may
+    occupy dedicated crypto hardware, it is advised to
+    always finalize sums even if you have no use for
+    the results.
 
 =end pod
 
 class Sum {
 
-    has $.algo handles<name nid block_size size>;
+    has $.algo handles<name nid block_size>;
     has Instance $.inst;
     has $!res;
     has $.pos = 0; # Always in bits; libcrypto hides bitwiseness
@@ -311,17 +335,19 @@ class Sum {
     multi method new (Str $name) {
         my $inst = Instance.new($name);
 	return $inst unless $inst.defined;
-        self.bless(*,:$inst,:algo(%Algos{$name}));
+        self.bless(*, :$inst, :algo(%Algos{$name}));
     }
 
     method clone() {
         my $inst = $!inst.clone;
 	return $inst
 	    unless $inst.defined;
-        self.bless(*,:$!pos,:$!res,:$!algo,:$inst);
+        self.bless(*, :$!pos, :$!res, :$!algo, :$inst);
     }
 
     method elems { self.pos };
+
+    method size { +self.algo.size * 8 }
 
     multi method add (buf8 $addends) {
         return Failure.new(X::Sum::Final.new())
@@ -343,7 +369,7 @@ class Sum {
     method Buf () {
         return $!res if $!res.defined or $!res.WHAT ~~ Failure;
         $!res := self.inst.finalize();
-        $!inst := Instance; # This has been freed by libcrypto
+        $!inst := Instance; # This has been freed
         $!res
     }
 
