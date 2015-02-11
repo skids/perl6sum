@@ -88,7 +88,14 @@ my sub rhash_library_init is native('librhash')
 
 # TODO: allow the user to explictly prevent all libssl interaction
 # by allowing a way to delay this call during 'use' directive.
-rhash_library_init();
+our $up = try { rhash_library_init(); }
+# I have no clue why this is working or if it will continue to work
+if $up.WHAT =:= Mu {
+    $up = True;
+}
+else {
+    $up = False;
+}
 
 # We offer this as a raw API but do not touch it ourselves, because as
 # long as we do not, we do not have to worry about syncing to header
@@ -108,7 +115,10 @@ our sub transmit (int $msg_id, OpaquePointer $dst,
 our sub count returns int is native('librhash')
     is symbol('rhash_count') { * }
 
-our $count = count();
+our $count;
+if ($up) {
+    $count = count();
+}
 
 # $id should be uint
 our sub digest_size (int $id) returns int is native('librhash')
@@ -170,12 +180,15 @@ class Algo {
 
 our %Algos;
 
-for 1,2,4,8 ...^ 1 +< $count -> $b {
-    if digest_size($b) and name($b).defined {
-        %Algos{$b} = Algo.new(:id(0+$b), :digest_size(+digest_size($b)),
-                              :name(~name($b)), :hash_length(+hash_length($b)),
-			      :is_base32(?is_base32($b)),
-			      :magnet_name(~magnet_name($b)))
+if ($up) {
+    for 1,2,4,8 ...^ 1 +< $count -> $b {
+        if digest_size($b) and name($b).defined {
+            %Algos{$b} = Algo.new(:id(0+$b) :digest_size(+digest_size($b))
+                                  :name(~name($b))
+                                  :hash_length(+hash_length($b))
+				  :is_base32(?is_base32($b))
+			          :magnet_name(~magnet_name($b)))
+        }
     }
 }
 
@@ -364,16 +377,18 @@ class Instance is repr('CPointer') {
 }
 
 # Do some runtime validation in case librhash has been changed since install
-my $md5 := Instance.new("MD5");
-fail("Runtime validation: could not make an Instance")
-    unless $md5 ~~ Instance;
+if ($up) {
+    my $md5 := Instance.new("MD5");
+    fail("Runtime validation: could not make an Instance")
+        unless $md5 ~~ Instance;
 
-my $message := Buf.new(0x30..0x37);
-$md5.add($message);
-my $digest := $md5.finalize(:bytes(16));
-fail("rhash functional sanity test failed") unless
-    $digest eqv buf8.new(0x2e,0x9e,0xc3,0x17,0xe1,0x97,0x81,0x93,
-                         0x58,0xfb,0xc4,0x3a,0xfc,0xa7,0xd8,0x37);
+    my $message := Buf.new(0x30..0x37);
+    $md5.add($message);
+    my $digest := $md5.finalize(:bytes(16));
+    fail("rhash functional sanity test failed")
+        unless $digest eqv buf8.new(0x2e,0x9e,0xc3,0x17,0xe1,0x97,0x81,0x93,
+                                    0x58,0xfb,0xc4,0x3a,0xfc,0xa7,0xd8,0x37);
+}
 
 =begin pod
 

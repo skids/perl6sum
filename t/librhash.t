@@ -4,15 +4,28 @@ use lib	'./lib';
 
 use Test;
 
-plan 26;
-
 use Sum::librhash;
+
+my $abort;
+if ($Sum::librhash::up) {
+   plan 26;
+}
+else {
+   plan 3;
+   $abort = True;
+}
+
 ok(1,'We use Sum and we are still alive');
 
 lives_ok { X::librhash::NotFound.new() },
 	 'X::librhash::NotFound is available';
 lives_ok { X::librhash::NativeError.new() },
 	 'X::librhash::NativeError is available';
+
+if $abort {
+   diag "No librhash detected, or other very basic problem.  Skipping tests.";
+   exit;
+}
 
 my $c = Sum::librhash::count();
 ok $c > 0, "Sum::librhash::count() reports algorithms present";
