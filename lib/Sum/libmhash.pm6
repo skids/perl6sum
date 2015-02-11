@@ -4,7 +4,7 @@ module X::libmhash {
     has $.field;
     has $.name;
     method message {
-        "No unique algorithm by $.field of $.name found in libmhash"
+      "No unique algorithm by $.field of $.name found in libmhash"
     }
   }
 
@@ -12,7 +12,7 @@ module X::libmhash {
   our class NativeError is Exception {
     has $.code = "undetermined";
     method message {
-        "Error while talking to libmhash: $.code"
+      "Error while talking to libmhash: $.code"
     }
   }
 
@@ -40,14 +40,17 @@ use Sum;
     my $md5 := Sum::libmhash::Instance.new("MD5");
     $md5.add(buf8.new(0x30..0x39));
     :256[$md5.finalize().values].base(16).say;
+    ### 781E5E245D69B566979B86E28D23F2C7
 
     # Slightly less raw interface:
     my $sha1 = Sum::libmhash::Sum.new("SHA1");
     $sha1.push(buf8.new(0x30..0x35));
-    $sha1.pos.say;
+    $sha1.pos.say; # 48
     $sha1.finalize(buf8.new(0x36..0x39)).base(16).say;
-    $sha1.size.say;
-    $sha1.Buf.say;
+    ### 87ACEC17CD9DCD20A716CC2CF67417B71C8A7016
+    $sha1.size.say; # 160
+    $sha1.Buf[].fmt("%x").say;
+    ### 87 ac ec 17 cd 9d cd 20 a7 16 cc 2c f6 74 17 b7 1c 8a 70 1
 
 =end code
 =end SYNOPSIS
@@ -102,8 +105,8 @@ our sub pblock_size(int) returns int is native('libmhash')
 =head2 class Sum::libmhash::Algo
 
     This class presents the contents of the table of algorithms
-    presented by C<libmhash>.  The C<.id> attribute is the integer
-    ID used internally by the module to call C<libmhash> API
+    presented by C<libmhash>.  The C<.id> attribute is the "hashid"
+    used internally by the module to call C<libmhash> API
     functions.  The C<.name> attribute contains the name of the
     algorithm as presented by C<libmhash>.  The C<.block_size>
     contains the final digest's size in bytes.  The C<.pblock_size>
@@ -138,8 +141,7 @@ if ($count.defined) {
 
 my sub algo-by-name ($name) {
     my @ids = %Algos.keys.grep: { %Algos{$_}.name eq $name };
-    return Failure.new(X::libmhash::NotFound.new(
-                       :field<name> :$name))
+    return Failure.new(X::libmhash::NotFound.new(:field<name> :$name))
         if @ids.elems != 1;
     +@ids[0];
 }
@@ -160,7 +162,7 @@ my $swab_4byte_digests = False;
     produce results the first time it is called.  There is no
     C<.push> method.
 
-    The C<.new> contructor may take either the C<.id> or the
+    The C<.new> constructor may take either the C<.id> or the
     C<.name> of a C<Sum::libmhash::Algo> to choose the algorithm,
     as a positional argument.
 
@@ -207,23 +209,35 @@ class Instance is repr('CPointer') {
 	                     :field<id> :name($id)))
               unless %Algos{$id};
           my $res = init(+$id);
-	  return Failure.new(X::libmhash::NativeError.new())
+	  return Failure.new(X::libmhash::NativeError.new(:code<NULL>))
 	      unless $res.defined;
 	  %allocated{~$res.WHICH} = True;
 	  $res;
       }
+
       multi method new (Str $name) {
           my $id = algo-by-name($name);
 	  return $id unless $id.defined;
 	  self.new($id);
       }
 
-      method add($data, $len = $data.elems)
+      method add(blob8 $data, Int $len = $data.elems)
       {
           return Failure.new(X::Sum::Final.new())
               unless %allocated{~self.WHICH}:exists;
-          # TODO check RC
-          mhash(self, $data, +$len);
+          unless -1 < $len <= $data.elems {
+              return Failure.new(X::OutOfRange.new(:what<index> :got($len)
+                                                   :range(0..$data.elems)));
+          }
+	  # In case .elems > max size_t (int actually, until that gets fixed)
+          my int $ilen = $len;
+	  return Failure.new(X::AdHoc.new(:payload(
+	      "Overflow assigning an Int to a size_t with managed memory")))
+	      unless $ilen == $len;
+	  my $code = mhash(self, $data, +$len);
+          return Failure.new(X::libmhash::NativeError.new(:$code))
+	      if $code;
+	  True;
       }
 
       method finalize() {
@@ -248,6 +262,8 @@ class Instance is repr('CPointer') {
           return Failure.new(X::Sum::Final.new())
               unless %allocated{~self.WHICH}:exists;
           my $res = cp(self);
+          return Failure.new(X::libmhash::NativeError.new(:code<NULL>))
+	      unless $res.defined;
 	  %allocated{~$res.WHICH} = True;
 	  $res;
       }
@@ -292,7 +308,7 @@ if ($count.defined) {
     On the bright side, you can pass any size C<buf8> without
     the need for a marshalling role.
 
-    The methods C<.pos> and C<.elems> both work as
+    The methods C<.pos>, C<.size> and C<.elems> both work as
     described in the C<Sum::> base role.  The units of these
     mehod are bits, not bytes, even for algorithms that do not
     have bitwise resolution, because there is no way to figure
@@ -343,7 +359,7 @@ class Sum {
         }
     }
 
-    method size() { +self.block_size };
+    method size() { +self.block_size * 8 };
 
     method elems { self.pos };
 
