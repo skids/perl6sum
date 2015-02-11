@@ -83,7 +83,14 @@ use NativeCall;
 my  sub add_digests is native('libcrypto')
     is symbol('OpenSSL_add_all_digests') { * };
 
-once add_digests();
+our $up = try { add_digests() }
+# I have no clue why this is working or if it will continue to work
+if $up.WHAT =:= Mu {
+    $up = True;
+}
+else {
+    $up = False;
+}
 
 =begin pod
 
@@ -134,13 +141,15 @@ our sub block_size(OpaquePointer) returns int is native('libcrypto')
 our sub get_digestbyname(Str) returns OpaquePointer is native('libcrypto')
     is symbol('EVP_get_digestbyname') { * }
 
-for <sha sha1 sha224 sha256 sha384 sha512
-     md4 md5 dss1 ripemd160 md2 mdc2> -> $name {
+if ($up) {
+    for <sha sha1 sha224 sha256 sha384 sha512
+         md4 md5 dss1 ripemd160 md2 mdc2> -> $name {
 
     my $a := get_digestbyname($name);
     next unless $a.defined;
     %Algos{$name} = Algo.new(:$name :nid(nid($a)) :size(size($a))
                              :block_size(block_size($a)));
+    }
 }
 
 =begin pod
@@ -272,18 +281,20 @@ class Instance is repr('CPointer') {
 }
 
 # Do some runtime validation in case libcrypto has been changed since install
-my $md5 := Instance.new("md5");
+if ($up) {
+    my $md5 := Instance.new("md5");
 
-fail("Runtime validation: could not make an Instance")
-    unless $md5 ~~ Instance;
+    fail("Runtime validation: could not make an Instance")
+        unless $md5 ~~ Instance;
 
-my $message := Buf.new(0x30..0x37);
-$md5.add($message);
-my $digest := $md5.finalize();
+    my $message := blob8.new(0x30..0x37);
+    $md5.add($message);
+    my $digest := $md5.finalize();
 
-fail("Runtime validation: crypto functional sanity test failed") unless
-    $digest eqv buf8.new(0x2e,0x9e,0xc3,0x17,0xe1,0x97,0x81,0x93,
-                         0x58,0xfb,0xc4,0x3a,0xfc,0xa7,0xd8,0x37);
+    fail("Runtime validation: crypto functional sanity test failed") unless
+        $digest eqv buf8.new(0x2e,0x9e,0xc3,0x17,0xe1,0x97,0x81,0x93,
+                             0x58,0xfb,0xc4,0x3a,0xfc,0xa7,0xd8,0x37);
+}
 
 =begin pod
 
