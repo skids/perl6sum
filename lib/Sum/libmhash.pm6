@@ -85,7 +85,8 @@ use NativeCall;
 our sub count() returns int is native('libmhash')
     is symbol('mhash_count') { * }
 
-our $count = count();
+our $count = Failure.new(X::AdHoc.new(:payload("libmhash initialization")));
+try { $count = count() }
 
 our sub name(int) returns str is native('libmhash')
     is symbol('mhash_get_hash_name_static') { * }
@@ -125,11 +126,14 @@ class Algo {
 
 our %Algos;
 
-for 0..$count -> $b {
-    if block_size($b) and name($b).defined {
-        %Algos{$b} = Algo.new(:id(0+$b), :block_size(block_size($b)),
-                              :name(name($b)), :pblock_size(pblock_size($b)))
+if ($count.defined) {
+    for 0..$count -> $b {
+        if block_size($b) and name($b).defined {
+            %Algos{$b} = Algo.new(:id(0+$b) :name(name($b))
+                                  :block_size(block_size($b)),
+                                  :pblock_size(pblock_size($b)))
         }
+    }
 }
 
 my sub algo-by-name ($name) {
@@ -250,24 +254,27 @@ class Instance is repr('CPointer') {
 }
 
 # Do some runtime validation in case libmhash has been changed since install
-my $md5 := Instance.new("MD5");
-fail("Runtime validation: could not make an Instance")
-    unless $md5 ~~ Instance;
+if ($count.defined) {
+    my $md5 := Instance.new("MD5");
+    fail("Runtime validation: could not make an Instance")
+         unless $md5 ~~ Instance;
 
-my $message := Buf.new(0x30..0x37);
-$md5.add($message);
-my $digest := $md5.finalize();
-fail("mhash functional sanity test failed") unless
-    $digest eqv buf8.new(0x2e,0x9e,0xc3,0x17,0xe1,0x97,0x81,0x93,
-                         0x58,0xfb,0xc4,0x3a,0xfc,0xa7,0xd8,0x37);
+    my $message := Buf.new(0x30..0x37);
+    $md5.add($message);
+    my $digest := $md5.finalize();
+    fail("mhash functional sanity test failed")
+        unless $digest eqv buf8.new(0x2e,0x9e,0xc3,0x17,0xe1,0x97,0x81,0x93,
+                                    0x58,0xfb,0xc4,0x3a,0xfc,0xa7,0xd8,0x37);
 
-# It seems mhash has some endian problems with 4-byte digests.  Check for that.
-# (There are no other 2..8-byte digest sizes but problems could be there, too.)
-my $a32 := Instance.new("ADLER32");
-$a32.add($message);
-$digest := $a32.finalize();
-# There is something strange going on with how Buf unpacks, finagle for eqv
-$swab_4byte_digests = $digest.values eqv Array.new(0x9d,0x01,0x1c,0x07);
+    # It seems mhash has some endian problems with 4-byte digests.
+    # Check and compensate for that.
+    # (There are no other 2..8-byte digest sizes but those may be broken too.)
+    my $a32 := Instance.new("ADLER32");
+    $a32.add($message);
+    $digest := $a32.finalize();
+    # There is something strange going on with how Buf unpacks, finagle for eqv
+    $swab_4byte_digests = $digest.values eqv Array.new(0x9d,0x01,0x1c,0x07);
+}
 
 =begin pod
 
