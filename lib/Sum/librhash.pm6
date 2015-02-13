@@ -39,7 +39,7 @@ use Sum;
     say "Largest librhash algo ID is $Sum::librhash::count";
     say "ID\tNAME\tBLOCK SIZE\tRESULT SIZE";
     for %Sum::librhash::Algos.pairs.sort -> $p ( :$key, :value($v) ) {
-        say "{$v.id}\t{$v.name}\t{$v.block_size}\t{$v.pblock_size}";
+        say "{$v.id}\t{$v.name}\t{$v.digest_size}\t{$v.hash_length}";
     }
 
     my $md5 := Sum::librhash::Instance.new("MD5");
