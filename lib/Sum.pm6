@@ -49,7 +49,7 @@ class X::Sum::Recourse is Exception {
     use Sum;
 
     # Define a very simple Sum class that just adds normally
-    class MySum does Sum::Partial
+    class MySum does Sum::Partial does Sum
                 does Sum::Marshal::Method[:atype(Str) :method<ords>] {
         has $.accum is rw = 0;
         method size { Inf }
@@ -295,38 +295,18 @@ role Sum:auth<skids>:ver<0.1.0> {
         die(".clear called and we don't know what it does yet.")
     }
 
-=begin pod
-
-=head3 method recourse ()
-
-    Many C<Sum> roles will offer a C<:recourse> role parameter
-    which may contain a list of different implementations to
-    choose from.  The resulting subclass will choose from that
-    list one implementation to instantiate.  The C<.recourse>
-    method returns the name of the chosen implementation.
-
-    Common implementations are "libmhash", "librhash",
-    and "libcrypto", which will attempt to use implementations
-    from the C libraries of the same name, and "Perl6"
-    which will use an implementation of the algorithm written
-    entirely in Perl 6.
-
-=end pod
-
-    method recourse () { "Perl6" }
-
 }
 
 =begin pod
 
-=head2 role Sum::Partial does Sum
+=head2 role Sum::Partial
 
-    The C<Sum::Partial> role is used (instead of C<Sum>) to indicate
-    that a sum may produce partial results at any addend index.
+    The C<Sum::Partial> role is used to indicate that a sum may
+    produce partial results at any addend index.
 
 =end pod
 
-role Sum::Partial does Sum {
+role Sum::Partial {
 
 =begin pod
 
