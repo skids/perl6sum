@@ -88,8 +88,12 @@ use NativeCall;
 our sub count() returns int is native('libmhash')
     is symbol('mhash_count') { * }
 
+our $up = False;
+
 our $count = Failure.new(X::AdHoc.new(:payload("libmhash initialization")));
 try { $count = count() }
+
+$up = True if $count.defined;
 
 our sub name(int) returns str is native('libmhash')
     is symbol('mhash_get_hash_name_static') { * }
@@ -129,7 +133,7 @@ class Algo {
 
 our %Algos;
 
-if ($count.defined) {
+if ($up) {
     for 0..$count -> $b {
         if block_size($b) and name($b).defined {
             %Algos{$b} = Algo.new(:id(0+$b) :name(name($b))
@@ -270,7 +274,7 @@ class Instance is repr('CPointer') {
 }
 
 # Do some runtime validation in case libmhash has been changed since install
-if ($count.defined) {
+if ($up) {
     my $md5 := Instance.new("MD5");
     fail("Runtime validation: could not make an Instance")
          unless $md5 ~~ Instance;
