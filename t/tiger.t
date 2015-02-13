@@ -9,24 +9,27 @@ use Test;
 
 my $testvecs = 16; # useful values are 1..512
 
-my $ntests = 85 + $testvecs * 7;
+my $ntests = 88 + $testvecs * 9;
 $ntests -= max(40, ($testvecs - 439) * 4) if $testvecs > 439;
 plan $ntests;
 
 use Sum::Tiger;
 ok 1,'We use Sum::Tiger and we are still alive';
 
-class T1 does Sum::Tiger1[:recourse<Perl6>] does Sum::Marshal::Raw { };
+class T1 does Sum::Tiger1[:!recourse] does Sum::Marshal::Raw { };
 my T1 $s .= new();
+is $s.recourse, "Perl6", ":!recourse yields 'Perl6' for Tiger1";
 ok $s.WHAT === T1, 'We create a Sum::Tiger1 class and object';
 
-class T1r does Sum::Tiger1[:recourse<librhash>] does Sum::Marshal::Raw { };
+class T1r does Sum::Tiger1 does Sum::Marshal::Raw { };
 my T1r $sr .= new();
+is $sr.recourse, "librhash", "librhash picked by default for Tiger1";
 ok $sr.WHAT === T1r, 'We create a librhash-backed Sum::Tiger1 class and object';
-throws_like {$sr.push(False)}, X::Sum::Marshal, :message => "Marshalling error.  Cannot handle addend of type Bool via recourse libmhash.";
+throws_like {$sr.push(False)}, X::Sum::Marshal, message => "Marshalling error.  Cannot handle addend of type Bool via recourse librhash.";
 
-class T1u does Sum::Tiger1 does Sum::Marshal::Raw { };
-is T1u.recourse, "librhash", "librhash picked by default for Tiger1";
+class T1p does Sum::Tiger1 does Sum::Marshal::Raw does Sum::Partial { };
+my T1p $sp .= new();
+is $sp.recourse, "Perl6", "Sum::Partial mixin chases away librhash";
 
 for T1.new(), T1r.new() {
 my $recstr = "(:recourse<{$_.recourse}>)";
@@ -1639,12 +1642,15 @@ while ($msg) {
 #                          hash=CDDDCACFEA7B70B485655BA3DC3F60DEE4F6B8F861069E33
 #         iterated 100000 times=35C4F594F7E827FFC68BFECEBEDA314EDC6FE917BDF00B66
 
-class T2 does Sum::Tiger2[ :recourse<Perl6> ] does Sum::Marshal::Raw { };
+class T2 does Sum::Tiger2[:!recourse] does Sum::Marshal::Raw { };
 my T2 $s2 .= new();
 ok $s2.WHAT === T2, 'We create a Sum::Tiger2 class and object';
 
 class T2u does Sum::Tiger2 does Sum::Marshal::Raw { };
-is T2u.recourse, "Perl6", "Tiger2 class without :recourse role param";
+# NOTE: Tiger2 is currently our only test of an indirect Perl6 recourse
+# so if we get a C or P5 implementation, we must make more tests.
+my T2u $s2u .= new();
+is $s2u.recourse, "Perl6", "Tiger2 defaults to indirect Perl6 recourse";
 
 given (T2.new()) {
 is .size, 192, "Tiger2.size is correct";
@@ -1675,6 +1681,9 @@ for @t2set1.kv -> $vnum, $test {
     my T2 $t2 .= new();
     { $t2.push($_) } for $test.key».encode('ascii');
     is $t2.finalize, $test.value, "Tiger2 Set 1 vector #{$vnum + 1}";
+    my T2u $t2u .= new();
+    { $t2u.push($_) } for $test.key».encode('ascii');
+    is $t2u.finalize, $test.value, "Tiger2 Set 1 vector #{$vnum + 1} (indirect)";
 }
 
 # Now grab the code in the synopsis from the POD and make sure it runs.
@@ -3246,6 +3255,7 @@ my $vnum = 0;
 while ($msg) {
     next if $vnum > $testvecs - 1 and not 439 < $vnum < 450;
     is T2.new.finalize(Buf.new(255 X+& ($msg X+> (504,496...0)))), ("0x" ~ @t2set3[$vnum]).Int, "Tiger2 Set 3, vector #$vnum";
+    is T2u.new.finalize(Buf.new(255 X+& ($msg X+> (504,496...0)))), ("0x" ~ @t2set3[$vnum]).Int, "Tiger2 Set 3, vector #$vnum (indirect)";
     NEXT {
         $vnum++;
         $msg +>= 1;
