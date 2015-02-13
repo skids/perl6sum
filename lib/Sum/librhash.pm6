@@ -461,7 +461,7 @@ class Sum {
         }
     }
 
-    method size() { +self.algo.digest_size };
+    method size() { +self.algo.digest_size * 8 };
 
     method elems { self.pos };
 
@@ -470,6 +470,11 @@ class Sum {
 	return unless $addends.elems;
         self.inst.add($addends, $addends.elems);
 	$!pos += $addends.elems * 8;
+    }
+
+    # Take care to ensure the error message in this case.
+    multi method add (Bool $b) {
+       Failure.new(X::Sum::Marshal.new(:recourse<librhash> :addend<Bool>));
     }
 
     method finalize(*@addends) {
@@ -481,12 +486,15 @@ class Sum {
 
     method Numeric () { self.finalize };
 
-    method Buf () {
+    method buf8 () {
         return $!res if $!res.defined or $!res.WHAT ~~ Failure;
         $!res := self.inst.finalize(:bytes(self.algo.digest_size));
         $!inst := Instance; # This has been freed by librhash
         $!res
     }
+    method Buf () { self.buf8 };
+    method blob8 () { self.buf8 };
+    method Blob () { self.buf8 };
 
     method push (*@addends --> Failure) {
         for (@addends) {
