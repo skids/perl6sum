@@ -365,6 +365,11 @@ class Sum {
         $!pos += $addends.elems * 8;
     }
 
+    # Take care to ensure the error message in this case.
+    multi method add (Bool $b) {
+       Failure.new(X::Sum::Marshal.new(:recourse<libcrypto> :addend<Bool>));
+    }
+
     method finalize(*@addends) {
         self.push(@addends) if @addends.elems;
         return :256[$!res.values] if $!res.defined;
@@ -374,12 +379,15 @@ class Sum {
 
     method Numeric () { self.finalize };
 
-    method Buf () {
+    method buf8 () {
         return $!res if $!res.defined or $!res.WHAT ~~ Failure;
         $!res := self.inst.finalize();
         $!inst := Instance; # This has been freed
         $!res
     }
+    method Buf () { self.buf8 };
+    method blob8 () { self.buf8 };
+    method Blob () { self.buf8 };
 
     method push (*@addends --> Failure) {
         for (@addends) {
