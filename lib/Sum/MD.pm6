@@ -6,7 +6,7 @@
 
     class myMD5 does Sum::MD5 does Sum::Marshal::Raw { }
     my myMD5 $a .= new();
-    $a.finalize("123456789".encode('ascii')).say;
+    $a.finalize("123456789".encode('ascii')).Int.say;
         # 50479014739749459024317001064922631435
 
     # Usage is basically the same for MD4, MD4ext, RIPEMD128,
@@ -431,13 +431,18 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
             return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
         }
 
-        self.add(|self.drain) if self.^can("drain");
-
+        unless $.final {
+            self.add(|self.drain) if self.^can("drain");
+        }
         self.add(blob8.new()) unless $.final;
 
+        self;
+    }
+    method Numeric {
+        self.finalize;
         :256[ 255 X+& (@!s[] X+> (0,8,16,24)) ]
     }
-    method Numeric { self.finalize };
+    method Int () { self.Numeric }
     method bytes_internal { @!s[] X+> (0,8,16,24) };
     method buf8 {
         self.finalize;
@@ -563,13 +568,18 @@ role Sum::MD2 does Sum {
             return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
         }
 
-        self.add(|self.drain) if self.^can("drain");
+	if self.^can("drain") {
+            self.add(|self.drain) unless $!final;
+	}
 
         self.add(blob8.new()) unless $!final;
 
+	self
+    }
+    method Numeric {
+        self.finalize;
         :256[ @!X[^16] ]
     }
-    method Numeric { self.finalize };
     method buf8 {
         self.finalize;
         buf8.new( @!X[^16] );

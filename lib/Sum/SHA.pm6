@@ -6,20 +6,20 @@
 
     class mySHA1 does Sum::SHA1 does Sum::Marshal::Raw { }
     my mySHA1 $a .= new();
-    $a.finalize("123456789".encode('ascii')).say;
+    $a.finalize("123456789".encode('ascii')).Int.say;
        # 1414485752856024225500297739715962456813268251713
 
     # SHA-224
     class mySHA2 does Sum::SHA2[:columns(224)] does Sum::Marshal::Raw { }
     my mySHA2 $b .= new();
-    $b.finalize("123456789".encode('ascii')).say;
+    $b.finalize("123456789".encode('ascii')).Int.say;
        # 16349067602210014067037177823623301242625642097093531536712287864097
 
     # When dealing with obselete systems that use SHA0
     class mySHA0 does Sum::SHA1[:insecure_sha0_obselete]
         does Sum::Marshal::Raw { }
     my mySHA0 $c .= new();
-    $c.finalize("123456789".encode('ascii')).say;
+    $c.finalize("123456789".encode('ascii')).Int.say;
        # 1371362676478658660830737973868471486175721482632
 =end code
 =end SYNOPSIS
@@ -134,11 +134,15 @@ role Sum::SHA1 [ Bool :$insecure_sha0_obselete = False ]
 
         self.add(blob8.new()) unless $.final;
 
-        # This does not work yet on 32-bit machines
-        # :4294967296[@!s[]];
-        [+|] (@!s[] Z+< (128,96...0));
+	self
     }
-    method Numeric { self.finalize };
+    method Numeric {
+        self.finalize;
+        # This does not work yet on 32-bit machines
+        # :4294967296[@!s[]]
+        [+|] (@!s[] Z+< (128,96...0))
+    }
+    method Int () { self.Numeric }
     method bytes_internal {
         @!s[] X+> (24,16,8,0);
     }
@@ -221,10 +225,12 @@ role Sum::SHA2common {
         }
         self.add(self.drain) if self.^can("drain");
         self.add(blob8.new()) unless $.final;
-        self.Int_internal;
+	self
     }
-    method Numeric { self.finalize };
-
+    method Numeric {
+        self.finalize;
+        self.Int_internal
+    }
     method buf8 {
         self.finalize;
         buf8.new(self.bytes_internal)
