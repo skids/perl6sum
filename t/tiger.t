@@ -14,6 +14,7 @@ $ntests -= max(40, ($testvecs - 439) * 4) if $testvecs > 439;
 plan $ntests;
 
 use Sum::Tiger;
+use Sum::librhash;
 ok 1,'We use Sum::Tiger and we are still alive';
 
 class T1 does Sum::Tiger1[:!recourse] does Sum::Marshal::Raw { };
@@ -21,18 +22,34 @@ my T1 $s .= new();
 is $s.recourse, "Perl6", ":!recourse yields 'Perl6' for Tiger1";
 ok $s.WHAT === T1, 'We create a Sum::Tiger1 class and object';
 
+my $recourse = "librhash";
+unless ($Sum::librhash::up) {
+  $recourse = "Perl6";
+}
 class T1r does Sum::Tiger1 does Sum::Marshal::Raw { };
 my T1r $sr .= new();
-is $sr.recourse, "librhash", "librhash picked by default for Tiger1";
-ok $sr.WHAT === T1r, 'We create a librhash-backed Sum::Tiger1 class and object';
-throws_like {$sr.push(False)}, X::Sum::Marshal, message => "Marshalling error.  Cannot handle addend of type Bool via recourse librhash.";
+is $sr.recourse, $recourse, "$recourse picked by default for Tiger1";
+ok $sr.WHAT === T1r, 'We create a $recourse backed Sum::Tiger1 class and object';
+unless $Sum::librhash::up {
+    todo "This will come with byte-only marshalling", 1;
+}
+throws_like {$sr.push(False)}, X::Sum::Marshal, message => "Marshalling error.  Cannot handle addend of type Bool via recourse $recourse.";
 
 class T1p does Sum::Tiger1 does Sum::Marshal::Raw does Sum::Partial { };
 my T1p $sp .= new();
 is $sp.recourse, "Perl6", "Sum::Partial mixin chases away librhash";
 
-for T1.new(), T1r.new() {
-my $recstr = "(:recourse<{$_.recourse}>)";
+my $recstr = "(:recourse<{$sp.recourse}>)";
+
+given T1.new() {
+is .size, 192, "Tiger1.size is correct (!:recourse)";
+is .finalize(Buf.new()),
+   0x3293ac630c13f0245f92bbb1766e16167a4e58492dde73f3,
+   "Tiger1 Set 1 vector #0 (empty buffer) (!:recourse)";
+is .Buf.values, (0x32, 0x93, 0xac, 0x63, 0x0c, 0x13, 0xf0, 0x24, 0x5f, 0x92, 0xbb, 0xb1, 0x76, 0x6e, 0x16, 0x16, 0x7a, 0x4e, 0x58, 0x49, 0x2d, 0xde, 0x73, 0xf3), "Tiger1 Buf method works (!:recourse)";
+}
+
+given T1r.new() {
 is .size, 192, "Tiger1.size is correct $recstr";
 is .finalize(Buf.new()),
    0x3293ac630c13f0245f92bbb1766e16167a4e58492dde73f3,
@@ -61,10 +78,10 @@ my @t1set1 = (
 for @t1set1.kv -> $vnum, $test {
     my T1 $t1 .= new();
     $t1.push(.encode('ascii')) for $test.key.list;
-    is $t1.finalize, $test.value, "Tiger1 Set 1 vector #{$vnum + 1} (:recourse<Perl6>)";
+    is $t1.finalize, $test.value, "Tiger1 Set 1 vector #{$vnum + 1} (:!recourse)";
     my T1r $t1r .= new();
     $t1r.push(.encode('ascii')) for $test.key.list;
-    is $t1.finalize, $test.value, "Tiger1 Set 1 vector #{$vnum + 1} (:recourse<librhash>";
+    is $t1.finalize, $test.value, "Tiger1 Set 1 vector #{$vnum + 1} $recstr";
 }
 
 my @t1set2 = «
@@ -1625,8 +1642,8 @@ my $msg = 1 +< 511;
 my $vnum = 0;
 while ($msg) {
     next if $vnum > $testvecs - 1 and not 439 < $vnum < 450;
-    is T1.new.finalize(Buf.new(255 X+& ($msg X+> (504,496...0)))), ("0x" ~ @t1set3[$vnum]).Int, "Tiger1 Set 3, vector #$vnum (:recourse<Perl6>)";
-    is T1r.new.finalize(Buf.new(255 X+& ($msg X+> (504,496...0)))), ("0x" ~ @t1set3[$vnum]).Int, "Tiger1 Set 3, vector #$vnum (:recourse<librhash>)";
+    is T1.new.finalize(Buf.new(255 X+& ($msg X+> (504,496...0)))), ("0x" ~ @t1set3[$vnum]).Int, "Tiger1 Set 3, vector #$vnum (:!recourse)";
+    is T1r.new.finalize(Buf.new(255 X+& ($msg X+> (504,496...0)))), ("0x" ~ @t1set3[$vnum]).Int, "Tiger1 Set 3, vector #$vnum $recstr";
     NEXT {
         $vnum++;
         $msg +>= 1;
