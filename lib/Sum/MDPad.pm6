@@ -221,7 +221,7 @@ role Sum::MDPad [ int :$blocksize where { not $_ % 8 }
     multi method add (blob8 $block where { -1 < .elems < $bbytes },
                       Bool $b7?, Bool $b6?, Bool $b5?, Bool $b4?,
                       Bool $b3?, Bool $b2?, Bool $b1?) {
-
+        return unless $block.elems or $b7.defined;
         fail(X::Sum::Final.new()) if $.final;
         my @bcat = ();
         @bcat.push($_) if .defined for ($b7,$b6,$b5,$b4,$b3,$b2,$b1);
