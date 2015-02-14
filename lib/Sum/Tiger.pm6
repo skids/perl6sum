@@ -481,7 +481,7 @@ role Sum::Tiger {
 }
 
 role Sum::Tiger1[ :$recourse where { $_ == False } = True ] does Sum::Tiger does Sum::MDPad[ :lengthtype<uint64_le> :justify ] does Sum {
-    method recourse { "Perl6" }
+    method recourse (--> Str) { "Perl6" }
 }
 
 my class PureTiger1 does Sum::Tiger1[:!recourse] does Sum::Marshal::Block { }
@@ -494,7 +494,7 @@ role Sum::Tiger1[ :$recourse where { $_ == True } = True ] does Sum::Recourse[:r
 # we go through the motions
 
 role Sum::Tiger2[ :$recourse where { $_ == False } = True ] does Sum::Tiger does Sum::MDPad[:lengthtype<uint64_le>] does Sum {
-    method recourse { "Perl6" }
+    method recourse (--> Str) { "Perl6" }
 }
 
 # TODO: we need a lightweight Sum::Marshal::Block-like without bitwise support
