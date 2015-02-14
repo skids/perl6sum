@@ -509,6 +509,8 @@ class Sum {
     multi method marshal (*@addends) { for @addends { $_ } };
 }
 
+$! = 0;
+
 } # module
 
 

@@ -94,6 +94,7 @@ our $count = Failure.new(X::AdHoc.new(:payload("libmhash initialization")));
 try { $count = count() }
 
 $up = True if $count.defined;
+$count = 0 unless $count.defined;
 
 our sub name(int) returns str is native('libmhash')
     is symbol('mhash_get_hash_name_static') { * }
@@ -410,6 +411,8 @@ class Sum {
 
     multi method marshal (*@addends) { for @addends { $_ } };
 }
+
+$! = 0;
 
 } # module
 

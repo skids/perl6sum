@@ -71,11 +71,15 @@ use Sum::Recourse;
 
 =end pod
 
-role Sum::GOST[ :$sbox where { $_ eq "test parameters" } = "test parameters",
-                :$recourse where { $_ == True } = True ] does Sum::Recourse[:recourse[:librhash<GOST>]] { }  # add libmhash<GOST>, with tests, if it ever starts working.
+role Sum::GOST[ :$sbox where { $_ eq "test parameters" }
+                  = "test parameters",
+                :$recourse where { $_ == True }
+                  = True ] does Sum::Recourse[:recourse[:librhash<GOST>]] { }  # add libmhash<GOST>, with tests, if it ever starts working.
 
-role Sum::GOST[ :$sbox where { $_ eq "CryptoPro" } = "test parameters",
-                :$recourse where { $_ == True } = True ] does Sum::Recourse[:recourse[:librhash<GOST-CRYPTOPRO>]] { }
+role Sum::GOST[ :$sbox where { $_ eq "CryptoPro" }
+                  = "test parameters",
+                :$recourse where { $_ == True }
+                  = True ] does Sum::Recourse[:recourse[:librhash<GOST-CRYPTOPRO>]] { }
 
 =AUTHOR Brian S. Julin
 
