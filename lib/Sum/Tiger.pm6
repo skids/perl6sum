@@ -442,6 +442,8 @@ role Sum::Tiger {
 
     multi method add (blob8 $block where { .elems == 64 }) {
 
+        return Failure.new(X::Sum::Final.new()) if $.final;
+
         # Update the length count and check for problems via Sum::MDPad
         given self.pos_block_inc {
             when Failure { return $_ };

@@ -405,6 +405,8 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
 
     multi method add (blob8 $block where { .elems == 64 }) {
 
+        return Failure.new(X::Sum::Final.new()) if $.final;
+
         # Update the length count and check for problems via Sum::MDPad
         given self.pos_block_inc {
             when Failure { return $_ };
