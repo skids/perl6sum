@@ -6,7 +6,7 @@
 
     class SipHash_2_4 does Sum::SipHash does Sum::Marshal::Raw { }
     my SipHash_2_4 $a .= new(:key(0x000102030405060708090a0b0c0d0e0f));
-    $a.finalize(0..0xe).base(16).say; # a129ca6149be45e5
+    $a.finalize(0..0xe).base(16).say; # A129CA6149BE45E5
 
 =end code
 =end SYNOPSIS
