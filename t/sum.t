@@ -3,7 +3,7 @@ use lib	'./lib';
 
 use Test;
 
-plan 76;
+plan 79;
 
 use Sum;
 ok(1,'We use Sum and we are still alive');
@@ -27,7 +27,7 @@ lives_ok { EVAL 'class fooC1 does Sum does Sum::Marshal::Method[:atype(Str) :met
 lives_ok {
 class Foo does Sum does Sum::Marshal::Cooked {
         has $.accum is rw = 0;
-        method size () { 64 };
+        method size () { 24 };
         method finalize (*@addends) {
             self.push(@addends);
             self
@@ -36,6 +36,9 @@ class Foo does Sum does Sum::Marshal::Cooked {
             self.finalize;
             $.accum
         }
+	method buf8 () {
+	    buf8.new(self.Numeric X+> (16, 8, 0))
+	}
         method add (*@addends) {
             $.accum += [+] @addends;
         };
@@ -58,6 +61,10 @@ is +$f.finalize(5), 20, "finalize with one argument works (Cooked)";
 is +$f.finalize(5,6), 31, "finalize with multiple arguments works (Cooked)";
 $f.push();
 is $f.accum, 31, "push with no arguments works(Cooked)";
+
+is $f.base(2), "000000000000000000011111", ".base(2) works";
+is $f.base(16), "00001F", ".base(16) works";
+is $f.fmt, "00001f", ".fmt works";
 
 lives_ok {
 class Foo2 does Sum does Sum::Marshal::Raw {

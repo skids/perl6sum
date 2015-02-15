@@ -155,10 +155,13 @@ role Sum:auth<skids>:ver<0.1.0> {
     a C<Buf> at this time.  As such, explicit use of the C<.buf8> and
     C<.buf1> methods is advised in the interim.
 
-    A C<.fmt> method will also usually be made available, and will finalize
-    the sum and express the result as a string in a format conventional
-    to the particular type of sum.  This version of .fmt will pad leading
-    zeroes to the appropriate width for conversions like "%x".
+    A C<.base(2)> multimethod will finalize the sum and print a text
+    representation of the result.  Likewise, A C<.base(16)> multimethod
+    will print an uppercase hex representation of the result.  A C<.fmt>
+    method will also usually be made available, which is shorthand
+    for C<.buf8.values.fmt($format,$separator)> with default values for
+    a lowercase hex representation.  All three of these methods are
+    special in that they will emit leading zeros.
 
     Note that a C<.Str> coercion method is currently not provided, until
     it can be established that nothing in the setting accidentally finalizes
@@ -167,6 +170,22 @@ role Sum:auth<skids>:ver<0.1.0> {
 =end pod
 
     method finalize (*@addends) { ... }  # Provided by class or role
+
+    # Some methods to elide the need to convert to Int.  The individual
+    # sums decide on how to do Numeric, but probably have no good
+    # reason not to fool with these, so we can do some DRY control here.
+    # We only cover common use cases.
+
+    multi method base(2) {
+        self.Numeric.fmt("%" ~ self.size ~ "." ~ self.size  ~ "b")
+    }
+    multi method base(16) {
+        my $digits = (self.size + 3) div 4;
+        self.Numeric.fmt("%" ~ $digits ~ "." ~ $digits ~ "X")
+    }
+    multi method fmt($format = "%2.2x", $sep = "") {
+        self.buf8.values.fmt($format, $sep)
+    }
 
 =begin pod
 
