@@ -62,7 +62,7 @@ objects from Sum:: versus the Perl 5 Digest:: interface.
        say mysha.new.finalize($buffer).base(16); # uppercase hex
        say mysha.new.finalize($buffer).base(2);  # binary text
 
-4) There is no ->reset method, and .new does not re-use
+5) There is no ->reset method, and .new does not re-use
    the Perl 6 object when called on an instance, it just
    creates a new Perl 6 object.  Sum objects are meant
    to be thrown away after use.  Replacing them is easy:
@@ -70,7 +70,7 @@ objects from Sum:: versus the Perl 5 Digest:: interface.
       # assuming $md has a Sum in it, or was constrained when defined.
       $md .= new;
 
-5) There is .clone in Perl 6 on just about everything,
+6) There is .clone in Perl 6 on just about everything,
    including Sum objects.  However, not all back-ends
    can clone their instances.  Using a class that does
    Sum::Partial is one way to guarantee that only backends
