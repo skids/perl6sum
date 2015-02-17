@@ -36,15 +36,15 @@ use Sum;
     }
 
     my $md5 := Sum::libcrypto::Instance.new("md5");
-    $md5.add(buf8.new(0x30..0x39));
+    $md5.add(blob8.new(0x30..0x39));
     :256[$md5.finalize().values].base(16).say;
     ### 781E5E245D69B566979B86E28D23F2C7
 
     # Slightly less raw interface:
     my $sha1 = Sum::libcrypto::Sum.new("sha1");
-    $sha1.push(buf8.new(0x30..0x35));
+    $sha1.push(blob8.new(0x30..0x35));
     $sha1.pos.say;  # 48
-    $sha1.finalize(buf8.new(0x36..0x39)).Int.base(16).say;
+    $sha1.finalize(blob8.new(0x36..0x39)).Int.base(16).say;
     ### 87ACEC17CD9DCD20A716CC2CF67417B71C8A7016
     $sha1.size.say; # 384
     $sha1.Buf.say;  # 20
@@ -358,7 +358,7 @@ class Sum {
 
     method size { +self.algo.size * 8 }
 
-    multi method add (buf8 $addends) {
+    multi method add (blob8 $addends) {
         return Failure.new(X::Sum::Final.new())
             unless defined $!inst;
         return unless $addends.elems;
@@ -390,8 +390,8 @@ class Sum {
         $!inst := Instance; # This has been freed
         $!res
     }
+    method blob8 () { self.buf8 }
     method Buf () { self.buf8 };
-    method blob8 () { self.buf8 };
     method Blob () { self.buf8 };
 
     method push (*@addends --> Failure) {
