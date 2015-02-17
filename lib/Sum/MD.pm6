@@ -42,6 +42,7 @@
 
 use Sum;
 use Sum::MDPad;
+use Sum::Recourse;
 
 # The newline in the parameter list here should not need to be here.  Star 2013.11 regression.
 # Also this used to be just "where one <...>" but the braces seem to help the parser as well
@@ -479,13 +480,49 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
 
 =end pod
 
-role Sum::MD4       does Sum::MD4_5[ :alg<MD4>        ] { }
-role Sum::MD4ext    does Sum::MD4_5[ :alg<MD4ext>     ] { }
-role Sum::MD5       does Sum::MD4_5[ :alg<MD5>        ] { }
-role Sum::RIPEMD128 does Sum::MD4_5[ :alg<RIPEMD-128> ] { }
-role Sum::RIPEMD160 does Sum::MD4_5[ :alg<RIPEMD-160> ] { }
-role Sum::RIPEMD256 does Sum::MD4_5[ :alg<RIPEMD-256> ] { }
-role Sum::RIPEMD320 does Sum::MD4_5[ :alg<RIPEMD-320> ] { }
+role Sum::MD4[ :$recourse where { $_ == False } = True ] does Sum::MD4_5[ :alg<MD4> ] {
+    method recourse (--> Str) { "Perl6" }
+}
+my class PureMD4 does Sum::MD4[:!recourse] does Sum::Marshal::Block { }
+role Sum::MD4[ :$recourse where { $_ == True } = True ] does Sum::Recourse[:recourse(:librhash<MD4> :libmhash<MD4> :Perl6(PureMD4))] { }
+
+role Sum::MD4ext[ :$recourse where { $_ == False } = True ] does Sum::MD4_5[ :alg<MD4ext> ] {
+    method recourse (--> Str) { "Perl6" }
+}
+my class PureMD4ext does Sum::MD4ext[:!recourse] does Sum::Marshal::Block { }
+role Sum::MD4ext[ :$recourse where { $_ == True } = True ] does Sum::Recourse[:recourse[:Perl6(PureMD4ext)]] { }
+
+role Sum::MD5[ :$recourse where { $_ == False } = True ] does Sum::MD4_5[ :alg<MD5> ] {
+    method recourse (--> Str) { "Perl6" }
+}
+my class PureMD5 does Sum::MD5[:!recourse] does Sum::Marshal::Block { }
+role Sum::MD5[ :$recourse where { $_ == True } = True ] does Sum::Recourse[:recourse(:libcrypto<md5> :librhash<MD5> :libmhash<MD5> :Perl6(PureMD5))] { }
+
+role Sum::RIPEMD128[ :$recourse where { $_ == False } = True ] does Sum::MD4_5[ :alg<RIPEMD-128> ] {
+    method recourse (--> Str) { "Perl6" }
+}
+my class PureRIPEMD128 does Sum::RIPEMD128[:!recourse] does Sum::Marshal::Block { }
+# TODO: This might just be a truncation; have to look and see if we can make
+# a fixup role/parameter to allow recourses.
+role Sum::RIPEMD128[ :$recourse where { $_ == True } = True ] does Sum::Recourse[:recourse[:Perl6(PureRIPEMD128)]] { }
+
+role Sum::RIPEMD160[ :$recourse where { $_ == False } = True ] does Sum::MD4_5[ :alg<RIPEMD-160> ] {
+    method recourse (--> Str) { "Perl6" }
+}
+my class PureRIPEMD160 does Sum::RIPEMD160[:!recourse] does Sum::Marshal::Block { }
+role Sum::RIPEMD160[ :$recourse where { $_ == True } = True ] does Sum::Recourse[:recourse(:libcrypto<ripemd160> :librhash<RIPEMD-160> :libmhash<RIPEMD160> :Perl6(PureRIPEMD160))] { }
+
+role Sum::RIPEMD256[ :$recourse where { $_ == False } = True ] does Sum::MD4_5[ :alg<RIPEMD-256> ] {
+    method recourse (--> Str) { "Perl6" }
+}
+my class PureRIPEMD256 does Sum::RIPEMD256[:!recourse] does Sum::Marshal::Block { }
+role Sum::RIPEMD256[ :$recourse where { $_ == True } = True ] does Sum::Recourse[:recourse[:Perl6(PureRIPEMD256)]] { }
+
+role Sum::RIPEMD320[ :$recourse where { $_ == False } = True ] does Sum::MD4_5[ :alg<RIPEMD-320> ] {
+    method recourse (--> Str) { "Perl6" }
+}
+my class PureRIPEMD320 does Sum::RIPEMD320[:!recourse] does Sum::Marshal::Block { }
+role Sum::RIPEMD320[ :$recourse where { $_ == True } = True ] does Sum::Recourse[:recourse[:Perl6(PureRIPEMD320)]] { }
 
 =begin pod
 
