@@ -14,12 +14,12 @@ if $Sum::librhash::up {
 }
 # mhash GOST implementation is broken.  Kept for if it is ever fixed.
 #elsif $Sum::libmhash::up {
-#   diag "Only testing libmhash functionality as librhash not working.";
 #   plan 13;
+#   diag "Only testing libmhash functionality as librhash not working.";
 #}
 else {
-   diag "No libmhash or librhash working, skipping most tests.";
    plan 2;
+   diag "No libmhash or librhash working, skipping most tests.";
 }
 
 ok 1,'We use Sum::GOST and we are still alive';
