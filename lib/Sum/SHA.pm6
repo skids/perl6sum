@@ -499,13 +499,13 @@ my class PureSHA384 does Sum::SHA384[:!recourse] does Sum::Marshal::Block { }
 my class PureSHA512 does Sum::SHA512[:!recourse] does Sum::Marshal::Block { }
 
 role Sum::SHA224[:$recourse where { so $_ }
-                                            = True] does Sum::Recourse[:recourse[:libcrypto<sha224> :librhash<SHA-224> :libmhash<SHA224> :Perl6(PureSHA224)]] { }
+                                            = True] does Sum::Recourse[:recourse(:libcrypto<sha224> :librhash<SHA-224> :libmhash<SHA224> :Perl6(PureSHA224))] { }
 role Sum::SHA256[:$recourse where { so $_ }
-                                            = True] does Sum::Recourse[:recourse[:libcrypto<sha256> :librhash<SHA-256> :libmhash<SHA256> :Perl6(PureSHA256)]] { }
+                                            = True] does Sum::Recourse[:recourse(:libcrypto<sha256> :librhash<SHA-256> :libmhash<SHA256> :Perl6(PureSHA256))] { }
 role Sum::SHA384[:$recourse where { so $_ }
-                                            = True] does Sum::Recourse[:recourse[:libcrypto<sha384> :librhash<SHA-384> :libmhash<SHA384> :Perl6(PureSHA384)]] { }
+                                            = True] does Sum::Recourse[:recourse(:libcrypto<sha384> :librhash<SHA-384> :libmhash<SHA384> :Perl6(PureSHA384))] { }
 role Sum::SHA512[:$recourse where { so $_ }
-                                            = True] does Sum::Recourse[:recourse[:libcrypto<sha512> :librhash<SHA-512> :libmhash<SHA512> :Perl6(PureSHA512)]] { }
+                                            = True] does Sum::Recourse[:recourse(:libcrypto<sha512> :librhash<SHA-512> :libmhash<SHA512> :Perl6(PureSHA512))] { }
 
 
 role Sum::SHA2[ :$recourse where {not $_}
