@@ -46,14 +46,14 @@ one succeeds, or until the end of the list is passed, in which case
 an C<X::Sum::Recourse> C<Failure> is returned instead.
 
 Most of the ancillary roles from the C<Sum> base interface may be
-mixed in alongside X::Sum::Recourse.  Note that one must still mix
+mixed in alongside Sum::Recourse.  Note that one must still mix
 in at least one C<Sum::Marshal::*> role.  Mixing in C<Sum::Partial>
 will disable any C<librhash> functionality even if it appears in
 C<:recourse>, because C<librhash> lacks the ability to clone contexts.
 
 Note that most C implementations of hashing algorithms are not capable
 of generating checksums for messages that do not pack evenly into bytes,
-so one should not use C<X::Sum::Recourse> for this purpose, and rather
+so one should not use C<Sum::Recourse> for this purpose, and rather
 should construct a pure Perl 6 implementation from the roles provided
 in algorithm-specific modules if this functionality is needed.
 
