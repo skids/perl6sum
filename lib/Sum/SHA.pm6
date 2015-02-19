@@ -148,7 +148,7 @@ role Sum::SHA1 [ :$recourse where { not $_ }
     }
 
     method finalize(*@addends) {
-        given self.push(@addends) {
+        given self.push(|@addends) {
             return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
         }
 
@@ -180,8 +180,8 @@ role Sum::SHA1 [ :$recourse where { not $_ }
     method Blob { self.blob8 }
 }
 
-my class PureSHA0 does Sum::SHA1[ :!recourse :insecure_sha0_obselete ] does Sum::Marshal::Block { }
-my class PureSHA1 does Sum::SHA1[ :!recourse ] does Sum::Marshal::Block { }
+my class PureSHA0 does Sum::SHA1[ :!recourse :insecure_sha0_obselete ] does Sum::Recourse::Marshal { }
+my class PureSHA1 does Sum::SHA1[ :!recourse ] does Sum::Recourse::Marshal { }
 
 role Sum::SHA1 [ :$recourse where { so $_ }
                                            = True, :$insecure_sha0_obselete where { so $_ }
@@ -493,10 +493,10 @@ role Sum::SHA512[:$recourse where { not $_ }
     method size { 512 }
 }
 
-my class PureSHA224 does Sum::SHA224[:!recourse] does Sum::Marshal::Block { }
-my class PureSHA256 does Sum::SHA256[:!recourse] does Sum::Marshal::Block { }
-my class PureSHA384 does Sum::SHA384[:!recourse] does Sum::Marshal::Block { }
-my class PureSHA512 does Sum::SHA512[:!recourse] does Sum::Marshal::Block { }
+my class PureSHA224 does Sum::SHA224[:!recourse] does Sum::Recourse::Marshal { }
+my class PureSHA256 does Sum::SHA256[:!recourse] does Sum::Recourse::Marshal { }
+my class PureSHA384 does Sum::SHA384[:!recourse] does Sum::Recourse::Marshal { }
+my class PureSHA512 does Sum::SHA512[:!recourse] does Sum::Recourse::Marshal { }
 
 role Sum::SHA224[:$recourse where { so $_ }
                                             = True] does Sum::Recourse[:recourse(:libcrypto<sha224> :librhash<SHA-224> :libmhash<SHA224> :Perl6(PureSHA224))] { }
