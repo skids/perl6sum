@@ -25,7 +25,7 @@ unless $Sum::librhash::up {
     }
 }
 unless $Sum::libmhash::up {
-    my $m_or_p = "Perl6";
+    $m_or_p = "Perl6";
 }
 plan 123;
 
