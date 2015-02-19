@@ -290,7 +290,7 @@ role Sum::SHA2common {
     };
 
     method finalize(*@addends) {
-        given self.push(@addends) {
+        given self.push(|@addends) {
             return $_ unless $_.exception.WHAT ~~ X::Sum::Push::Usage;
         }
         self.add(self.drain) if self.^can("drain");
