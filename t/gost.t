@@ -19,7 +19,6 @@ if $Sum::librhash::up {
 #}
 else {
    plan 2;
-   diag "No libmhash or librhash working, skipping most tests.";
 }
 
 ok 1,'We use Sum::GOST and we are still alive';
@@ -27,7 +26,10 @@ ok 1,'We use Sum::GOST and we are still alive';
 # With no pure Perl6 implementation, this should die
 eval_dies_ok "class G1p does Sum::GOST[:!recourse] does Sum::Marshal::Raw { }", "Attempt to use nonexistant pure-Perl6 code dies.";
 
-exit unless $Sum::librhash::up; # or $Sum::libmhash::up;
+unless $Sum::librhash::up {  # or $Sum::libmhash::up;
+   diag "No libmhash or librhash working, skipping most tests.";
+   exit
+}
 
 my $recourse = "librhash";
 #$recourse = "libmhash" unless $Sum::librhash::up;
