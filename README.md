@@ -10,7 +10,7 @@ interface to checksum and digest algorithms, for both academic use
 and for production applications.  It supports both efficient
 external libraries, and pure Perl 6 implementations of algorithms.
 
-Currently for production use, it is recommended only to use
+Currently, for production use, it is recommended only to use
 the modules with external libraries implementing desired algorithms.
 At this time, the libraries supported are libcrypto, librhash,
 and libmhash.  These libraries are not strictly dependencies,
@@ -58,7 +58,7 @@ checksums:
         method rx {
             my $received_data;
             ...
-            self.push($received.data);
+            self.push($received_data);
         }
     }
 
@@ -138,6 +138,11 @@ objects from Sum:: versus the Perl 5 Digest:: interface.
 
       # assuming $md has a Sum in it, or was constrained when defined.
       $md .= new;
+
+   If you are concerned about tying up crypto resources, the
+   only thing to worry about is to ensure you finalize the object
+   before discarding it.  The backends should be smart enough to
+   free up resources promptly upon finalization.
 
 6) Just about everything in perl 6 has a .clone method,
    including Sum objects.  However, not all back-ends
