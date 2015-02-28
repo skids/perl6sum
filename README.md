@@ -116,7 +116,7 @@ objects from Sum:: versus the Perl 5 Digest:: interface.
 
 4.  Note that the return value of .finalize is the finalized
     Sum object.  This can be coerced to common types you might
-    want using and formatted using many built-in Perl 6
+    want and formatted by using many built-in Perl 6
     methods.  Also, .finalize takes arguments, which are just
     passed to .push.  Together this gives the following idiom
     for one-shot purposes:
@@ -130,6 +130,9 @@ objects from Sum:: versus the Perl 5 Digest:: interface.
         say mysha.new.finalize($buffer).fmt("%2.2x",":"); # colon octets
         say mysha.new.finalize($buffer).base(16); # uppercase hex
         say mysha.new.finalize($buffer).base(2);  # binary text
+
+    Base32 and Base64 is not yet implemented pending a review of
+    which variations of these encodings are used in modern applications.
 
 5.  There is no ->reset method, and .new does not re-use
     the Perl 6 object when called on an instance, it just
