@@ -92,17 +92,17 @@ role Sum::SHA1 [ :$recourse where { not $_ }
      does Sum::MDPad[ :lengthtype<uint64_be> :!overflow ] {
 
     has @!s;     # Current hash state.  H in specification.
-    has @!w = self.sha_build_workaround(); # "Parsed" message gets bound here.
+    has @!w;     # "Parsed" message gets bound here.
+
+    has Bool $sha_bogus = self.sha_build_workaround(); 
 
     # Until there is a better way to handle BUILD-like stuff from roles,
     # we use the attribute initialization logic to do the trick.
     method sha_build_workaround {
         @!s :=
             buf32.new(0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0);
-
-	# We really do not care about what we assign to @!w; it gets
-        # initialized during .push
-	();
+	@!w := buf32.new(0 xx 80);
+	return True;
     }
 
     method size ( --> int) { 160 }
@@ -151,13 +151,14 @@ role Sum::SHA1 [ :$recourse where { not $_ }
         # First 16 uint32's are a straight copy of the data.
         # When endianness matches and with native types,
         # this would boil down to a simple memcpy.
-        my @m = (:256[ $block[ $_ ..^ $_+4 ] ] for 0,4 ...^ 64);
+        @!w[0..15] = (:256[ $block[ $_ ..^ $_+4 ] ] for 0,4 ...^ 64);
 
         # Fill the rest of the scratchpad with permutations.
-        @m.push(rol(([+^] @m[* «-« (3,8,14,16)]),+!$insecure_sha0_obselete))
-            for 16..^80;
+	for 16..^80 {
+            @!w[$_] = rol(([+^] @!w[$_ X- (3,8,14,16)]),
+                          +!$insecure_sha0_obselete)
+        }
 
-        @!w := @m;
         self.comp;
     }
 
