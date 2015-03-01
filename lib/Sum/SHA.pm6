@@ -107,7 +107,7 @@ role Sum::SHA1 [ :$recourse where { not $_ }
     method size ( --> int) { 160 }
 
     method comp ( --> Nil) {
-        my @s := buf32.new(@!s[0..^*]);
+        my @s := @!s.clone;
 # This later causes "Cannot assign to a readonly variable or value"
 #        my ($a, $b, $c, $d, $e) := @s[0..^*];
 # workaround...
