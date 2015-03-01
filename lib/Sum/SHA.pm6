@@ -94,10 +94,9 @@ role Sum::SHA1 [ :$recourse where { not $_ }
     has @!s;     # Current hash state.  H in specification.
     has @!w;     # "Parsed" message gets bound here.
 
-    has Bool $sha_bogus = self.sha_build_workaround(); 
-
     # Until there is a better way to handle BUILD-like stuff from roles,
     # we use the attribute initialization logic to do the trick.
+    has Bool $sha_bogus = self.sha_build_workaround();
     method sha_build_workaround {
         @!s :=
             buf32.new(0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0);
