@@ -91,14 +91,32 @@ role Sum::SHA1 [ :$recourse where { not $_ }
                                              = True, Bool :$insecure_sha0_obselete = False ]
      does Sum::MDPad[ :lengthtype<uint64_be> :!overflow ] {
 
-    has @!w;     # "Parsed" message gets bound here.
-    has @!s =    # Current hash state.  H in specification.
-        (0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0);
+    has @!s;     # Current hash state.  H in specification.
+    has @!w = self.sha_build_workaround(); # "Parsed" message gets bound here.
+
+    # Until there is a better way to handle BUILD-like stuff from roles,
+    # we use the attribute initialization logic to do the trick.
+    method sha_build_workaround {
+        @!s :=
+            buf32.new(0x67452301,0xEFCDAB89,0x98BADCFE,0x10325476,0xC3D2E1F0);
+
+	# We really do not care about what we assign to @!w; it gets
+        # initialized during .push
+	();
+    }
 
     method size ( --> int) { 160 }
 
     method comp ( --> Nil) {
-        my ($a, $b, $c, $d, $e) = @!s.values;
+        my @s := buf32.new(@!s[0..^*]);
+# This later causes "Cannot assign to a readonly variable or value"
+#        my ($a, $b, $c, $d, $e) := @s[0..^*];
+# workaround...
+        my $a := @s[0];
+        my $b := @s[1];
+        my $c := @s[2];
+        my $d := @s[3];
+        my $e := @s[4];
 
         for ((0x5A827999,{ $b +& $c +| +^$b +& $d }).item xx 20,
              (0x6ED9EBA1,{ $b +^ $c +^ $d }).item xx 20,
@@ -107,21 +125,20 @@ role Sum::SHA1 [ :$recourse where { not $_ }
             -> $i,($k,$f) {
             ($b,$c,$d,$e,$a) =
                 ($a, rol($b,30), $c, $d,
-                 0xffffffff +& (rol($a,5) + $f() + $e + $k + @!w[$i]));
+                 (rol($a,5) + $f() + $e + $k + @!w[$i]));
         }
-        @!s = 0xffffffff X+& (@!s.values Z+ (0xffffffff X+& ($a,$b,$c,$d,$e)));
+
+        @!s[0..^*] = @!s.values Z+ @s.values;
 	return; # This should not be needed per S06/Signatures
     }
+
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-# rakudo-p in star 2014.8 cannot handle these sized types when running from PIR
-#    my sub rol (uint32 $v, int $count where 0..32, --> uint32) {
-    my sub rol ($v, $count where 0..32) {
+    my sub rol (uint32 $v, int $count where 0..32, --> uint32) {
         ($v +< $count) +& 0xffffffff +| (($v +& 0xffffffff) +> (32 - $count));
     }
 
     multi method add (blob8 $block where { .elems == 64 }) {
-
         return Failure.new(X::Sum::Final.new()) if $.final;
 
         # Update the length count and check for problems via Sum::MDPad
