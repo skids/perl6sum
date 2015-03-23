@@ -85,9 +85,7 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
 
     # A moment of silence for the pixies that die every time something
     # like this gets written in an HLL.
-# rakudo-p in star 2014.8 cannot handle these sized types when running from PIR
-#    my sub rol (uint32 $v, int $count where 0..32, --> uint32) {
-    my sub rol ($v, $count where 0..32) {
+    my sub rol (uint32 $v, int $count where 0..32, --> uint32) {
         (($v +< $count) +& 0xffffffff) +| (($v +& 0xffffffff) +> (32 - $count));
     }
 
