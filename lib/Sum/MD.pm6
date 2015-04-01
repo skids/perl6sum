@@ -279,9 +279,8 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
     }
 
     # RIPEMD constants
-#my @lperms = [^16], { [ (7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8)[$_.values] ] } ... *[0]  == 4;
     my @lperms =
-        $(array[uint32].new(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15)),
+        $(array[uint32].new(^16)),
         {
             $(array[uint32].new(
                  (7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8)[$_.values]))
