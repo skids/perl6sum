@@ -274,7 +274,6 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
             self.md5_round4_step(@!w[$^didx], $^idx, $^shift);
         }
         @!s »+=« @s;
-        @!s »+&=» 0xffffffff; # Should go away with sized types
 	return; # This should not be needed per S06/Signatures
     }
 
@@ -381,7 +380,6 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
         else {
             @!s = @!s Z+ @s;
         }
-        @!s = 0xffffffff X+& @!s;
 	return; # This should not be needed per S06/Signatures
     }
 
@@ -424,7 +422,6 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
         else {
             @!s = @!s Z+ @s;
         }
-        @!s = 0xffffffff X+& @!s;
 	return; # This should not be needed per S06/Signatures
     }
 
