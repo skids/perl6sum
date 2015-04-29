@@ -234,17 +234,17 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
 
     method md4_comp (--> Nil) {
         my uint32 @s = @!s;
-        for (^16) Z (3,7,11,19) xx 4 {
+        for flat (^16) Z (3,7,11,19) xx 4 {
             self.md4_round1_step(@!w[$^idx],$^shift);
 	    self.md4_ext_round1_step(@!w[$^idx],$^shift)
                 if $alg eqv "MD4ext";
         }
-        for (0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15) Z (3,5,9,13) xx 4 {
+        for flat (0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15) Z (3,5,9,13) xx 4 {
             self.md4_round2_step(@!w[$^idx],$^shift);
             self.md4_ext_round2_step(@!w[$^idx],$^shift)
                 if $alg eqv "MD4ext";
         }
-        for (0,8,4,12,2,10,6,14,1,9,5,13,3,11,7,15) Z (3,9,11,15) xx 4 {
+        for flat (0,8,4,12,2,10,6,14,1,9,5,13,3,11,7,15) Z (3,9,11,15) xx 4 {
             self.md4_round3_step(@!w[$^idx],$^shift);
             self.md4_ext_round3_step(@!w[$^idx],$^shift)
                 if $alg eqv "MD4ext";
@@ -256,18 +256,18 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
 
     method md5_comp (--> Nil) {
         my uint32 @s = @!s;
-        for (^16) Z (^16) Z (7,12,17,22) xx 4 {
+        for flat (^16) Z (^16) Z (7,12,17,22) xx 4 {
             self.md5_round1_step(@!w[$^didx], $^idx, $^shift);
         }
-        for (1,6,11,0,5,10,15,4,9,14,3,8,13,2,7,12)
+        for flat (1,6,11,0,5,10,15,4,9,14,3,8,13,2,7,12)
             Z (16..^32) Z (5,9,14,20) xx 4 {
             self.md5_round2_step(@!w[$^didx], $^idx, $^shift);
         }
-        for (5,8,11,14,1,4,7,10,13,0,3,6,9,12,15,2)
+        for flat (5,8,11,14,1,4,7,10,13,0,3,6,9,12,15,2)
             Z (32..^48) Z (4,11,16,23) xx 4 {
             self.md5_round3_step(@!w[$^didx], $^idx, $^shift);
         }
-        for (0,7,14,5,12,3,10,1,8,15,6,13,4,11,2,9)
+        for flat (0,7,14,5,12,3,10,1,8,15,6,13,4,11,2,9)
             Z (48..^64) Z (6,10,15,21) xx 4 {
             self.md5_round4_step(@!w[$^didx], $^idx, $^shift);
         }
@@ -337,38 +337,38 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
         my uint32 @s = @!s;
         @!s.push(@s) if $alg eqv "RIPEMD-160";
 
-        for @lperms[0].values Z @lshifts[0].values {
+        for flat @lperms[0].values Z @lshifts[0].values {
             self.ripe_f1_5(0,@!w[$^didx],@kl[0],$^shift);
         }
-        for @rperms[0].values Z @rshifts[0].values {
+        for flat @rperms[0].values Z @rshifts[0].values {
             self.ripe_f5_5(5,@!w[$^didx],@kr[0],$^shift);
         }
         @!s[1,6] = @!s[6,1] if $alg eqv "RIPEMD-320";
-        for @lperms[1].values Z @lshifts[1].values {
+        for flat @lperms[1].values Z @lshifts[1].values {
             self.ripe_f2_5(0,@!w[$^didx],@kl[1],$^shift);
         }
-        for @rperms[1].values Z @rshifts[1].values {
+        for flat @rperms[1].values Z @rshifts[1].values {
             self.ripe_f4_5(5,@!w[$^didx],@kr[1],$^shift);
         }
         @!s[3,8] = @!s[8,3] if $alg eqv "RIPEMD-320";
-        for @lperms[2].values Z @lshifts[2].values {
+        for flat @lperms[2].values Z @lshifts[2].values {
             self.ripe_f3_5(0,@!w[$^didx],@kl[2],$^shift);
         }
-        for @rperms[2].values Z @rshifts[2].values {
+        for flat @rperms[2].values Z @rshifts[2].values {
             self.ripe_f3_5(5,@!w[$^didx],@kr[2],$^shift);
         }
         @!s[0,5] = @!s[5,0] if $alg eqv "RIPEMD-320";
-        for @lperms[3].values Z @lshifts[3].values {
+        for flat @lperms[3].values Z @lshifts[3].values {
             self.ripe_f4_5(0,@!w[$^didx],@kl[3],$^shift);
         }
-        for @rperms[3].values Z @rshifts[3].values {
+        for flat @rperms[3].values Z @rshifts[3].values {
             self.ripe_f2_5(5,@!w[$^didx],@kr[3],$^shift);
         }
         @!s[2,7] = @!s[7,2] if $alg eqv "RIPEMD-320";
-        for @lperms[4].values Z @lshifts[4].values {
+        for flat @lperms[4].values Z @lshifts[4].values {
             self.ripe_f5_5(0,@!w[$^didx],@kl[4],$^shift);
         }
-        for @rperms[4].values Z @rshifts[4].values {
+        for flat @rperms[4].values Z @rshifts[4].values {
             self.ripe_f1_5(5,@!w[$^didx],@kr[4],$^shift);
         }
         @!s[4,9] = @!s[9,4] if $alg eqv "RIPEMD-320";
@@ -386,31 +386,31 @@ role Sum::MD4_5 [ Str :$alg where { $_ eqv one <MD5 MD4 MD4ext RIPEMD-128 RIPEMD
         my uint32 @s = @!s;
         @!s.push(@s) if $alg eqv "RIPEMD-128";
 
-        for @lperms[0].values Z @lshifts[0].values {
+        for flat @lperms[0].values Z @lshifts[0].values {
             self.ripe_f1_4(0,@!w[$^didx],@kl[0],$^shift);
         }
-        for @rperms[0].values Z @rshifts[0].values {
+        for flat @rperms[0].values Z @rshifts[0].values {
             self.ripe_f4_4(4,@!w[$^didx],@kr[0],$^shift);
         }
         @!s[0,4] = @!s[4,0] if $alg eqv "RIPEMD-256";
-        for @lperms[1].values Z @lshifts[1].values {
+        for flat @lperms[1].values Z @lshifts[1].values {
             self.ripe_f2_4(0,@!w[$^didx],@kl[1],$^shift);
         }
-        for @rperms[1].values Z @rshifts[1].values {
+        for flat @rperms[1].values Z @rshifts[1].values {
             self.ripe_f3_4(4,@!w[$^didx],@kr[1],$^shift);
         }
         @!s[1,5] = @!s[5,1] if $alg eqv "RIPEMD-256";
-        for @lperms[2].values Z @lshifts[2].values {
+        for flat @lperms[2].values Z @lshifts[2].values {
             self.ripe_f3_4(0,@!w[$^didx],@kl[2],$^shift);
         }
-        for @rperms[2].values Z @rshifts[2].values {
+        for flat @rperms[2].values Z @rshifts[2].values {
             self.ripe_f2_4(4,@!w[$^didx],@kr[2],$^shift);
         }
         @!s[2,6] = @!s[6,2] if $alg eqv "RIPEMD-256";
-        for @lperms[3].values Z @lshifts[3].values {
+        for flat @lperms[3].values Z @lshifts[3].values {
             self.ripe_f4_4(0,@!w[$^didx],@kl[3],$^shift);
         }
-        for @rperms[3].values Z @rshifts[3].values {
+        for flat @rperms[3].values Z @rshifts[3].values {
             self.ripe_f1_4(4,@!w[$^didx],@kr[4],$^shift);
         }
         @!s[3,7] = @!s[7,3] if $alg eqv "RIPEMD-256";
@@ -582,7 +582,7 @@ role Sum::MD2 does Sum {
 
     proto method add (|cap) {*}
     multi method add (*@addends) {
-        sink for @addends { self.add($_) }
+        sink for flat @addends { self.add($_) }
     }
     multi method add ($addend) {
         # TODO: Typed failure here?
@@ -597,7 +597,7 @@ role Sum::MD2 does Sum {
     multi method add (blob8 $block where { .elems == 16 }) {
         @!X[16..^32] = $block.values;
         @!X[32..^48] = @!X[^16] Z+^ @!X[16..^32];
-        for 15,^15 Z ^16 -> $last, $x {
+        for flat 15,^15 Z ^16 -> $last, $x {
             @!C[$x] +^= @S[$block[$x] +^ @!C[$last]]
         }
         my $t = 0;
