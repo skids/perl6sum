@@ -475,7 +475,8 @@ role Sum::Tiger {
     method Blob { self.blob8 }
 }
 
-role Sum::Tiger1[ :$recourse where { $_ == False } = True ] does Sum::Tiger does Sum::MDPad[ :lengthtype<uint64_le> :justify ] does Sum {
+role Sum::Tiger1[ :$recourse where { $_ == False }
+                                                   = True ] does Sum::Tiger does Sum::MDPad[ :lengthtype<uint64_le> :justify ] does Sum {
     method recourse (--> Str) { "Perl6" }
 }
 
@@ -488,7 +489,8 @@ role Sum::Tiger1[ :$recourse where { $_ == True } = True ] does Sum does Sum::Re
 # We have no working C drivers for Tiger2 yet but in case we have we get some
 # we go through the motions
 
-role Sum::Tiger2[ :$recourse where { $_ == False } = True ] does Sum::Tiger does Sum::MDPad[:lengthtype<uint64_le>] does Sum {
+role Sum::Tiger2[ :$recourse where { $_ == False }
+                                                   = True ] does Sum::Tiger does Sum::MDPad[:lengthtype<uint64_le>] does Sum {
     method recourse (--> Str) { "Perl6" }
 }
 
