@@ -137,12 +137,9 @@ my @d;
 #? rakudo skip 'feed through a slurpy arity function'
 #@d <== $h.partials <== (2,3);
 #is @d.join(""), "3942", "partials inserts values in a feed"
-{ # We don't want "use fatal" so use an explicit catch block
-    is $h.partials(4,5,Failure.new(X::AdHoc.new(:payload<foo>)),6).map({.WHAT.gist}), '(Foo3) (Foo3) (Failure)', "partials stops iterating on Failure (Partial,Cooked).";
-    CATCH {
-       when X::AdHoc { $_.defined; }
-    }
-}
+my $fail = Failure.new(X::AdHoc.new(:payload<foo>));
+is $h.partials(4,5,$fail,6).map({.WHAT.gist}), '(Foo3) (Foo3) (Failure)', "partials stops iterating on Failure (Partial,Cooked).";
+$fail.defined;
 
 class Foo3r does Sum::Partial does Sum does Sum::Marshal::Raw {
         has $.accum is rw = 0;
@@ -162,12 +159,7 @@ class Foo3r does Sum::Partial does Sum does Sum::Marshal::Raw {
 my Foo3r $hr .= new();
 
 # XXX do some tests of laziness of partials method
-{ # We don't want "use fatal" so use an explicit catch block
-    is $hr.partials(4,5,Failure.new(X::AdHoc.new(:payload<foo>)),6).map({.WHAT.gist}), '(Foo3r) (Foo3r) (Failure)', "partials stops iterating on Failure (Partial,Raw).";
-    CATCH {
-       when X::AdHoc { $_.defined; }
-    }
-}
+is $hr.partials(4,5,$fail,6).map({.WHAT.gist}), '(Foo3r) (Foo3r) (Failure)', "partials stops iterating on Failure (Partial,Raw).";
 
 lives-ok {
 class Foo4 does Sum::Partial does Sum does Sum::Marshal::Method[:atype(Str) :method<ords>] {
