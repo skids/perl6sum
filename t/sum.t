@@ -1,5 +1,5 @@
 use v6;
-use lib	'./lib';
+use lib	<blib/lib lib>;
 
 use Test;
 
@@ -283,8 +283,8 @@ class Foo7 does Sum::Marshal::IO does Sum::Marshal::Cooked
 
 my Foo7 $tf;
 lives-ok { $tf .= new(); }, "Can instantiate custom Sum::Marshal::IO subclass";
-$tf.push(open("./t/testfile.txt"));
-is $tf.finalize, open("./t/testfile.txt").read(5000).values.join(','), "Sum::Marshal::IO works";
+$tf.push(open($?FILE.IO.parent.child('testfile.txt')));
+is $tf.finalize, open($?FILE.IO.parent.child('testfile.txt')).read(5000).values.join(','), "Sum::Marshal::IO works";
 
 # Now grab the code in the synopsis from the POD and make sure it runs.
 # This is currently complete hackery but might improve when pod support does.
